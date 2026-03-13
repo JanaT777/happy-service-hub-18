@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { DecisionTree } from '@/components/DecisionTree';
-import { TicketForm } from '@/components/TicketForm';
-import { RequestType } from '@/types/ticket';
+import { DecisionTree, DecisionTreeResult } from '@/components/DecisionTree';
+import { ReturnForm } from '@/components/ReturnForm';
+import { ComplaintForm } from '@/components/ComplaintForm';
+import { OtherRequestForm } from '@/components/OtherRequestForm';
 
 const Index = () => {
-  const [selectedType, setSelectedType] = useState<RequestType | null>(null);
+  const [treeResult, setTreeResult] = useState<DecisionTreeResult | null>(null);
   const [submitted, setSubmitted] = useState(false);
+
+  const reset = () => { setTreeResult(null); setSubmitted(false); };
 
   if (submitted) {
     return (
@@ -19,27 +22,27 @@ const Index = () => {
         <p className="mb-8 text-muted-foreground">
           We've received your request and will get back to you within 24 hours.
         </p>
-        <button
-          onClick={() => { setSelectedType(null); setSubmitted(false); }}
-          className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
+        <button onClick={reset}
+          className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
           Submit Another Request
         </button>
       </div>
     );
   }
 
-  if (!selectedType) {
-    return <DecisionTree onSelect={setSelectedType} />;
+  if (!treeResult) {
+    return <DecisionTree onComplete={setTreeResult} />;
   }
 
-  return (
-    <TicketForm
-      requestType={selectedType}
-      onBack={() => setSelectedType(null)}
-      onSubmit={() => setSubmitted(true)}
-    />
-  );
+  if (treeResult.requestType === 'return') {
+    return <ReturnForm treeResult={treeResult} onBack={reset} onSubmit={() => setSubmitted(true)} />;
+  }
+
+  if (treeResult.requestType === 'complaint') {
+    return <ComplaintForm treeResult={treeResult} onBack={reset} onSubmit={() => setSubmitted(true)} />;
+  }
+
+  return <OtherRequestForm onBack={reset} onSubmit={() => setSubmitted(true)} />;
 };
 
 export default Index;
