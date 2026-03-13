@@ -54,7 +54,14 @@ export const TicketForm = ({ requestType, onBack, onSubmit }: Props) => {
     setErrors({});
     setSubmitting(true);
     await new Promise(r => setTimeout(r, 600));
-    addTicket({ ...result.data, attachments, requestType });
+    addTicket({
+      customerEmail: result.data.customerEmail,
+      orderNumber: result.data.orderNumber,
+      product: result.data.product,
+      description: result.data.description,
+      attachments,
+      requestType,
+    });
     toast.success('Ticket submitted successfully!');
     setSubmitting(false);
     onSubmit();
