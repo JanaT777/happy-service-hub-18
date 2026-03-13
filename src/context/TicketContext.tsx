@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, RequestType } from '@/types/ticket';
+import { Ticket, TicketStatus } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -22,6 +22,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       description: 'The left earbud stopped working after 2 weeks of use.',
       attachments: [],
       requestType: 'complaint',
+      issueType: 'damaged',
+      severity: 'high',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -31,9 +33,11 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       customerEmail: 'mark@example.com',
       orderNumber: 'ORD-10038',
       product: 'Running Shoes Size 10',
-      description: 'Wrong size delivered. I ordered size 10 but received size 8. Would like to return.',
+      description: 'Wrong size delivered. I ordered size 10 but received size 8.',
       attachments: [],
       requestType: 'return',
+      refundMethod: 'original_payment',
+      withinReturnWindow: true,
       status: 'in_review',
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
