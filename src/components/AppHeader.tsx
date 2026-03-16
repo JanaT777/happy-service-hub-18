@@ -7,6 +7,7 @@ export const AppHeader = () => {
 
   const links = [
     { to: '/', label: 'New Request', icon: PlusCircle },
+    { to: '/track', label: 'Track Request', icon: SearchCheck },
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   ];
 
