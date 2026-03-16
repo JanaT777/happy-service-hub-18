@@ -1,65 +1,212 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTickets } from '@/context/TicketContext';
 import {
   TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS, STATUS_FLOW,
   ISSUE_TYPE_LABELS, SEVERITY_LABELS, REFUND_METHOD_LABELS,
+  RequestType, Ticket,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote } from 'lucide-react';
+import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, isAfter, isBefore, startOfDay, endOfDay, subDays } from 'date-fns';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+
+type Section = 'all' | 'new' | 'in_review' | 'returns_approval' | 'complaints_review' | 'refunds';
+
+const SECTION_CONFIG: { key: Section; label: string; filter: (t: Ticket) => boolean }[] = [
+  { key: 'all', label: 'All Tickets', filter: () => true },
+  { key: 'new', label: 'New Tickets', filter: t => t.status === 'new' },
+  { key: 'in_review', label: 'In Review', filter: t => t.status === 'in_review' },
+  { key: 'returns_approval', label: 'Returns Awaiting Approval', filter: t => t.requestType === 'return' && (t.status === 'in_review' || t.status === 'approved') },
+  { key: 'complaints_review', label: 'Complaints to Review', filter: t => t.requestType === 'complaint' && (t.status === 'new' || t.status === 'in_review') },
+  { key: 'refunds', label: 'Refunds to Process', filter: t => t.status === 'refund_processing' },
+];
 
 const ALL_STATUSES: TicketStatus[] = ['new', 'in_review', 'approved', 'rejected', 'refund_processing', 'completed'];
+const ALL_REQUEST_TYPES: RequestType[] = ['return', 'complaint', 'other'];
+
+const DATE_PRESETS = [
+  { label: 'Today', days: 0 },
+  { label: 'Last 7 days', days: 7 },
+  { label: 'Last 30 days', days: 30 },
+];
 
 const Admin = () => {
   const { tickets, updateTicketStatus } = useTickets();
+  const [activeSection, setActiveSection] = useState<Section>('all');
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
 
-  const filtered = tickets.filter(t => {
-    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return t.id.toLowerCase().includes(q) || t.customerEmail.toLowerCase().includes(q) || t.orderNumber.toLowerCase().includes(q) || t.product.toLowerCase().includes(q);
-    }
-    return true;
-  });
+  const filtered = useMemo(() => {
+    const sectionFilter = SECTION_CONFIG.find(s => s.key === activeSection)!.filter;
+    return tickets.filter(t => {
+      if (!sectionFilter(t)) return false;
+      if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+      if (typeFilter !== 'all' && t.requestType !== typeFilter) return false;
+      if (dateFrom && isBefore(new Date(t.createdAt), startOfDay(dateFrom))) return false;
+      if (dateTo && isAfter(new Date(t.createdAt), endOfDay(dateTo))) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return t.id.toLowerCase().includes(q) || t.customerEmail.toLowerCase().includes(q) || t.orderNumber.toLowerCase().includes(q) || t.product.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [tickets, activeSection, statusFilter, typeFilter, dateFrom, dateTo, search]);
 
   const handleStatusChange = (id: string, newStatus: TicketStatus) => {
     updateTicketStatus(id, newStatus);
     toast.success(`Ticket updated to ${STATUS_LABELS[newStatus]}`);
   };
 
-  const statusCounts = ALL_STATUSES.reduce((acc, s) => {
-    acc[s] = tickets.filter(t => t.status === s).length;
-    return acc;
-  }, {} as Record<TicketStatus, number>);
+  const sectionCounts = useMemo(() =>
+    SECTION_CONFIG.reduce((acc, s) => {
+      acc[s.key] = tickets.filter(s.filter).length;
+      return acc;
+    }, {} as Record<Section, number>),
+    [tickets]
+  );
+
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setDateFrom(undefined);
+    setDateTo(undefined);
+    setSearch('');
+  };
+
+  const hasActiveFilters = statusFilter !== 'all' || typeFilter !== 'all' || !!dateFrom || !!dateTo || !!search;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="font-heading text-2xl font-bold sm:text-3xl">Support Dashboard</h1>
         <p className="text-muted-foreground">Manage and resolve customer requests</p>
       </div>
 
-      <div className="mb-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
-        {ALL_STATUSES.map(s => (
-          <button key={s} onClick={() => setStatusFilter(f => f === s ? 'all' : s)}
-            className={`rounded-xl border p-3 text-center transition-all ${statusFilter === s ? 'border-primary bg-accent shadow-sm' : 'bg-card hover:bg-secondary'}`}>
-            <div className="text-xl font-bold font-heading">{statusCounts[s]}</div>
-            <div className="text-[11px] text-muted-foreground">{STATUS_LABELS[s]}</div>
+      {/* Summary cards */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {SECTION_CONFIG.filter(s => s.key !== 'all').map(s => (
+          <button key={s.key} onClick={() => setActiveSection(prev => prev === s.key ? 'all' : s.key)}
+            className={`rounded-xl border p-3 text-center transition-all ${activeSection === s.key ? 'border-primary bg-accent shadow-sm' : 'bg-card hover:bg-secondary'}`}>
+            <div className="text-xl font-bold font-heading">{sectionCounts[s.key]}</div>
+            <div className="text-[11px] leading-tight text-muted-foreground">{s.label}</div>
           </button>
         ))}
       </div>
 
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input type="text" placeholder="Search by ticket ID, email, order, or product..."
-          value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full rounded-lg border bg-card py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+      {/* Search + filter toggle */}
+      <div className="mb-4 flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input type="text" placeholder="Search by ticket ID, email, order, or product..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full rounded-lg border bg-card py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <Button variant={showFilters ? 'default' : 'outline'} size="sm" className="gap-1.5"
+          onClick={() => setShowFilters(!showFilters)}>
+          <Filter className="h-4 w-4" />
+          <span className="hidden sm:inline">Filters</span>
+          {hasActiveFilters && <span className="flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground">!</span>}
+        </Button>
       </div>
 
+      {/* Filter panel */}
+      {showFilters && (
+        <div className="mb-6 rounded-xl border bg-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-semibold font-heading">Filters</span>
+            {hasActiveFilters && (
+              <button onClick={clearFilters} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                <X className="h-3 w-3" /> Clear all
+              </button>
+            )}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {/* Status filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Status</label>
+              <div className="flex flex-wrap gap-1.5">
+                {ALL_STATUSES.map(s => (
+                  <button key={s} onClick={() => setStatusFilter(f => f === s ? 'all' : s)}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${statusFilter === s ? 'border-primary bg-accent text-accent-foreground' : 'bg-secondary text-secondary-foreground hover:bg-muted'}`}>
+                    {STATUS_LABELS[s]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Request type filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Request Type</label>
+              <div className="flex flex-wrap gap-1.5">
+                {ALL_REQUEST_TYPES.map(rt => (
+                  <button key={rt} onClick={() => setTypeFilter(f => f === rt ? 'all' : rt)}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${typeFilter === rt ? 'border-primary bg-accent text-accent-foreground' : 'bg-secondary text-secondary-foreground hover:bg-muted'}`}>
+                    {REQUEST_TYPE_LABELS[rt]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Date filter */}
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Date Range</label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {DATE_PRESETS.map(p => (
+                  <button key={p.label} onClick={() => { setDateFrom(subDays(new Date(), p.days)); setDateTo(new Date()); }}
+                    className="rounded-full border bg-secondary px-2.5 py-1 text-[11px] font-medium text-secondary-foreground hover:bg-muted transition-colors">
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs flex-1">
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      {dateFrom ? format(dateFrom, 'MMM d') : 'From'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs flex-1">
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      {dateTo ? format(dateTo, 'MMM d') : 'To'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section tabs */}
+      <Tabs value={activeSection} onValueChange={v => setActiveSection(v as Section)} className="mb-4">
+        <TabsList className="w-full flex-wrap h-auto gap-1 bg-transparent p-0">
+          {SECTION_CONFIG.map(s => (
+            <TabsTrigger key={s.key} value={s.key} className="rounded-lg border bg-card data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs px-3 py-1.5">
+              {s.label} ({sectionCounts[s.key]})
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
+      {/* Ticket list */}
       <div className="space-y-3">
         {filtered.length === 0 && (
           <div className="rounded-xl border bg-card py-16 text-center text-muted-foreground">No tickets found.</div>
