@@ -7,6 +7,7 @@ import { TicketProvider } from "@/context/TicketContext";
 import { AppHeader } from "@/components/AppHeader";
 import Index from "./pages/Index.tsx";
 import Admin from "./pages/Admin.tsx";
+import TrackRequest from "./pages/TrackRequest.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
           <AppHeader />
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/track" element={<TrackRequest />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Headset, LayoutDashboard, PlusCircle } from 'lucide-react';
+import { Headset, LayoutDashboard, PlusCircle, SearchCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const AppHeader = () => {
@@ -7,6 +7,7 @@ export const AppHeader = () => {
 
   const links = [
     { to: '/', label: 'New Request', icon: PlusCircle },
+    { to: '/track', label: 'Track Request', icon: SearchCheck },
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   ];
 
