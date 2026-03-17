@@ -6,9 +6,9 @@ export const AppHeader = () => {
   const { pathname } = useLocation();
 
   const links = [
-    { to: '/', label: 'New Request', icon: PlusCircle },
-    { to: '/track', label: 'Track Request', icon: SearchCheck },
-    { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/', label: 'Nová požiadavka', icon: PlusCircle },
+    { to: '/track', label: 'Sledovať požiadavku', icon: SearchCheck },
+    { to: '/admin', label: 'Prehľad', icon: LayoutDashboard },
   ];
 
   return (

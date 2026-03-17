@@ -6,17 +6,17 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Search, Mail, Hash, Package, AlertTriangle, Banknote, Clock, CheckCircle2, Circle, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { sk } from 'date-fns/locale';
 
 const searchSchema = z.object({
-  email: z.string().trim().email({ message: 'Please enter a valid email address' }).max(255),
-  orderNumber: z.string().trim().min(1, { message: 'Please enter an order number' }).max(50),
+  email: z.string().trim().email({ message: 'Prosím zadajte platnú e-mailovú adresu' }).max(255),
+  orderNumber: z.string().trim().min(1, { message: 'Prosím zadajte číslo objednávky' }).max(50),
 });
 
 const STATUS_ORDER = ['new', 'in_review', 'approved', 'rejected', 'refund_processing', 'completed'] as const;
 
 const StatusTimeline = ({ ticket }: { ticket: Ticket }) => {
   const currentIdx = STATUS_ORDER.indexOf(ticket.status);
-  // Build a relevant path based on ticket flow
   const isRejected = ticket.status === 'rejected';
   const hasRefund = ticket.requestType === 'return' || ticket.status === 'refund_processing';
   
@@ -85,24 +85,24 @@ const TrackRequest = () => {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="mb-8 text-center">
-        <h1 className="font-heading text-2xl font-bold sm:text-3xl">Track Your Request</h1>
-        <p className="mt-1 text-muted-foreground">Enter your email and order number to check the status of your request.</p>
+        <h1 className="font-heading text-2xl font-bold sm:text-3xl">Sledujte vašu požiadavku</h1>
+        <p className="mt-1 text-muted-foreground">Zadajte váš email a číslo objednávky na zistenie stavu vašej požiadavky.</p>
       </div>
 
       <form onSubmit={handleSearch} className="mb-8 rounded-xl border bg-card p-6 shadow-sm">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Email Address</label>
+            <label className="mb-1.5 block text-sm font-medium">E-mailová adresa</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder="vas@email.com"
                 className={`w-full rounded-lg border bg-background py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring ${errors.email ? 'border-destructive' : ''}`} />
             </div>
             {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Order Number</label>
+            <label className="mb-1.5 block text-sm font-medium">Číslo objednávky</label>
             <div className="relative">
               <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input type="text" value={orderNumber} onChange={e => setOrderNumber(e.target.value)}
@@ -113,7 +113,7 @@ const TrackRequest = () => {
           </div>
         </div>
         <Button type="submit" className="mt-4 w-full gap-2">
-          <Search className="h-4 w-4" /> Look Up Request
+          <Search className="h-4 w-4" /> Vyhľadať požiadavku
         </Button>
       </form>
 
@@ -121,12 +121,12 @@ const TrackRequest = () => {
         <>
           {results.length === 0 ? (
             <div className="rounded-xl border bg-card py-12 text-center">
-              <p className="text-muted-foreground">No requests found for this email and order number.</p>
-              <p className="mt-1 text-sm text-muted-foreground">Please double-check your details and try again.</p>
+              <p className="text-muted-foreground">Pre tento email a číslo objednávky neboli nájdené žiadne požiadavky.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Skontrolujte svoje údaje a skúste to znova.</p>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">{results.length} request{results.length > 1 ? 's' : ''} found</p>
+              <p className="text-sm text-muted-foreground">{results.length} {results.length === 1 ? 'požiadavka nájdená' : results.length < 5 ? 'požiadavky nájdené' : 'požiadaviek nájdených'}</p>
               {results.map(ticket => (
                 <div key={ticket.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
                   <div className="p-5">
@@ -145,7 +145,7 @@ const TrackRequest = () => {
                         <Package className="h-4 w-4 shrink-0" /> {ticket.product}
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="h-4 w-4 shrink-0" /> Submitted {format(new Date(ticket.createdAt), 'MMM d, yyyy')}
+                        <Clock className="h-4 w-4 shrink-0" /> Odoslané {format(new Date(ticket.createdAt), 'd. MMM yyyy', { locale: sk })}
                       </div>
                       {ticket.issueType && (
                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -171,7 +171,7 @@ const TrackRequest = () => {
 
                     <p className="mt-3 rounded-lg bg-secondary/50 p-3 text-sm">{ticket.description}</p>
 
-                    <p className="mt-2 text-xs text-muted-foreground">Last updated: {format(new Date(ticket.updatedAt), 'MMM d, yyyy · h:mm a')}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Naposledy aktualizované: {format(new Date(ticket.updatedAt), 'd. MMM yyyy · H:mm', { locale: sk })}</p>
                   </div>
                 </div>
               ))}

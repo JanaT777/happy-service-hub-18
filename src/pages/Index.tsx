@@ -18,13 +18,13 @@ const Index = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 className="mb-3 font-heading text-3xl font-bold">Request Submitted!</h1>
+        <h1 className="mb-3 font-heading text-3xl font-bold">Požiadavka bola odoslaná!</h1>
         <p className="mb-8 text-muted-foreground">
-          We've received your request and will get back to you within 24 hours.
+          Prijali sme vašu požiadavku a ozveme sa vám do 24 hodín.
         </p>
         <button onClick={reset}
           className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-          Submit Another Request
+          Odoslať ďalšiu požiadavku
         </button>
       </div>
     );

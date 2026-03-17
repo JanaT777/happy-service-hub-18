@@ -40,10 +40,9 @@ export const DecisionTree = ({ onComplete }: Props) => {
 
   const handleOrderLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
-    if (!trimmed) { setOrderError('Please enter an order number'); return; }
+    if (!trimmed) { setOrderError('Prosím zadajte číslo objednávky'); return; }
     const order = MOCK_ORDER_PRODUCTS[trimmed];
-    if (!order) { setOrderError('Order not found. Please check and try again.'); return; }
-    // Check 14-day window
+    if (!order) { setOrderError('Objednávka nenájdená. Skontrolujte údaje a skúste znova.'); return; }
     const orderDate = new Date(order.date);
     const daysDiff = Math.floor((Date.now() - orderDate.getTime()) / 86400000);
     setWithinWindow(daysDiff <= 14);
@@ -79,7 +78,7 @@ export const DecisionTree = ({ onComplete }: Props) => {
       {/* Progress bar */}
       <div className="mb-8">
         <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Step {progress} of {totalSteps}</span>
+          <span>Krok {progress} z {totalSteps}</span>
           <span>{Math.round((progress / totalSteps) * 100)}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -92,22 +91,22 @@ export const DecisionTree = ({ onComplete }: Props) => {
 
       {step !== 'type' && (
         <button onClick={goBack} className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4" /> Späť
         </button>
       )}
 
-      {/* Step 1: Choose type */}
+      {/* Krok 1: Výber typu */}
       {step === 'type' && (
         <div>
           <div className="mb-8 text-center">
-            <h1 className="mb-2 font-heading text-3xl font-bold sm:text-4xl">How can we help you?</h1>
-            <p className="text-muted-foreground">Choose what best describes your situation</p>
+            <h1 className="mb-2 font-heading text-3xl font-bold sm:text-4xl">Ako vám môžeme pomôcť?</h1>
+            <p className="text-muted-foreground">Vyberte, čo najlepšie popisuje vašu situáciu</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {[
-              { type: 'return' as RequestType, title: 'Return a Product', desc: 'Get a refund or exchange for your purchase', icon: RotateCcw, color: 'text-info' },
-              { type: 'complaint' as RequestType, title: 'Report Damaged Product', desc: 'Report a defect, damage, or issue with your order', icon: AlertTriangle, color: 'text-warning' },
-              { type: 'other' as RequestType, title: 'Other Request', desc: 'Shipping, account, or general questions', icon: HelpCircle, color: 'text-muted-foreground' },
+              { type: 'return' as RequestType, title: 'Vrátiť produkt', desc: 'Získajte vrátenie peňazí alebo výmenu za váš nákup', icon: RotateCcw, color: 'text-info' },
+              { type: 'complaint' as RequestType, title: 'Nahlásiť poškodený produkt', desc: 'Nahláste chybu, poškodenie alebo problém s objednávkou', icon: AlertTriangle, color: 'text-warning' },
+              { type: 'other' as RequestType, title: 'Iná požiadavka', desc: 'Doručenie, účet alebo všeobecné otázky', icon: HelpCircle, color: 'text-muted-foreground' },
             ].map(({ type, title, desc, icon: Icon, color }) => (
               <button
                 key={type}
@@ -120,7 +119,7 @@ export const DecisionTree = ({ onComplete }: Props) => {
                 <h3 className="mb-1 font-heading text-base font-semibold">{title}</h3>
                 <p className="mb-3 text-sm text-muted-foreground">{desc}</p>
                 <div className="flex items-center gap-1 text-sm font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                  Select <ArrowRight className="h-3.5 w-3.5" />
+                  Vybrať <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </button>
             ))}
@@ -128,49 +127,48 @@ export const DecisionTree = ({ onComplete }: Props) => {
         </div>
       )}
 
-      {/* Step 2a: Return — Order lookup */}
+      {/* Krok 2a: Vrátenie — Vyhľadanie objednávky */}
       {step === 'return-order' && (
         <div className="mx-auto max-w-md">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <Package className="h-7 w-7" />
             </div>
-            <h2 className="mb-2 font-heading text-2xl font-bold">Find Your Order</h2>
-            <p className="text-sm text-muted-foreground">Enter your order number so we can look it up</p>
+            <h2 className="mb-2 font-heading text-2xl font-bold">Nájdite svoju objednávku</h2>
+            <p className="text-sm text-muted-foreground">Zadajte číslo objednávky, aby sme ju mohli vyhľadať</p>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium">Order Number</label>
+              <label className="mb-1.5 block text-sm font-medium">Číslo objednávky</label>
               <input
                 className={`w-full rounded-lg border bg-background px-3.5 py-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${orderError ? 'border-destructive' : 'border-input'}`}
-                placeholder="e.g. ORD-10042"
+                placeholder="napr. ORD-10042"
                 value={orderNumber}
                 onChange={e => { setOrderNumber(e.target.value); setOrderError(''); }}
                 onKeyDown={e => e.key === 'Enter' && handleOrderLookup()}
               />
               {orderError && <p className="mt-1.5 text-xs text-destructive">{orderError}</p>}
               <p className="mt-2 text-xs text-muted-foreground">
-                Try: ORD-10042, ORD-10038, ORD-10051, ORD-10055
+                Skúste: ORD-10042, ORD-10038, ORD-10051, ORD-10055
               </p>
             </div>
             <button
               onClick={handleOrderLookup}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Look Up Order <ArrowRight className="h-4 w-4" />
+              Vyhľadať objednávku <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* Step 2b: Return — Window check + product select */}
+      {/* Krok 2b: Vrátenie — Kontrola okna + výber produktu */}
       {step === 'return-window' && (
         <div className="mx-auto max-w-md">
           <div className="mb-6 text-center">
-            <h2 className="mb-2 font-heading text-2xl font-bold">Order {orderNumber.trim().toUpperCase()}</h2>
+            <h2 className="mb-2 font-heading text-2xl font-bold">Objednávka {orderNumber.trim().toUpperCase()}</h2>
           </div>
 
-          {/* Return window notice */}
           <div className={`mb-6 flex items-start gap-3 rounded-xl border p-4 ${withinWindow ? 'border-success/30 bg-success/10' : 'border-warning/30 bg-warning/10'}`}>
             {withinWindow
               ? <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
@@ -178,17 +176,17 @@ export const DecisionTree = ({ onComplete }: Props) => {
             }
             <div>
               <p className="text-sm font-medium">
-                {withinWindow ? 'Within 14-day return window' : 'Outside 14-day return window'}
+                {withinWindow ? 'V rámci 14-dňovej lehoty na vrátenie' : 'Mimo 14-dňovej lehoty na vrátenie'}
               </p>
               <p className="text-xs text-muted-foreground">
                 {withinWindow
-                  ? 'You are eligible for a full refund.'
-                  : 'You may still be eligible for a partial refund or exchange. We\'ll review your case.'}
+                  ? 'Máte nárok na plné vrátenie peňazí.'
+                  : 'Stále môžete mať nárok na čiastočné vrátenie alebo výmenu. Váš prípad posúdime.'}
               </p>
             </div>
           </div>
 
-          <p className="mb-3 text-sm font-medium">Which product would you like to return?</p>
+          <p className="mb-3 text-sm font-medium">Ktorý produkt chcete vrátiť?</p>
           <div className="space-y-2">
             {orderProducts.map(product => (
               <button
@@ -207,21 +205,21 @@ export const DecisionTree = ({ onComplete }: Props) => {
         </div>
       )}
 
-      {/* Step 2c: Complaint — Issue type */}
+      {/* Krok 2c: Reklamácia — Typ problému */}
       {step === 'complaint-issue' && (
         <div className="mx-auto max-w-md">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-warning/15 text-warning">
               <AlertTriangle className="h-7 w-7" />
             </div>
-            <h2 className="mb-2 font-heading text-2xl font-bold">What happened?</h2>
-            <p className="text-sm text-muted-foreground">Select the type of issue you're experiencing</p>
+            <h2 className="mb-2 font-heading text-2xl font-bold">Čo sa stalo?</h2>
+            <p className="text-sm text-muted-foreground">Vyberte typ problému, ktorý máte</p>
           </div>
           <div className="space-y-3">
             {([
-              { type: 'damaged' as IssueType, title: 'Damaged Product', desc: 'Item arrived broken, scratched, or physically damaged', icon: AlertOctagon },
-              { type: 'missing_part' as IssueType, title: 'Missing Parts', desc: 'Package is incomplete or parts are missing', icon: PackageX },
-              { type: 'wrong_product' as IssueType, title: 'Wrong Product', desc: 'Received a different item than what was ordered', icon: Wrench },
+              { type: 'damaged' as IssueType, title: 'Poškodený produkt', desc: 'Tovar prišiel zlomený, poškriabaný alebo fyzicky poškodený', icon: AlertOctagon },
+              { type: 'missing_part' as IssueType, title: 'Chýbajúce diely', desc: 'Balík je nekompletný alebo chýbajú časti', icon: PackageX },
+              { type: 'wrong_product' as IssueType, title: 'Nesprávny produkt', desc: 'Dostal som iný tovar ako bol objednaný', icon: Wrench },
             ]).map(({ type, title, desc, icon: Icon }) => (
               <button
                 key={type}
