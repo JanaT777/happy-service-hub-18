@@ -7,8 +7,8 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 
 const returnSchema = z.object({
-  customerEmail: z.string().trim().email('Please enter a valid email').max(255),
-  description: z.string().trim().min(10, 'Please provide at least 10 characters').max(2000),
+  customerEmail: z.string().trim().email('Prosím zadajte platný email').max(255),
+  description: z.string().trim().min(10, 'Prosím zadajte aspoň 10 znakov').max(2000),
 });
 
 interface Props {
@@ -34,7 +34,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
       return;
     }
     if (!refundMethod) {
-      setErrors(prev => ({ ...prev, refundMethod: 'Please select a refund method' }));
+      setErrors(prev => ({ ...prev, refundMethod: 'Prosím vyberte spôsob vrátenia peňazí' }));
       return;
     }
     setErrors({});
@@ -50,7 +50,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
       refundMethod,
       withinReturnWindow: treeResult.withinReturnWindow,
     });
-    toast.success('Return request submitted!');
+    toast.success('Žiadosť o vrátenie bola odoslaná!');
     setSubmitting(false);
     onSubmit();
   };
@@ -61,42 +61,42 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <button onClick={onBack} className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Start over
+        <ArrowLeft className="h-4 w-4" /> Začať odznova
       </button>
 
       <div className="mb-6">
         <span className="mb-2 inline-block rounded-full bg-info/15 border border-info/30 px-3 py-1 text-xs font-semibold text-info">
-          Product Return
+          Vrátenie produktu
         </span>
-        <h1 className="font-heading text-2xl font-bold">Complete Your Return Request</h1>
+        <h1 className="font-heading text-2xl font-bold">Dokončite žiadosť o vrátenie</h1>
       </div>
 
-      {/* Summary card */}
+      {/* Súhrnná karta */}
       <div className="mb-6 rounded-xl border bg-secondary/50 p-4 space-y-2">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Order</span>
+          <span className="text-muted-foreground">Objednávka</span>
           <span className="font-medium">{treeResult.orderNumber}</span>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Product</span>
+          <span className="text-muted-foreground">Produkt</span>
           <span className="font-medium">{treeResult.selectedProduct}</span>
         </div>
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Return Window</span>
+          <span className="text-muted-foreground">Lehota na vrátenie</span>
           <span className={`flex items-center gap-1 font-medium ${treeResult.withinReturnWindow ? 'text-success' : 'text-warning'}`}>
             {treeResult.withinReturnWindow ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-            {treeResult.withinReturnWindow ? 'Eligible' : 'Review needed'}
+            {treeResult.withinReturnWindow ? 'Oprávnený' : 'Vyžaduje posúdenie'}
           </span>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Email Address</label>
+          <label className="mb-1.5 block text-sm font-medium">E-mailová adresa</label>
           <input
             type="email"
             className={inputClass('customerEmail')}
-            placeholder="you@example.com"
+            placeholder="vas@email.com"
             value={form.customerEmail}
             onChange={e => setForm(f => ({ ...f, customerEmail: e.target.value }))}
           />
@@ -104,11 +104,11 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Reason for Return</label>
+          <label className="mb-1.5 block text-sm font-medium">Dôvod vrátenia</label>
           <textarea
             rows={3}
             className={inputClass('description')}
-            placeholder="Tell us why you'd like to return this product..."
+            placeholder="Povedzte nám, prečo chcete vrátiť tento produkt..."
             value={form.description}
             onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
           />
@@ -116,11 +116,11 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium">Preferred Refund Method</label>
+          <label className="mb-2 block text-sm font-medium">Preferovaný spôsob vrátenia peňazí</label>
           <div className="grid gap-3 sm:grid-cols-2">
             {([
-              { method: 'bank_transfer' as RefundMethod, icon: Banknote, desc: 'Refund to your bank account (3-5 business days)' },
-              { method: 'original_payment' as RefundMethod, icon: CreditCard, desc: 'Refund to original payment method (1-3 business days)' },
+              { method: 'bank_transfer' as RefundMethod, icon: Banknote, desc: 'Vrátenie na bankový účet (3-5 pracovných dní)' },
+              { method: 'original_payment' as RefundMethod, icon: CreditCard, desc: 'Vrátenie pôvodnou platobnou metódou (1-3 pracovné dni)' },
             ]).map(({ method, icon: Icon, desc }) => (
               <button
                 key={method}
@@ -149,7 +149,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
           className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {submitting ? 'Submitting...' : 'Submit Return Request'}
+          {submitting ? 'Odosielanie...' : 'Odoslať žiadosť o vrátenie'}
         </button>
       </form>
     </div>

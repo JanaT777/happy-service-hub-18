@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow, isAfter, isBefore, startOfDay, endOfDay, subDays } from 'date-fns';
+import { sk } from 'date-fns/locale';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -18,21 +19,21 @@ import { format } from 'date-fns';
 type Section = 'all' | 'new' | 'in_review' | 'returns_approval' | 'complaints_review' | 'refunds';
 
 const SECTION_CONFIG: { key: Section; label: string; filter: (t: Ticket) => boolean }[] = [
-  { key: 'all', label: 'All Tickets', filter: () => true },
-  { key: 'new', label: 'New Tickets', filter: t => t.status === 'new' },
-  { key: 'in_review', label: 'In Review', filter: t => t.status === 'in_review' },
-  { key: 'returns_approval', label: 'Returns Awaiting Approval', filter: t => t.requestType === 'return' && (t.status === 'in_review' || t.status === 'approved') },
-  { key: 'complaints_review', label: 'Complaints to Review', filter: t => t.requestType === 'complaint' && (t.status === 'new' || t.status === 'in_review') },
-  { key: 'refunds', label: 'Refunds to Process', filter: t => t.status === 'refund_processing' },
+  { key: 'all', label: 'Všetky tikety', filter: () => true },
+  { key: 'new', label: 'Nové tikety', filter: t => t.status === 'new' },
+  { key: 'in_review', label: 'V preskúmaní', filter: t => t.status === 'in_review' },
+  { key: 'returns_approval', label: 'Vrátenia na schválenie', filter: t => t.requestType === 'return' && (t.status === 'in_review' || t.status === 'approved') },
+  { key: 'complaints_review', label: 'Reklamácie na posúdenie', filter: t => t.requestType === 'complaint' && (t.status === 'new' || t.status === 'in_review') },
+  { key: 'refunds', label: 'Vrátenia peňazí', filter: t => t.status === 'refund_processing' },
 ];
 
 const ALL_STATUSES: TicketStatus[] = ['new', 'in_review', 'approved', 'rejected', 'refund_processing', 'completed'];
 const ALL_REQUEST_TYPES: RequestType[] = ['return', 'complaint', 'other'];
 
 const DATE_PRESETS = [
-  { label: 'Today', days: 0 },
-  { label: 'Last 7 days', days: 7 },
-  { label: 'Last 30 days', days: 30 },
+  { label: 'Dnes', days: 0 },
+  { label: 'Posledných 7 dní', days: 7 },
+  { label: 'Posledných 30 dní', days: 30 },
 ];
 
 const Admin = () => {
@@ -64,7 +65,7 @@ const Admin = () => {
 
   const handleStatusChange = (id: string, newStatus: TicketStatus) => {
     updateTicketStatus(id, newStatus);
-    toast.success(`Ticket updated to ${STATUS_LABELS[newStatus]}`);
+    toast.success(`Tiket aktualizovaný na ${STATUS_LABELS[newStatus]}`);
   };
 
   const sectionCounts = useMemo(() =>
@@ -88,11 +89,11 @@ const Admin = () => {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl font-bold sm:text-3xl">Support Dashboard</h1>
-        <p className="text-muted-foreground">Manage and resolve customer requests</p>
+        <h1 className="font-heading text-2xl font-bold sm:text-3xl">Prehľad podpory</h1>
+        <p className="text-muted-foreground">Spravujte a riešte požiadavky zákazníkov</p>
       </div>
 
-      {/* Summary cards */}
+      {/* Súhrnné karty */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {SECTION_CONFIG.filter(s => s.key !== 'all').map(s => (
           <button key={s.key} onClick={() => setActiveSection(prev => prev === s.key ? 'all' : s.key)}
@@ -103,37 +104,37 @@ const Admin = () => {
         ))}
       </div>
 
-      {/* Search + filter toggle */}
+      {/* Vyhľadávanie + prepínač filtrov */}
       <div className="mb-4 flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Search by ticket ID, email, order, or product..."
+          <input type="text" placeholder="Hľadať podľa ID tiketu, emailu, objednávky alebo produktu..."
             value={search} onChange={e => setSearch(e.target.value)}
             className="w-full rounded-lg border bg-card py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
         </div>
         <Button variant={showFilters ? 'default' : 'outline'} size="sm" className="gap-1.5"
           onClick={() => setShowFilters(!showFilters)}>
           <Filter className="h-4 w-4" />
-          <span className="hidden sm:inline">Filters</span>
+          <span className="hidden sm:inline">Filtre</span>
           {hasActiveFilters && <span className="flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground">!</span>}
         </Button>
       </div>
 
-      {/* Filter panel */}
+      {/* Panel filtrov */}
       {showFilters && (
         <div className="mb-6 rounded-xl border bg-card p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-semibold font-heading">Filters</span>
+            <span className="text-sm font-semibold font-heading">Filtre</span>
             {hasActiveFilters && (
               <button onClick={clearFilters} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                <X className="h-3 w-3" /> Clear all
+                <X className="h-3 w-3" /> Vymazať všetko
               </button>
             )}
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            {/* Status filter */}
+            {/* Filter podľa stavu */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Status</label>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Stav</label>
               <div className="flex flex-wrap gap-1.5">
                 {ALL_STATUSES.map(s => (
                   <button key={s} onClick={() => setStatusFilter(f => f === s ? 'all' : s)}
@@ -143,9 +144,9 @@ const Admin = () => {
                 ))}
               </div>
             </div>
-            {/* Request type filter */}
+            {/* Filter podľa typu požiadavky */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Request Type</label>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Typ požiadavky</label>
               <div className="flex flex-wrap gap-1.5">
                 {ALL_REQUEST_TYPES.map(rt => (
                   <button key={rt} onClick={() => setTypeFilter(f => f === rt ? 'all' : rt)}
@@ -155,9 +156,9 @@ const Admin = () => {
                 ))}
               </div>
             </div>
-            {/* Date filter */}
+            {/* Filter podľa dátumu */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Date Range</label>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Obdobie</label>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {DATE_PRESETS.map(p => (
                   <button key={p.label} onClick={() => { setDateFrom(subDays(new Date(), p.days)); setDateTo(new Date()); }}
@@ -171,7 +172,7 @@ const Admin = () => {
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs flex-1">
                       <CalendarIcon className="h-3.5 w-3.5" />
-                      {dateFrom ? format(dateFrom, 'MMM d') : 'From'}
+                      {dateFrom ? format(dateFrom, 'd. MMM', { locale: sk }) : 'Od'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -182,7 +183,7 @@ const Admin = () => {
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs flex-1">
                       <CalendarIcon className="h-3.5 w-3.5" />
-                      {dateTo ? format(dateTo, 'MMM d') : 'To'}
+                      {dateTo ? format(dateTo, 'd. MMM', { locale: sk }) : 'Do'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -195,7 +196,7 @@ const Admin = () => {
         </div>
       )}
 
-      {/* Section tabs */}
+      {/* Záložky sekcií */}
       <Tabs value={activeSection} onValueChange={v => setActiveSection(v as Section)} className="mb-4">
         <TabsList className="w-full flex-wrap h-auto gap-1 bg-transparent p-0">
           {SECTION_CONFIG.map(s => (
@@ -206,10 +207,10 @@ const Admin = () => {
         </TabsList>
       </Tabs>
 
-      {/* Ticket list */}
+      {/* Zoznam tiketov */}
       <div className="space-y-3">
         {filtered.length === 0 && (
-          <div className="rounded-xl border bg-card py-16 text-center text-muted-foreground">No tickets found.</div>
+          <div className="rounded-xl border bg-card py-16 text-center text-muted-foreground">Žiadne tikety neboli nájdené.</div>
         )}
         {filtered.map(ticket => {
           const isExpanded = expandedId === ticket.id;
@@ -230,7 +231,7 @@ const Admin = () => {
                 </div>
                 <div className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
                   <Clock className="h-3.5 w-3.5" />
-                  {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: sk })}
                 </div>
                 <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
               </button>
@@ -259,7 +260,7 @@ const Admin = () => {
                           ticket.severity === 'high' ? 'bg-warning' :
                           ticket.severity === 'medium' ? 'bg-info' : 'bg-success'
                         }`} />
-                        Severity: {SEVERITY_LABELS[ticket.severity]}
+                        Závažnosť: {SEVERITY_LABELS[ticket.severity]}
                       </div>
                     )}
                     {ticket.refundMethod && (
@@ -280,7 +281,7 @@ const Admin = () => {
 
                   {nextStatuses.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
-                      <span className="mr-1 self-center text-xs text-muted-foreground">Actions:</span>
+                      <span className="mr-1 self-center text-xs text-muted-foreground">Akcie:</span>
                       {nextStatuses.map(ns => (
                         <button key={ns} onClick={() => handleStatusChange(ticket.id, ns)}
                           className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${

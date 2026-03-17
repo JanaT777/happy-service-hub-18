@@ -17,45 +17,43 @@ export interface Ticket {
   status: TicketStatus;
   createdAt: string;
   updatedAt: string;
-  // Return-specific
   refundMethod?: RefundMethod;
   withinReturnWindow?: boolean;
-  // Complaint-specific
   issueType?: IssueType;
   severity?: SeverityLevel;
 }
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
-  new: 'New',
-  in_review: 'In Review',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  refund_processing: 'Refund Processing',
-  completed: 'Completed',
+  new: 'Nový',
+  in_review: 'V preskúmaní',
+  approved: 'Schválený',
+  rejected: 'Zamietnutý',
+  refund_processing: 'Spracovanie vrátenia',
+  completed: 'Dokončený',
 };
 
 export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
-  return: 'Product Return',
-  complaint: 'Product Complaint',
-  other: 'Other Request',
+  return: 'Vrátenie produktu',
+  complaint: 'Reklamácia produktu',
+  other: 'Iná požiadavka',
 };
 
 export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
-  damaged: 'Damaged Product',
-  missing_part: 'Missing Parts',
-  wrong_product: 'Wrong Product Received',
+  damaged: 'Poškodený produkt',
+  missing_part: 'Chýbajúce diely',
+  wrong_product: 'Nesprávny produkt',
 };
 
 export const SEVERITY_LABELS: Record<SeverityLevel, string> = {
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  critical: 'Critical',
+  low: 'Nízka',
+  medium: 'Stredná',
+  high: 'Vysoká',
+  critical: 'Kritická',
 };
 
 export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = {
-  bank_transfer: 'Bank Transfer',
-  original_payment: 'Original Payment Method',
+  bank_transfer: 'Bankový prevod',
+  original_payment: 'Pôvodná platobná metóda',
 };
 
 export const STATUS_FLOW: Record<TicketStatus, TicketStatus[]> = {
@@ -67,10 +65,9 @@ export const STATUS_FLOW: Record<TicketStatus, TicketStatus[]> = {
   completed: [],
 };
 
-// Mock products for order lookup
 export const MOCK_ORDER_PRODUCTS: Record<string, { products: string[]; date: string }> = {
-  'ORD-10042': { products: ['Wireless Headphones', 'Phone Case', 'USB Cable'], date: '2026-03-05' },
-  'ORD-10038': { products: ['Running Shoes Size 10', 'Sports Socks'], date: '2026-02-20' },
-  'ORD-10051': { products: ['Smart Watch', 'Watch Band'], date: '2026-03-10' },
-  'ORD-10055': { products: ['Laptop Stand', 'Keyboard', 'Mouse Pad'], date: '2026-01-15' },
+  'ORD-10042': { products: ['Bezdrôtové slúchadlá', 'Obal na telefón', 'USB kábel'], date: '2026-03-05' },
+  'ORD-10038': { products: ['Bežecké topánky veľkosť 10', 'Športové ponožky'], date: '2026-02-20' },
+  'ORD-10051': { products: ['Inteligentné hodinky', 'Remienok na hodinky'], date: '2026-03-10' },
+  'ORD-10055': { products: ['Stojan na notebook', 'Klávesnica', 'Podložka pod myš'], date: '2026-01-15' },
 };
