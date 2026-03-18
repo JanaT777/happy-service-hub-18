@@ -2,7 +2,8 @@ export type RequestType = 'return' | 'complaint' | 'other';
 
 export type TicketStatus = 'new' | 'in_review' | 'approved' | 'rejected' | 'refund_processing' | 'completed';
 
-export type IssueType = 'damaged' | 'missing_part' | 'wrong_product';
+export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'other_issue';
+export type SuggestedSolution = 'exchange' | 'refund' | 'send_missing';
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type RefundMethod = 'bank_transfer' | 'original_payment';
 
