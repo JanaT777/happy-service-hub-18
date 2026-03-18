@@ -2,6 +2,8 @@ export type RequestType = 'return' | 'complaint' | 'other';
 
 export type TicketStatus = 'new' | 'in_review' | 'approved' | 'rejected' | 'refund_processing' | 'completed';
 
+export type ComplaintStatus = 'complaint_new' | 'complaint_in_progress' | 'complaint_approved' | 'complaint_rejected' | 'complaint_resolved';
+
 export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'other_issue';
 export type SuggestedSolution = 'exchange' | 'refund' | 'send_missing';
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
@@ -22,6 +24,8 @@ export interface Ticket {
   withinReturnWindow?: boolean;
   issueType?: IssueType;
   severity?: SeverityLevel;
+  suggestedSolution?: SuggestedSolution;
+  complaintStatus?: ComplaintStatus;
 }
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
@@ -31,6 +35,22 @@ export const STATUS_LABELS: Record<TicketStatus, string> = {
   rejected: 'Zamietnutý',
   refund_processing: 'Spracovanie vrátenia',
   completed: 'Dokončený',
+};
+
+export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
+  complaint_new: 'Nová',
+  complaint_in_progress: 'V riešení',
+  complaint_approved: 'Schválená',
+  complaint_rejected: 'Zamietnutá',
+  complaint_resolved: 'Vybavená',
+};
+
+export const COMPLAINT_STATUS_FLOW: Record<ComplaintStatus, ComplaintStatus[]> = {
+  complaint_new: ['complaint_in_progress'],
+  complaint_in_progress: ['complaint_approved', 'complaint_rejected'],
+  complaint_approved: ['complaint_resolved'],
+  complaint_rejected: ['complaint_resolved'],
+  complaint_resolved: [],
 };
 
 export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
