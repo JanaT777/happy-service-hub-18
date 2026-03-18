@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
   addTicket: (ticket: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => void;
   updateTicketStatus: (id: string, status: TicketStatus) => void;
+  updateComplaintStatus: (id: string, complaintStatus: ComplaintStatus) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
@@ -24,6 +25,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       requestType: 'complaint',
       issueType: 'damaged',
       severity: 'high',
+      suggestedSolution: 'exchange',
+      complaintStatus: 'complaint_new',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -62,6 +65,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ...data,
       id: `TK-${generateId()}`,
       status: 'new' as TicketStatus,
+      complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
       createdAt: now,
       updatedAt: now,
     }, ...prev]);
@@ -73,10 +77,16 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     ));
   }, []);
 
+  const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
+    setTickets(prev => prev.map(t =>
+      t.id === id ? { ...t, complaintStatus, updatedAt: new Date().toISOString() } : t
+    ));
+  }, []);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, getTicket }}>
+    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, getTicket }}>
       {children}
     </TicketContext.Provider>
   );

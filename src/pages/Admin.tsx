@@ -3,10 +3,11 @@ import { useTickets } from '@/context/TicketContext';
 import {
   TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS, STATUS_FLOW,
   ISSUE_TYPE_LABELS, SEVERITY_LABELS, REFUND_METHOD_LABELS,
-  RequestType, Ticket,
+  SUGGESTED_SOLUTION_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_FLOW,
+  RequestType, Ticket, ComplaintStatus,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, CalendarIcon } from 'lucide-react';
+import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, CalendarIcon, RefreshCw, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow, isAfter, isBefore, startOfDay, endOfDay, subDays } from 'date-fns';
 import { sk } from 'date-fns/locale';
@@ -36,8 +37,16 @@ const DATE_PRESETS = [
   { label: 'Posledných 30 dní', days: 30 },
 ];
 
+const COMPLAINT_STATUS_COLORS: Record<ComplaintStatus, string> = {
+  complaint_new: 'bg-info/15 text-info border-info/30',
+  complaint_in_progress: 'bg-warning/15 text-warning border-warning/30',
+  complaint_approved: 'bg-success/15 text-success border-success/30',
+  complaint_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
+  complaint_resolved: 'bg-muted text-muted-foreground border-muted',
+};
+
 const Admin = () => {
-  const { tickets, updateTicketStatus } = useTickets();
+  const { tickets, updateTicketStatus, updateComplaintStatus } = useTickets();
   const [activeSection, setActiveSection] = useState<Section>('all');
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all');
@@ -66,6 +75,11 @@ const Admin = () => {
   const handleStatusChange = (id: string, newStatus: TicketStatus) => {
     updateTicketStatus(id, newStatus);
     toast.success(`Tiket aktualizovaný na ${STATUS_LABELS[newStatus]}`);
+  };
+
+  const handleComplaintStatusChange = (id: string, newStatus: ComplaintStatus) => {
+    updateComplaintStatus(id, newStatus);
+    toast.success(`Stav reklamácie aktualizovaný na "${COMPLAINT_STATUS_LABELS[newStatus]}"`);
   };
 
   const sectionCounts = useMemo(() =>
@@ -215,6 +229,8 @@ const Admin = () => {
         {filtered.map(ticket => {
           const isExpanded = expandedId === ticket.id;
           const nextStatuses = STATUS_FLOW[ticket.status];
+          const isComplaint = ticket.requestType === 'complaint';
+          const complaintNextStatuses = isComplaint && ticket.complaintStatus ? COMPLAINT_STATUS_FLOW[ticket.complaintStatus] : [];
           return (
             <div key={ticket.id} className="overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md">
               <button onClick={() => setExpandedId(isExpanded ? null : ticket.id)}
@@ -226,6 +242,11 @@ const Admin = () => {
                     <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
                       {REQUEST_TYPE_LABELS[ticket.requestType]}
                     </span>
+                    {isComplaint && ticket.complaintStatus && (
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${COMPLAINT_STATUS_COLORS[ticket.complaintStatus]}`}>
+                        {COMPLAINT_STATUS_LABELS[ticket.complaintStatus]}
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 truncate text-sm text-muted-foreground">{ticket.product} — {ticket.description}</p>
                 </div>
@@ -250,7 +271,14 @@ const Admin = () => {
                     </div>
                     {ticket.issueType && (
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <AlertTriangle className="h-4 w-4" /> {ISSUE_TYPE_LABELS[ticket.issueType]}
+                        <AlertTriangle className="h-4 w-4" />
+                        <span><span className="text-xs text-muted-foreground/70">Typ reklamácie:</span> {ISSUE_TYPE_LABELS[ticket.issueType]}</span>
+                      </div>
+                    )}
+                    {ticket.suggestedSolution && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <RefreshCw className="h-4 w-4" />
+                        <span><span className="text-xs text-muted-foreground/70">Navrhované riešenie:</span> {SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</span>
                       </div>
                     )}
                     {ticket.severity && (
@@ -279,8 +307,26 @@ const Admin = () => {
                     </div>
                   )}
 
+                  {/* Complaint status actions */}
+                  {isComplaint && complaintNextStatuses.length > 0 && (
+                    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="mr-1 text-xs font-medium text-muted-foreground">Stav reklamácie:</span>
+                      {complaintNextStatuses.map(ns => (
+                        <button key={ns} onClick={() => handleComplaintStatusChange(ticket.id, ns)}
+                          className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            ns === 'complaint_approved' || ns === 'complaint_resolved' ? 'bg-success text-success-foreground hover:bg-success/90' :
+                            ns === 'complaint_rejected' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' :
+                            'bg-warning text-warning-foreground hover:bg-warning/90'
+                          }`}>
+                          {COMPLAINT_STATUS_LABELS[ns]}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {nextStatuses.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
+                    <div className="mt-3 flex flex-wrap gap-2 border-t pt-4">
                       <span className="mr-1 self-center text-xs text-muted-foreground">Akcie:</span>
                       {nextStatuses.map(ns => (
                         <button key={ns} onClick={() => handleStatusChange(ticket.id, ns)}

@@ -121,6 +121,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       requestType: 'complaint',
       issueType,
       severity: severity || undefined,
+      suggestedSolution: selectedSolution || undefined,
     });
     toast.success('Reklamácia bola odoslaná!');
     setSubmitting(false);
