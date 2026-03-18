@@ -2,7 +2,8 @@ export type RequestType = 'return' | 'complaint' | 'other';
 
 export type TicketStatus = 'new' | 'in_review' | 'approved' | 'rejected' | 'refund_processing' | 'completed';
 
-export type IssueType = 'damaged' | 'missing_part' | 'wrong_product';
+export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'other_issue';
+export type SuggestedSolution = 'exchange' | 'refund' | 'send_missing';
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type RefundMethod = 'bank_transfer' | 'original_payment';
 
@@ -39,9 +40,16 @@ export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
 };
 
 export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
-  damaged: 'Poškodený produkt',
-  missing_part: 'Chýbajúce diely',
-  wrong_product: 'Nesprávny produkt',
+  damaged: 'Poškodený tovar',
+  missing_part: 'Chýbajúci tovar',
+  wrong_product: 'Nesprávny tovar',
+  other_issue: 'Iný problém',
+};
+
+export const SUGGESTED_SOLUTION_LABELS: Record<SuggestedSolution, string> = {
+  exchange: 'Výmena produktov',
+  refund: 'Vrátenie finančných prostriedkov',
+  send_missing: 'Doposlanie chýbajúcich produktov',
 };
 
 export const SEVERITY_LABELS: Record<SeverityLevel, string> = {

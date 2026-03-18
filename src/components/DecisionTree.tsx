@@ -217,9 +217,10 @@ export const DecisionTree = ({ onComplete }: Props) => {
           </div>
           <div className="space-y-3">
             {([
-              { type: 'damaged' as IssueType, title: 'Poškodený produkt', desc: 'Tovar prišiel zlomený, poškriabaný alebo fyzicky poškodený', icon: AlertOctagon },
-              { type: 'missing_part' as IssueType, title: 'Chýbajúce diely', desc: 'Balík je nekompletný alebo chýbajú časti', icon: PackageX },
-              { type: 'wrong_product' as IssueType, title: 'Nesprávny produkt', desc: 'Dostal som iný tovar ako bol objednaný', icon: Wrench },
+              { type: 'damaged' as IssueType, title: 'Poškodený tovar', desc: 'Tovar prišiel zlomený, poškriabaný alebo fyzicky poškodený', icon: AlertOctagon },
+              { type: 'missing_part' as IssueType, title: 'Chýbajúci tovar', desc: 'Balík je nekompletný alebo chýbajú časti', icon: PackageX },
+              { type: 'wrong_product' as IssueType, title: 'Nesprávny tovar', desc: 'Dostal som iný tovar ako bol objednaný', icon: Wrench },
+              { type: 'other_issue' as IssueType, title: 'Iný problém', desc: 'Iný typ problému s objednávkou', icon: HelpCircle },
             ]).map(({ type, title, desc, icon: Icon }) => (
               <button
                 key={type}
