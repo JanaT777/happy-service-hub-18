@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
   addTicket: (ticket: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => void;
   updateTicketStatus: (id: string, status: TicketStatus) => void;
   updateComplaintStatus: (id: string, complaintStatus: ComplaintStatus) => void;
+  updateReturnStatus: (id: string, returnStatus: ReturnStatus) => void;
+  updateOtherStatus: (id: string, otherStatus: OtherStatus) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
@@ -41,7 +43,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       requestType: 'return',
       refundMethod: 'original_payment',
       withinReturnWindow: true,
-      status: 'in_review',
+      returnStatus: 'return_submitted',
+      status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     },
@@ -53,7 +56,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       description: 'Môžem zmeniť doručovaciu adresu pre moju čakajúcu objednávku?',
       attachments: [],
       requestType: 'other',
-      status: 'approved',
+      otherStatus: 'other_submitted',
+      status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 0.5).toISOString(),
     },
@@ -66,6 +70,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: `TK-${generateId()}`,
       status: 'new' as TicketStatus,
       complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
+      returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
+      otherStatus: data.requestType === 'other' ? 'other_submitted' as OtherStatus : undefined,
       createdAt: now,
       updatedAt: now,
     }, ...prev]);
@@ -83,10 +89,22 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     ));
   }, []);
 
+  const updateReturnStatus = useCallback((id: string, returnStatus: ReturnStatus) => {
+    setTickets(prev => prev.map(t =>
+      t.id === id ? { ...t, returnStatus, updatedAt: new Date().toISOString() } : t
+    ));
+  }, []);
+
+  const updateOtherStatus = useCallback((id: string, otherStatus: OtherStatus) => {
+    setTickets(prev => prev.map(t =>
+      t.id === id ? { ...t, otherStatus, updatedAt: new Date().toISOString() } : t
+    ));
+  }, []);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, getTicket }}>
+    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, getTicket }}>
       {children}
     </TicketContext.Provider>
   );

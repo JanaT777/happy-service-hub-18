@@ -4,18 +4,18 @@ import {
   TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS, STATUS_FLOW,
   ISSUE_TYPE_LABELS, SEVERITY_LABELS, REFUND_METHOD_LABELS,
   SUGGESTED_SOLUTION_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_FLOW,
-  RequestType, Ticket, ComplaintStatus,
+  RETURN_STATUS_LABELS, RETURN_STATUS_FLOW, OTHER_STATUS_LABELS, OTHER_STATUS_FLOW,
+  RequestType, Ticket, ComplaintStatus, ReturnStatus, OtherStatus,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, CalendarIcon, RefreshCw, FileText } from 'lucide-react';
+import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, CalendarIcon, RefreshCw, FileText, Truck, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDistanceToNow, isAfter, isBefore, startOfDay, endOfDay, subDays } from 'date-fns';
+import { formatDistanceToNow, isBefore, isAfter, startOfDay, endOfDay, subDays, format } from 'date-fns';
 import { sk } from 'date-fns/locale';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
 
 type Section = 'all' | 'new' | 'in_review' | 'returns_approval' | 'complaints_review' | 'refunds';
 
@@ -37,7 +37,8 @@ const DATE_PRESETS = [
   { label: 'Posledných 30 dní', days: 30 },
 ];
 
-const COMPLAINT_STATUS_COLORS: Record<ComplaintStatus, string> = {
+const WORKFLOW_STATUS_COLORS: Record<string, string> = {
+  // Complaint
   complaint_new: 'bg-info/15 text-info border-info/30',
   complaint_pickup_ordered: 'bg-primary/15 text-primary border-primary/30',
   complaint_received: 'bg-primary/15 text-primary border-primary/30',
@@ -48,10 +49,56 @@ const COMPLAINT_STATUS_COLORS: Record<ComplaintStatus, string> = {
   complaint_refund_processing: 'bg-primary/15 text-primary border-primary/30',
   complaint_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
   complaint_resolved: 'bg-muted text-muted-foreground border-muted',
+  // Return
+  return_submitted: 'bg-info/15 text-info border-info/30',
+  return_received: 'bg-primary/15 text-primary border-primary/30',
+  return_inspecting: 'bg-warning/15 text-warning border-warning/30',
+  return_refund_processing: 'bg-primary/15 text-primary border-primary/30',
+  return_completed: 'bg-muted text-muted-foreground border-muted',
+  return_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
+  // Other
+  other_submitted: 'bg-info/15 text-info border-info/30',
+  other_in_progress: 'bg-warning/15 text-warning border-warning/30',
+  other_completed: 'bg-muted text-muted-foreground border-muted',
+  other_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
+};
+
+const getActionColor = (status: string) => {
+  if (status.includes('completed') || status.includes('resolved') || status.includes('approved'))
+    return 'bg-success text-success-foreground hover:bg-success/90';
+  if (status.includes('rejected'))
+    return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
+  if (status.includes('refund'))
+    return 'bg-primary text-primary-foreground hover:bg-primary/90';
+  if (status.includes('waiting'))
+    return 'bg-destructive/80 text-destructive-foreground hover:bg-destructive/70';
+  if (status.includes('in_progress'))
+    return 'bg-warning text-warning-foreground hover:bg-warning/90';
+  return 'bg-secondary text-secondary-foreground hover:bg-muted';
+};
+
+const getWorkflowLabel = (ticket: Ticket): string | undefined => {
+  if (ticket.requestType === 'complaint' && ticket.complaintStatus) return COMPLAINT_STATUS_LABELS[ticket.complaintStatus];
+  if (ticket.requestType === 'return' && ticket.returnStatus) return RETURN_STATUS_LABELS[ticket.returnStatus];
+  if (ticket.requestType === 'other' && ticket.otherStatus) return OTHER_STATUS_LABELS[ticket.otherStatus];
+  return undefined;
+};
+
+const getWorkflowStatusKey = (ticket: Ticket): string | undefined => {
+  if (ticket.requestType === 'complaint') return ticket.complaintStatus;
+  if (ticket.requestType === 'return') return ticket.returnStatus;
+  if (ticket.requestType === 'other') return ticket.otherStatus;
+  return undefined;
+};
+
+const getWorkflowIcon = (type: RequestType) => {
+  if (type === 'complaint') return FileText;
+  if (type === 'return') return RotateCcw;
+  return Truck;
 };
 
 const Admin = () => {
-  const { tickets, updateTicketStatus, updateComplaintStatus } = useTickets();
+  const { tickets, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus } = useTickets();
   const [activeSection, setActiveSection] = useState<Section>('all');
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all');
@@ -82,9 +129,30 @@ const Admin = () => {
     toast.success(`Tiket aktualizovaný na ${STATUS_LABELS[newStatus]}`);
   };
 
-  const handleComplaintStatusChange = (id: string, newStatus: ComplaintStatus) => {
-    updateComplaintStatus(id, newStatus);
-    toast.success(`Stav reklamácie aktualizovaný na "${COMPLAINT_STATUS_LABELS[newStatus]}"`);
+  const handleWorkflowChange = (ticket: Ticket, newStatus: string) => {
+    if (ticket.requestType === 'complaint') {
+      updateComplaintStatus(ticket.id, newStatus as ComplaintStatus);
+      toast.success(`Stav reklamácie: "${COMPLAINT_STATUS_LABELS[newStatus as ComplaintStatus]}"`);
+    } else if (ticket.requestType === 'return') {
+      updateReturnStatus(ticket.id, newStatus as ReturnStatus);
+      toast.success(`Stav vrátenia: "${RETURN_STATUS_LABELS[newStatus as ReturnStatus]}"`);
+    } else {
+      updateOtherStatus(ticket.id, newStatus as OtherStatus);
+      toast.success(`Stav požiadavky: "${OTHER_STATUS_LABELS[newStatus as OtherStatus]}"`);
+    }
+  };
+
+  const getNextStatuses = (ticket: Ticket): string[] => {
+    if (ticket.requestType === 'complaint' && ticket.complaintStatus) return COMPLAINT_STATUS_FLOW[ticket.complaintStatus] || [];
+    if (ticket.requestType === 'return' && ticket.returnStatus) return RETURN_STATUS_FLOW[ticket.returnStatus] || [];
+    if (ticket.requestType === 'other' && ticket.otherStatus) return OTHER_STATUS_FLOW[ticket.otherStatus] || [];
+    return [];
+  };
+
+  const getStatusLabel = (ticket: Ticket, status: string): string => {
+    if (ticket.requestType === 'complaint') return COMPLAINT_STATUS_LABELS[status as ComplaintStatus] || status;
+    if (ticket.requestType === 'return') return RETURN_STATUS_LABELS[status as ReturnStatus] || status;
+    return OTHER_STATUS_LABELS[status as OtherStatus] || status;
   };
 
   const sectionCounts = useMemo(() =>
@@ -112,7 +180,7 @@ const Admin = () => {
         <p className="text-muted-foreground">Spravujte a riešte požiadavky zákazníkov</p>
       </div>
 
-      {/* Súhrnné karty */}
+      {/* Summary cards */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {SECTION_CONFIG.filter(s => s.key !== 'all').map(s => (
           <button key={s.key} onClick={() => setActiveSection(prev => prev === s.key ? 'all' : s.key)}
@@ -123,7 +191,7 @@ const Admin = () => {
         ))}
       </div>
 
-      {/* Vyhľadávanie + prepínač filtrov */}
+      {/* Search + filter toggle */}
       <div className="mb-4 flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -139,7 +207,7 @@ const Admin = () => {
         </Button>
       </div>
 
-      {/* Panel filtrov */}
+      {/* Filter panel */}
       {showFilters && (
         <div className="mb-6 rounded-xl border bg-card p-4">
           <div className="flex items-center justify-between mb-3">
@@ -151,7 +219,6 @@ const Admin = () => {
             )}
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            {/* Filter podľa stavu */}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Stav</label>
               <div className="flex flex-wrap gap-1.5">
@@ -163,7 +230,6 @@ const Admin = () => {
                 ))}
               </div>
             </div>
-            {/* Filter podľa typu požiadavky */}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Typ požiadavky</label>
               <div className="flex flex-wrap gap-1.5">
@@ -175,7 +241,6 @@ const Admin = () => {
                 ))}
               </div>
             </div>
-            {/* Filter podľa dátumu */}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Obdobie</label>
               <div className="flex flex-wrap gap-1.5 mb-2">
@@ -215,7 +280,7 @@ const Admin = () => {
         </div>
       )}
 
-      {/* Záložky sekcií */}
+      {/* Section tabs */}
       <Tabs value={activeSection} onValueChange={v => setActiveSection(v as Section)} className="mb-4">
         <TabsList className="w-full flex-wrap h-auto gap-1 bg-transparent p-0">
           {SECTION_CONFIG.map(s => (
@@ -226,7 +291,7 @@ const Admin = () => {
         </TabsList>
       </Tabs>
 
-      {/* Zoznam tiketov */}
+      {/* Ticket list */}
       <div className="space-y-3">
         {filtered.length === 0 && (
           <div className="rounded-xl border bg-card py-16 text-center text-muted-foreground">Žiadne tikety neboli nájdené.</div>
@@ -234,8 +299,11 @@ const Admin = () => {
         {filtered.map(ticket => {
           const isExpanded = expandedId === ticket.id;
           const nextStatuses = STATUS_FLOW[ticket.status];
-          const isComplaint = ticket.requestType === 'complaint';
-          const complaintNextStatuses = isComplaint && ticket.complaintStatus ? COMPLAINT_STATUS_FLOW[ticket.complaintStatus] : [];
+          const workflowLabel = getWorkflowLabel(ticket);
+          const workflowKey = getWorkflowStatusKey(ticket);
+          const workflowNextStatuses = getNextStatuses(ticket);
+          const WorkflowIcon = getWorkflowIcon(ticket.requestType);
+
           return (
             <div key={ticket.id} className="overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md">
               <button onClick={() => setExpandedId(isExpanded ? null : ticket.id)}
@@ -247,9 +315,9 @@ const Admin = () => {
                     <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
                       {REQUEST_TYPE_LABELS[ticket.requestType]}
                     </span>
-                    {isComplaint && ticket.complaintStatus && (
-                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${COMPLAINT_STATUS_COLORS[ticket.complaintStatus]}`}>
-                        {COMPLAINT_STATUS_LABELS[ticket.complaintStatus]}
+                    {workflowKey && workflowLabel && (
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${WORKFLOW_STATUS_COLORS[workflowKey] || 'bg-secondary text-secondary-foreground'}`}>
+                        {workflowLabel}
                       </span>
                     )}
                   </div>
@@ -312,32 +380,26 @@ const Admin = () => {
                     </div>
                   )}
 
-                  {/* Complaint status actions */}
-                  {isComplaint && complaintNextStatuses.length > 0 && (
+                  {/* Workflow status actions (per request type) */}
+                  {workflowNextStatuses.length > 0 && (
                     <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="mr-1 text-xs font-medium text-muted-foreground">Stav reklamácie:</span>
-                      {complaintNextStatuses.map(ns => {
-                        const color =
-                          ns === 'complaint_approved' || ns === 'complaint_resolved' ? 'bg-success text-success-foreground hover:bg-success/90' :
-                          ns === 'complaint_rejected' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' :
-                          ns === 'complaint_waiting_customer' ? 'bg-destructive/80 text-destructive-foreground hover:bg-destructive/70' :
-                          ns === 'complaint_refund_processing' ? 'bg-primary text-primary-foreground hover:bg-primary/90' :
-                          ns === 'complaint_in_progress' ? 'bg-warning text-warning-foreground hover:bg-warning/90' :
-                          'bg-secondary text-secondary-foreground hover:bg-muted';
-                        return (
-                          <button key={ns} onClick={() => handleComplaintStatusChange(ticket.id, ns)}
-                            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${color}`}>
-                            {COMPLAINT_STATUS_LABELS[ns]}
-                          </button>
-                        );
-                      })}
+                      <WorkflowIcon className="h-4 w-4 text-muted-foreground" />
+                      <span className="mr-1 text-xs font-medium text-muted-foreground">
+                        {ticket.requestType === 'complaint' ? 'Stav reklamácie:' :
+                         ticket.requestType === 'return' ? 'Stav vrátenia:' : 'Stav požiadavky:'}
+                      </span>
+                      {workflowNextStatuses.map(ns => (
+                        <button key={ns} onClick={() => handleWorkflowChange(ticket, ns)}
+                          className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${getActionColor(ns)}`}>
+                          {getStatusLabel(ticket, ns)}
+                        </button>
+                      ))}
                     </div>
                   )}
 
                   {nextStatuses.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2 border-t pt-4">
-                      <span className="mr-1 self-center text-xs text-muted-foreground">Akcie:</span>
+                      <span className="mr-1 self-center text-xs text-muted-foreground">Akcie tiketu:</span>
                       {nextStatuses.map(ns => (
                         <button key={ns} onClick={() => handleStatusChange(ticket.id, ns)}
                           className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
