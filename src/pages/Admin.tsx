@@ -39,8 +39,13 @@ const DATE_PRESETS = [
 
 const COMPLAINT_STATUS_COLORS: Record<ComplaintStatus, string> = {
   complaint_new: 'bg-info/15 text-info border-info/30',
+  complaint_pickup_ordered: 'bg-primary/15 text-primary border-primary/30',
+  complaint_received: 'bg-primary/15 text-primary border-primary/30',
+  complaint_inspecting: 'bg-warning/15 text-warning border-warning/30',
   complaint_in_progress: 'bg-warning/15 text-warning border-warning/30',
+  complaint_waiting_customer: 'bg-destructive/15 text-destructive border-destructive/30',
   complaint_approved: 'bg-success/15 text-success border-success/30',
+  complaint_refund_processing: 'bg-primary/15 text-primary border-primary/30',
   complaint_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
   complaint_resolved: 'bg-muted text-muted-foreground border-muted',
 };
