@@ -93,6 +93,14 @@ export const STATUS_FLOW: Record<TicketStatus, TicketStatus[]> = {
   completed: [],
 };
 
+export type PaymentMethod = 'card' | 'bank_transfer' | 'cash';
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  card: 'Platobná karta',
+  bank_transfer: 'Bankový prevod',
+  cash: 'Hotovosť / Dobierka',
+};
+
 export interface MockOrderProduct {
   name: string;
   quantity: number;
@@ -104,6 +112,7 @@ export interface MockOrder {
   products: MockOrderProduct[];
   orderDate: string;
   deliveryDate: string;
+  paymentMethod: PaymentMethod;
 }
 
 export const MOCK_ORDERS: Record<string, MockOrder> = {
@@ -117,6 +126,7 @@ export const MOCK_ORDERS: Record<string, MockOrder> = {
     ],
     orderDate: '2026-03-01',
     deliveryDate: '2026-03-05',
+    paymentMethod: 'card',
   },
   'ORD-10038': {
     customerName: 'Marek Horváth',
@@ -127,6 +137,7 @@ export const MOCK_ORDERS: Record<string, MockOrder> = {
     ],
     orderDate: '2026-02-15',
     deliveryDate: '2026-02-20',
+    paymentMethod: 'bank_transfer',
   },
   'ORD-10051': {
     customerName: 'Sara Kováčová',
@@ -137,6 +148,7 @@ export const MOCK_ORDERS: Record<string, MockOrder> = {
     ],
     orderDate: '2026-03-06',
     deliveryDate: '2026-03-10',
+    paymentMethod: 'cash',
   },
   'ORD-10055': {
     customerName: 'Peter Szabó',
@@ -148,6 +160,7 @@ export const MOCK_ORDERS: Record<string, MockOrder> = {
     ],
     orderDate: '2026-01-10',
     deliveryDate: '2026-01-15',
+    paymentMethod: 'card',
   },
 };
 
