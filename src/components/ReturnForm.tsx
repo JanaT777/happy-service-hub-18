@@ -239,12 +239,12 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
               <p className="text-sm font-medium">
                 {order.paymentMethod === 'card'
                   ? 'Vrátenie na pôvodnú platobnú metódu'
-                  : 'Vrátenie bankovým prevodom'}
+                  : 'Vrátenie na bankový účet'}
               </p>
               <p className="text-xs text-muted-foreground">
                 {order.paymentMethod === 'card'
                   ? 'Platba bola uskutočnená kartou – peniaze vrátime na rovnakú kartu (1-3 pracovné dni).'
-                  : 'Platba bola uskutočnená prevodom/hotovosťou – na vrátenie potrebujeme váš IBAN.'}
+                  : `Platba bola uskutočnená ${order.paymentMethod === 'cash' ? 'dobierkou' : 'bankovým prevodom'} – na vrátenie potrebujeme váš IBAN.`}
               </p>
             </div>
           </div>
