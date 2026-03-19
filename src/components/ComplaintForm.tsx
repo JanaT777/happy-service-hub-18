@@ -101,8 +101,13 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       if (!p.reason) newErrors[`${p.name}_reason`] = 'Povinné';
       if (!p.solution) newErrors[`${p.name}_solution`] = 'Povinné';
     });
-    if (needsIban && !iban.trim()) {
-      newErrors.iban = 'IBAN je povinný pri vrátení peňazí.';
+    if (needsIban) {
+      const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
+      if (!trimmedIban) {
+        newErrors.iban = 'IBAN je povinný pri vrátení peňazí.';
+      } else if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(trimmedIban)) {
+        newErrors.iban = 'Neplatný formát IBAN (napr. SK31 1200 0000 1987 4263 7541).';
+      }
     }
     if (!description.trim() || description.trim().length < 10) {
       newErrors.description = 'Popíšte problém aspoň 10 znakmi.';
