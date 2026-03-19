@@ -85,8 +85,13 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
     if (!description.trim() || description.trim().length < 10) {
       newErrors.description = 'Popíšte dôvod vrátenia aspoň 10 znakmi.';
     }
-    if (needsIban && !iban.trim()) {
-      newErrors.iban = 'IBAN je povinný pri tomto type platby.';
+    if (needsIban) {
+      const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
+      if (!trimmedIban) {
+        newErrors.iban = 'IBAN je povinný pri tomto type platby.';
+      } else if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(trimmedIban)) {
+        newErrors.iban = 'Neplatný formát IBAN (napr. SK31 1200 0000 1987 4263 7541).';
+      }
     }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
