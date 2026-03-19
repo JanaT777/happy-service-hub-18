@@ -48,11 +48,16 @@ export const STATUS_LABELS: Record<TicketStatus, string> = {
 };
 
 export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
-  complaint_new: 'Nová',
+  complaint_new: 'Reklamácia zaevidovaná',
+  complaint_pickup_ordered: 'Objednávka zvozu',
+  complaint_received: 'Zásielka evidovaná na sklade',
+  complaint_inspecting: 'Kontrola tovaru',
   complaint_in_progress: 'V riešení',
-  complaint_approved: 'Schválená',
-  complaint_rejected: 'Zamietnutá',
-  complaint_resolved: 'Vybavená',
+  complaint_waiting_customer: 'Čaká na doplnenie od zákazníka',
+  complaint_approved: 'Akceptované',
+  complaint_refund_processing: 'Refundácia v procese',
+  complaint_rejected: 'Reklamácia zamietnutá',
+  complaint_resolved: 'Reklamácia vybavená',
 };
 
 export const COMPLAINT_STATUS_FLOW: Record<ComplaintStatus, ComplaintStatus[]> = {
