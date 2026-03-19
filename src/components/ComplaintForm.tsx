@@ -431,7 +431,8 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
                   <span className="font-medium">{p.name}</span>
                   <span className="text-muted-foreground">({p.qty}×)</span>
                   <span className="rounded bg-secondary px-2 py-0.5 text-xs">{REASON_OPTIONS.find(r => r.value === p.reason)?.label}</span>
-                  <span className="rounded bg-primary/10 text-primary px-2 py-0.5 text-xs">{SOLUTION_OPTIONS.find(s => s.value === p.solution)?.label}</span>
+                  <span className="rounded bg-primary/10 text-primary px-2 py-0.5 text-xs">{SOLUTION_META[p.solution!]?.label}</span>
+                  {p.photoFile && <span className="rounded bg-accent px-2 py-0.5 text-xs">📷 {p.photoFile.name}</span>}
                 </div>
               ))}
             </div>
