@@ -96,7 +96,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
   };
 
   const updateProduct = (name: string, update: Partial<SelectedProduct>) => {
-    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, ...update } : p));
+    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, ...update, ...(update.reason && update.reason !== p.reason ? { solution: null } : {}) } : p));
   };
 
   const needsIban = selectedProducts.some(p => p.solution === 'refund');
