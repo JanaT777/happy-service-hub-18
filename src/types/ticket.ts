@@ -126,6 +126,7 @@ export const MOCK_ORDERS: Record<string, MockOrder> = {
     ],
     orderDate: '2026-03-01',
     deliveryDate: '2026-03-05',
+    paymentMethod: 'card',
   },
   'ORD-10038': {
     customerName: 'Marek Horváth',
@@ -136,6 +137,7 @@ export const MOCK_ORDERS: Record<string, MockOrder> = {
     ],
     orderDate: '2026-02-15',
     deliveryDate: '2026-02-20',
+    paymentMethod: 'bank_transfer',
   },
   'ORD-10051': {
     customerName: 'Sara Kováčová',
@@ -146,6 +148,7 @@ export const MOCK_ORDERS: Record<string, MockOrder> = {
     ],
     orderDate: '2026-03-06',
     deliveryDate: '2026-03-10',
+    paymentMethod: 'cash',
   },
   'ORD-10055': {
     customerName: 'Peter Szabó',
@@ -157,6 +160,7 @@ export const MOCK_ORDERS: Record<string, MockOrder> = {
     ],
     orderDate: '2026-01-10',
     deliveryDate: '2026-01-15',
+    paymentMethod: 'card',
   },
 };
 
