@@ -61,10 +61,15 @@ export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
 };
 
 export const COMPLAINT_STATUS_FLOW: Record<ComplaintStatus, ComplaintStatus[]> = {
-  complaint_new: ['complaint_in_progress'],
-  complaint_in_progress: ['complaint_approved', 'complaint_rejected'],
-  complaint_approved: ['complaint_resolved'],
-  complaint_rejected: ['complaint_resolved'],
+  complaint_new: ['complaint_pickup_ordered', 'complaint_in_progress'],
+  complaint_pickup_ordered: ['complaint_received'],
+  complaint_received: ['complaint_inspecting'],
+  complaint_inspecting: ['complaint_in_progress'],
+  complaint_in_progress: ['complaint_waiting_customer', 'complaint_approved', 'complaint_rejected'],
+  complaint_waiting_customer: ['complaint_in_progress'],
+  complaint_approved: ['complaint_refund_processing', 'complaint_resolved'],
+  complaint_refund_processing: ['complaint_resolved'],
+  complaint_rejected: [],
   complaint_resolved: [],
 };
 

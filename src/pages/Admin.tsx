@@ -317,16 +317,21 @@ const Admin = () => {
                     <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
                       <FileText className="h-4 w-4 text-muted-foreground" />
                       <span className="mr-1 text-xs font-medium text-muted-foreground">Stav reklamácie:</span>
-                      {complaintNextStatuses.map(ns => (
-                        <button key={ns} onClick={() => handleComplaintStatusChange(ticket.id, ns)}
-                          className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                            ns === 'complaint_approved' || ns === 'complaint_resolved' ? 'bg-success text-success-foreground hover:bg-success/90' :
-                            ns === 'complaint_rejected' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' :
-                            'bg-warning text-warning-foreground hover:bg-warning/90'
-                          }`}>
-                          {COMPLAINT_STATUS_LABELS[ns]}
-                        </button>
-                      ))}
+                      {complaintNextStatuses.map(ns => {
+                        const color =
+                          ns === 'complaint_approved' || ns === 'complaint_resolved' ? 'bg-success text-success-foreground hover:bg-success/90' :
+                          ns === 'complaint_rejected' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' :
+                          ns === 'complaint_waiting_customer' ? 'bg-destructive/80 text-destructive-foreground hover:bg-destructive/70' :
+                          ns === 'complaint_refund_processing' ? 'bg-primary text-primary-foreground hover:bg-primary/90' :
+                          ns === 'complaint_in_progress' ? 'bg-warning text-warning-foreground hover:bg-warning/90' :
+                          'bg-secondary text-secondary-foreground hover:bg-muted';
+                        return (
+                          <button key={ns} onClick={() => handleComplaintStatusChange(ticket.id, ns)}
+                            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${color}`}>
+                            {COMPLAINT_STATUS_LABELS[ns]}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 
