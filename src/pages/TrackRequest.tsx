@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import { useTickets } from '@/context/TicketContext';
-import { STATUS_LABELS, REQUEST_TYPE_LABELS, SEVERITY_LABELS, REFUND_METHOD_LABELS, ISSUE_TYPE_LABELS, Ticket } from '@/types/ticket';
-import { StatusBadge } from '@/components/StatusBadge';
+import {
+  REQUEST_TYPE_LABELS, SEVERITY_LABELS, REFUND_METHOD_LABELS,
+  ISSUE_TYPE_LABELS, SUGGESTED_SOLUTION_LABELS,
+  COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
+  COMPLAINT_STATUS_FLOW, RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
+  Ticket, ComplaintStatus, ReturnStatus, OtherStatus,
+} from '@/types/ticket';
 import { Button } from '@/components/ui/button';
-import { Search, Mail, Hash, Package, AlertTriangle, Banknote, Clock, CheckCircle2, Circle, ArrowRight } from 'lucide-react';
-import { format } from 'date-fns';
+import {
+  Search, Mail, Hash, Package, AlertTriangle, Banknote, Clock,
+  CheckCircle2, Circle, FileText, RotateCcw, Truck, RefreshCw, CalendarDays,
+} from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
 import { sk } from 'date-fns/locale';
 
 const searchSchema = z.object({
@@ -13,42 +21,150 @@ const searchSchema = z.object({
   orderNumber: z.string().trim().min(1, { message: 'Prosím zadajte číslo objednávky' }).max(50),
 });
 
-const STATUS_ORDER = ['new', 'in_review', 'approved', 'rejected', 'refund_processing', 'completed'] as const;
+// Build the full workflow path for a ticket
+const getWorkflowTimeline = (ticket: Ticket): { key: string; label: string; done: boolean; current: boolean }[] => {
+  if (ticket.requestType === 'complaint' && ticket.complaintStatus) {
+    const allStatuses = Object.keys(COMPLAINT_STATUS_LABELS) as ComplaintStatus[];
+    const flow = COMPLAINT_STATUS_FLOW;
+    return buildTimeline(allStatuses, ticket.complaintStatus, flow, COMPLAINT_STATUS_LABELS);
+  }
+  if (ticket.requestType === 'return' && ticket.returnStatus) {
+    const allStatuses = Object.keys(RETURN_STATUS_LABELS) as ReturnStatus[];
+    const flow = RETURN_STATUS_FLOW;
+    return buildTimeline(allStatuses, ticket.returnStatus, flow, RETURN_STATUS_LABELS);
+  }
+  if (ticket.requestType === 'other' && ticket.otherStatus) {
+    const allStatuses = Object.keys(OTHER_STATUS_LABELS) as OtherStatus[];
+    const flow = OTHER_STATUS_FLOW;
+    return buildTimeline(allStatuses, ticket.otherStatus, flow, OTHER_STATUS_LABELS);
+  }
+  return [];
+};
 
-const StatusTimeline = ({ ticket }: { ticket: Ticket }) => {
-  const currentIdx = STATUS_ORDER.indexOf(ticket.status);
-  const isRejected = ticket.status === 'rejected';
-  const hasRefund = ticket.requestType === 'return' || ticket.status === 'refund_processing';
-  
-  let path = ['new', 'in_review'];
-  if (isRejected) {
-    path.push('rejected');
-  } else {
-    path.push('approved');
-    if (hasRefund) path.push('refund_processing');
-    path.push('completed');
+function buildTimeline<T extends string>(
+  allStatuses: T[],
+  currentStatus: T,
+  flow: Record<T, T[]>,
+  labels: Record<T, string>,
+): { key: string; label: string; done: boolean; current: boolean }[] {
+  // BFS to find path from first status to current
+  const start = allStatuses[0];
+  const visited = new Set<T>();
+  const parent = new Map<T, T | null>();
+  const queue: T[] = [start];
+  visited.add(start);
+  parent.set(start, null);
+
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+    if (node === currentStatus) break;
+    for (const next of (flow[node] || [])) {
+      if (!visited.has(next)) {
+        visited.add(next);
+        parent.set(next, node);
+        queue.push(next);
+      }
+    }
   }
 
+  // Reconstruct path
+  const path: T[] = [];
+  let cur: T | null = currentStatus;
+  while (cur !== null) {
+    path.unshift(cur);
+    cur = parent.get(cur) ?? null;
+    if (cur && path.includes(cur)) break; // safety
+  }
+
+  // Add future possible steps (first option from flow)
+  let last = path[path.length - 1];
+  const futureSteps: T[] = [];
+  for (let i = 0; i < 3; i++) {
+    const nexts = flow[last];
+    if (!nexts || nexts.length === 0) break;
+    const next = nexts[0]; // take the primary path
+    if (path.includes(next) || futureSteps.includes(next)) break;
+    futureSteps.push(next);
+    last = next;
+  }
+
+  const currentIdx = path.length - 1;
+
+  return [
+    ...path.map((s, i) => ({
+      key: s,
+      label: labels[s],
+      done: i < currentIdx,
+      current: i === currentIdx,
+    })),
+    ...futureSteps.map(s => ({
+      key: s,
+      label: labels[s],
+      done: false,
+      current: false,
+    })),
+  ];
+}
+
+const getTypeIcon = (type: string) => {
+  if (type === 'complaint') return FileText;
+  if (type === 'return') return RotateCcw;
+  return Truck;
+};
+
+const getTypeColor = (type: string) => {
+  if (type === 'complaint') return 'bg-warning/15 text-warning border-warning/30';
+  if (type === 'return') return 'bg-info/15 text-info border-info/30';
+  return 'bg-primary/15 text-primary border-primary/30';
+};
+
+const WorkflowTimeline = ({ ticket }: { ticket: Ticket }) => {
+  const steps = getWorkflowTimeline(ticket);
+
+  if (steps.length === 0) return null;
+
   return (
-    <div className="flex flex-wrap items-center gap-1 py-3">
-      {path.map((step, i) => {
-        const stepIdx = STATUS_ORDER.indexOf(step as any);
-        const isDone = stepIdx < currentIdx || (stepIdx === currentIdx && step === 'completed');
-        const isCurrent = step === ticket.status;
-        return (
-          <div key={step} className="flex items-center gap-1">
-            {i > 0 && <ArrowRight className="h-3 w-3 text-muted-foreground/50" />}
-            <div className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-              isCurrent ? 'border-primary bg-primary/10 text-primary' :
-              isDone ? 'border-success/30 bg-success/10 text-success' :
-              'border-border bg-muted/50 text-muted-foreground'
+    <div className="space-y-0">
+      {steps.map((step, i) => (
+        <div key={step.key} className="flex items-stretch gap-3">
+          {/* Vertical line + dot */}
+          <div className="flex flex-col items-center">
+            <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
+              step.current
+                ? 'border-primary bg-primary text-primary-foreground'
+                : step.done
+                  ? 'border-success bg-success text-success-foreground'
+                  : 'border-border bg-muted text-muted-foreground'
             }`}>
-              {isDone ? <CheckCircle2 className="h-3 w-3" /> : isCurrent ? <Clock className="h-3 w-3" /> : <Circle className="h-3 w-3" />}
-              {STATUS_LABELS[step as keyof typeof STATUS_LABELS]}
+              {step.done ? (
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              ) : step.current ? (
+                <Clock className="h-3.5 w-3.5" />
+              ) : (
+                <Circle className="h-3 w-3" />
+              )}
             </div>
+            {i < steps.length - 1 && (
+              <div className={`w-0.5 flex-1 min-h-[16px] ${
+                step.done ? 'bg-success/40' : 'bg-border'
+              }`} />
+            )}
           </div>
-        );
-      })}
+          {/* Label */}
+          <div className={`pb-3 pt-1 ${step.current ? '' : step.done ? '' : 'opacity-50'}`}>
+            <span className={`text-sm font-medium ${
+              step.current ? 'text-primary font-semibold' : step.done ? 'text-foreground' : 'text-muted-foreground'
+            }`}>
+              {step.label}
+            </span>
+            {step.current && (
+              <span className="ml-2 rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                Aktuálny stav
+              </span>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
@@ -115,6 +231,9 @@ const TrackRequest = () => {
         <Button type="submit" className="mt-4 w-full gap-2">
           <Search className="h-4 w-4" /> Vyhľadať požiadavku
         </Button>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Skúste: jana@example.com / ORD-10042 alebo marek@example.com / ORD-10038
+        </p>
       </form>
 
       {searched && results !== null && (
@@ -125,56 +244,118 @@ const TrackRequest = () => {
               <p className="mt-1 text-sm text-muted-foreground">Skontrolujte svoje údaje a skúste to znova.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">{results.length} {results.length === 1 ? 'požiadavka nájdená' : results.length < 5 ? 'požiadavky nájdené' : 'požiadaviek nájdených'}</p>
-              {results.map(ticket => (
-                <div key={ticket.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
-                  <div className="p-5">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="space-y-5">
+              <p className="text-sm text-muted-foreground">
+                {results.length} {results.length === 1 ? 'požiadavka nájdená' : results.length < 5 ? 'požiadavky nájdené' : 'požiadaviek nájdených'}
+              </p>
+              {results.map(ticket => {
+                const TypeIcon = getTypeIcon(ticket.requestType);
+                const typeColor = getTypeColor(ticket.requestType);
+                return (
+                  <div key={ticket.id} className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                    {/* Header */}
+                    <div className="border-b bg-secondary/30 px-5 py-3 flex flex-wrap items-center gap-2">
                       <span className="font-heading text-sm font-bold">{ticket.id}</span>
-                      <StatusBadge status={ticket.status} />
-                      <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                      <span className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${typeColor}`}>
+                        <TypeIcon className="h-3 w-3" />
                         {REQUEST_TYPE_LABELS[ticket.requestType]}
+                      </span>
+                      <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarDays className="h-3 w-3" />
+                        {format(new Date(ticket.createdAt), 'd. MMM yyyy', { locale: sk })}
                       </span>
                     </div>
 
-                    <StatusTimeline ticket={ticket} />
+                    <div className="p-5 space-y-5">
+                      {/* Current status highlight */}
+                      <div className="rounded-lg border bg-primary/5 border-primary/20 p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="h-4 w-4 text-primary" />
+                          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Aktuálny stav</span>
+                        </div>
+                        <p className="text-lg font-bold text-primary">
+                          {ticket.requestType === 'complaint' && ticket.complaintStatus
+                            ? COMPLAINT_STATUS_LABELS[ticket.complaintStatus]
+                            : ticket.requestType === 'return' && ticket.returnStatus
+                              ? RETURN_STATUS_LABELS[ticket.returnStatus]
+                              : ticket.requestType === 'other' && ticket.otherStatus
+                                ? OTHER_STATUS_LABELS[ticket.otherStatus]
+                                : 'Nový'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Aktualizované {formatDistanceToNow(new Date(ticket.updatedAt), { addSuffix: true, locale: sk })}
+                        </p>
+                      </div>
 
-                    <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Package className="h-4 w-4 shrink-0" /> {ticket.product}
+                      {/* Timeline */}
+                      <div>
+                        <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Priebeh spracovania</h3>
+                        <WorkflowTimeline ticket={ticket} />
                       </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="h-4 w-4 shrink-0" /> Odoslané {format(new Date(ticket.createdAt), 'd. MMM yyyy', { locale: sk })}
+
+                      {/* Details */}
+                      <div>
+                        <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Detaily požiadavky</h3>
+                        <div className="grid gap-2 text-sm sm:grid-cols-2">
+                          <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
+                            <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div>
+                              <span className="text-[11px] text-muted-foreground">Produkt</span>
+                              <p className="font-medium leading-tight">{ticket.product}</p>
+                            </div>
+                          </div>
+                          {ticket.issueType && (
+                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
+                              <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <div>
+                                <span className="text-[11px] text-muted-foreground">Typ problému</span>
+                                <p className="font-medium leading-tight">{ISSUE_TYPE_LABELS[ticket.issueType]}</p>
+                              </div>
+                            </div>
+                          )}
+                          {ticket.suggestedSolution && (
+                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
+                              <RefreshCw className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <div>
+                                <span className="text-[11px] text-muted-foreground">Riešenie</span>
+                                <p className="font-medium leading-tight">{SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</p>
+                              </div>
+                            </div>
+                          )}
+                          {ticket.severity && (
+                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
+                              <span className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${
+                                ticket.severity === 'critical' ? 'bg-destructive' :
+                                ticket.severity === 'high' ? 'bg-warning' :
+                                ticket.severity === 'medium' ? 'bg-info' : 'bg-success'
+                              }`} />
+                              <div>
+                                <span className="text-[11px] text-muted-foreground">Závažnosť</span>
+                                <p className="font-medium leading-tight">{SEVERITY_LABELS[ticket.severity]}</p>
+                              </div>
+                            </div>
+                          )}
+                          {ticket.refundMethod && (
+                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
+                              <Banknote className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <div>
+                                <span className="text-[11px] text-muted-foreground">Spôsob vrátenia</span>
+                                <p className="font-medium leading-tight">{REFUND_METHOD_LABELS[ticket.refundMethod]}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {ticket.issueType && (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <AlertTriangle className="h-4 w-4 shrink-0" /> {ISSUE_TYPE_LABELS[ticket.issueType]}
-                        </div>
-                      )}
-                      {ticket.severity && (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className={`inline-block h-2.5 w-2.5 rounded-full ${
-                            ticket.severity === 'critical' ? 'bg-destructive' :
-                            ticket.severity === 'high' ? 'bg-warning' :
-                            ticket.severity === 'medium' ? 'bg-info' : 'bg-success'
-                          }`} />
-                          {SEVERITY_LABELS[ticket.severity]}
-                        </div>
-                      )}
-                      {ticket.refundMethod && (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Banknote className="h-4 w-4 shrink-0" /> {REFUND_METHOD_LABELS[ticket.refundMethod]}
-                        </div>
-                      )}
+
+                      {/* Description */}
+                      <div className="rounded-lg border bg-secondary/30 p-3">
+                        <span className="text-[11px] font-medium text-muted-foreground">Popis</span>
+                        <p className="mt-1 text-sm">{ticket.description}</p>
+                      </div>
                     </div>
-
-                    <p className="mt-3 rounded-lg bg-secondary/50 p-3 text-sm">{ticket.description}</p>
-
-                    <p className="mt-2 text-xs text-muted-foreground">Naposledy aktualizované: {format(new Date(ticket.updatedAt), 'd. MMM yyyy · H:mm', { locale: sk })}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </>
