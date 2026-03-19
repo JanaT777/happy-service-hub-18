@@ -110,6 +110,10 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     selectedProducts.forEach(p => {
       if (!p.reason) newErrors[`${p.name}_reason`] = 'Povinné';
       if (!p.solution) newErrors[`${p.name}_solution`] = 'Povinné';
+      const reasonMeta = REASON_OPTIONS.find(r => r.value === p.reason);
+      if (reasonMeta?.photoRequired && !p.photoFile) {
+        newErrors[`${p.name}_photo`] = 'Fotografia je povinná pre tento typ reklamácie.';
+      }
     });
     if (needsIban) {
       const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
