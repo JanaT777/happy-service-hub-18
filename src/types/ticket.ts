@@ -93,6 +93,14 @@ export const STATUS_FLOW: Record<TicketStatus, TicketStatus[]> = {
   completed: [],
 };
 
+export type PaymentMethod = 'card' | 'bank_transfer' | 'cash';
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  card: 'Platobná karta',
+  bank_transfer: 'Bankový prevod',
+  cash: 'Hotovosť / Dobierka',
+};
+
 export interface MockOrderProduct {
   name: string;
   quantity: number;
@@ -104,6 +112,7 @@ export interface MockOrder {
   products: MockOrderProduct[];
   orderDate: string;
   deliveryDate: string;
+  paymentMethod: PaymentMethod;
 }
 
 export const MOCK_ORDERS: Record<string, MockOrder> = {
