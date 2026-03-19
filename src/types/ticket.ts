@@ -14,6 +14,20 @@ export type ComplaintStatus =
   | 'complaint_rejected'
   | 'complaint_resolved';
 
+export type ReturnStatus =
+  | 'return_submitted'
+  | 'return_received'
+  | 'return_inspecting'
+  | 'return_refund_processing'
+  | 'return_completed'
+  | 'return_rejected';
+
+export type OtherStatus =
+  | 'other_submitted'
+  | 'other_in_progress'
+  | 'other_completed'
+  | 'other_rejected';
+
 export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'other_issue';
 export type SuggestedSolution = 'exchange' | 'refund' | 'send_missing';
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
@@ -36,6 +50,8 @@ export interface Ticket {
   severity?: SeverityLevel;
   suggestedSolution?: SuggestedSolution;
   complaintStatus?: ComplaintStatus;
+  returnStatus?: ReturnStatus;
+  otherStatus?: OtherStatus;
 }
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
@@ -60,6 +76,22 @@ export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
   complaint_resolved: 'Reklamácia vybavená',
 };
 
+export const RETURN_STATUS_LABELS: Record<ReturnStatus, string> = {
+  return_submitted: 'Žiadosť podaná',
+  return_received: 'Zásielka evidovaná na sklade',
+  return_inspecting: 'Kontrola tovaru',
+  return_refund_processing: 'Akceptované – refundácia v procese',
+  return_completed: 'Vybavená',
+  return_rejected: 'Zamietnuté',
+};
+
+export const OTHER_STATUS_LABELS: Record<OtherStatus, string> = {
+  other_submitted: 'Požiadavka zaevidovaná',
+  other_in_progress: 'V riešení',
+  other_completed: 'Vybavená',
+  other_rejected: 'Zamietnutá',
+};
+
 export const COMPLAINT_STATUS_FLOW: Record<ComplaintStatus, ComplaintStatus[]> = {
   complaint_new: ['complaint_pickup_ordered', 'complaint_in_progress'],
   complaint_pickup_ordered: ['complaint_received'],
@@ -71,6 +103,22 @@ export const COMPLAINT_STATUS_FLOW: Record<ComplaintStatus, ComplaintStatus[]> =
   complaint_refund_processing: ['complaint_resolved'],
   complaint_rejected: [],
   complaint_resolved: [],
+};
+
+export const RETURN_STATUS_FLOW: Record<ReturnStatus, ReturnStatus[]> = {
+  return_submitted: ['return_received'],
+  return_received: ['return_inspecting'],
+  return_inspecting: ['return_refund_processing', 'return_rejected'],
+  return_refund_processing: ['return_completed'],
+  return_completed: [],
+  return_rejected: [],
+};
+
+export const OTHER_STATUS_FLOW: Record<OtherStatus, OtherStatus[]> = {
+  other_submitted: ['other_in_progress'],
+  other_in_progress: ['other_completed', 'other_rejected'],
+  other_completed: [],
+  other_rejected: [],
 };
 
 export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
