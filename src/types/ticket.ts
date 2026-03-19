@@ -139,6 +139,7 @@ export const SUGGESTED_SOLUTION_LABELS: Record<SuggestedSolution, string> = {
   exchange: 'Výmena produktov',
   refund: 'Vrátenie finančných prostriedkov',
   send_missing: 'Doposlanie chýbajúcich produktov',
+  discount: 'Zľava',
 };
 
 export const SEVERITY_LABELS: Record<SeverityLevel, string> = {
