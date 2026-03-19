@@ -131,6 +131,7 @@ export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
   damaged: 'Poškodený tovar',
   missing_part: 'Chýbajúci tovar',
   wrong_product: 'Nesprávny tovar',
+  wrong_quantity: 'Nesprávne množstvo',
   other_issue: 'Iný problém',
 };
 
