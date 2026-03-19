@@ -1,15 +1,19 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useTickets } from '@/context/TicketContext';
-import { RefundMethod, REFUND_METHOD_LABELS } from '@/types/ticket';
+import { MOCK_ORDERS, MockOrder, MockOrderProduct, PAYMENT_METHOD_LABELS } from '@/types/ticket';
 import { DecisionTreeResult } from '@/components/DecisionTree';
-import { ArrowLeft, Loader2, CheckCircle2, XCircle, Banknote, CreditCard } from 'lucide-react';
-import { z } from 'zod';
+import {
+  ArrowLeft, ArrowRight, Loader2, Search, Package,
+  User, Mail, CalendarDays, CreditCard, CheckCircle2,
+  Banknote, CheckCircle, XCircle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
-const returnSchema = z.object({
-  customerEmail: z.string().trim().email('Prosím zadajte platný email').max(255),
-  description: z.string().trim().min(10, 'Prosím zadajte aspoň 10 znakov').max(2000),
-});
+interface SelectedProduct {
+  name: string;
+  maxQty: number;
+  qty: number;
+}
 
 interface Props {
   treeResult: DecisionTreeResult;
@@ -17,42 +21,103 @@ interface Props {
   onSubmit: () => void;
 }
 
+type Step = 'lookup' | 'products' | 'confirm';
+
 export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const { addTicket } = useTickets();
-  const [form, setForm] = useState({ customerEmail: '', description: '' });
-  const [refundMethod, setRefundMethod] = useState<RefundMethod | null>(null);
+
+  const [step, setStep] = useState<Step>('lookup');
+  const [orderNumber, setOrderNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [lookupError, setLookupError] = useState('');
+  const [order, setOrder] = useState<MockOrder | null>(null);
+  const [foundOrderNumber, setFoundOrderNumber] = useState('');
+  const [withinWindow, setWithinWindow] = useState(false);
+
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
+  const [description, setDescription] = useState('');
+  const [iban, setIban] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = returnSchema.safeParse(form);
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.errors.forEach(err => { if (err.path[0]) fieldErrors[err.path[0] as string] = err.message; });
-      setErrors(fieldErrors);
+  // IBAN required when payment was NOT card
+  const needsIban = order ? order.paymentMethod !== 'card' : false;
+
+  const handleLookup = () => {
+    const trimmed = orderNumber.trim().toUpperCase();
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmed || !trimmedEmail) {
+      setLookupError('Vyplňte číslo objednávky aj e-mail.');
       return;
     }
-    if (!refundMethod) {
-      setErrors(prev => ({ ...prev, refundMethod: 'Prosím vyberte spôsob vrátenia peňazí' }));
+    const found = MOCK_ORDERS[trimmed];
+    if (!found || found.customerEmail.toLowerCase() !== trimmedEmail) {
+      setLookupError('Objednávka nenájdená. Skontrolujte údaje a skúste znova.');
       return;
     }
+    const deliveryDate = new Date(found.deliveryDate);
+    const daysDiff = Math.floor((Date.now() - deliveryDate.getTime()) / 86400000);
+    setWithinWindow(daysDiff <= 14);
+    setOrder(found);
+    setFoundOrderNumber(trimmed);
+    setLookupError('');
+    setStep('products');
+  };
+
+  const toggleProduct = (product: MockOrderProduct) => {
+    setSelectedProducts(prev => {
+      const exists = prev.find(p => p.name === product.name);
+      if (exists) return prev.filter(p => p.name !== product.name);
+      return [...prev, { name: product.name, maxQty: product.quantity, qty: 1 }];
+    });
+  };
+
+  const updateQty = (name: string, qty: number) => {
+    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, qty } : p));
+  };
+
+  const validateAndConfirm = () => {
+    const newErrors: Record<string, string> = {};
+    if (selectedProducts.length === 0) {
+      toast.error('Vyberte aspoň jeden produkt.');
+      return;
+    }
+    if (!description.trim() || description.trim().length < 10) {
+      newErrors.description = 'Popíšte dôvod vrátenia aspoň 10 znakmi.';
+    }
+    if (needsIban && !iban.trim()) {
+      newErrors.iban = 'IBAN je povinný pri tomto type platby.';
+    }
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
+    setStep('confirm');
+  };
+
+  const handleSubmit = async () => {
     setSubmitting(true);
     await new Promise(r => setTimeout(r, 600));
-    addTicket({
-      customerEmail: result.data.customerEmail,
-      orderNumber: treeResult.orderNumber || '',
-      product: treeResult.selectedProduct || '',
-      description: result.data.description,
-      attachments: [],
-      requestType: 'return',
-      refundMethod,
-      withinReturnWindow: treeResult.withinReturnWindow,
-    });
+    for (const p of selectedProducts) {
+      addTicket({
+        customerEmail: order!.customerEmail,
+        orderNumber: foundOrderNumber,
+        product: `${p.name} (${p.qty}×)`,
+        description,
+        attachments: [],
+        requestType: 'return',
+        refundMethod: order!.paymentMethod === 'card' ? 'original_payment' : 'bank_transfer',
+        withinReturnWindow: withinWindow,
+      });
+    }
     toast.success('Žiadosť o vrátenie bola odoslaná!');
     setSubmitting(false);
     onSubmit();
+  };
+
+  const stepNumber = step === 'lookup' ? 1 : step === 'products' ? 2 : 3;
+  const goBack = () => {
+    if (step === 'confirm') setStep('products');
+    else if (step === 'products') { setStep('lookup'); setOrder(null); setSelectedProducts([]); }
+    else onBack();
   };
 
   const inputClass = (field: string) =>
@@ -60,98 +125,245 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <button onClick={onBack} className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Začať odznova
+      <button onClick={goBack} className="mb-6 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <ArrowLeft className="h-4 w-4" /> Späť
       </button>
+
+      {/* Progress */}
+      <div className="mb-6">
+        <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+          <span>Krok {stepNumber} z 3</span>
+          <span>{Math.round((stepNumber / 3) * 100)}%</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${(stepNumber / 3) * 100}%` }} />
+        </div>
+      </div>
 
       <div className="mb-6">
         <span className="mb-2 inline-block rounded-full bg-info/15 border border-info/30 px-3 py-1 text-xs font-semibold text-info">
-          Vrátenie produktu
+          Vrátenie tovaru
         </span>
-        <h1 className="font-heading text-2xl font-bold">Dokončite žiadosť o vrátenie</h1>
+        <h1 className="font-heading text-2xl font-bold">
+          {step === 'lookup' && 'Vyhľadajte svoju objednávku'}
+          {step === 'products' && 'Vyberte produkty na vrátenie'}
+          {step === 'confirm' && 'Skontrolujte a odošlite'}
+        </h1>
       </div>
 
-      {/* Súhrnná karta */}
-      <div className="mb-6 rounded-xl border bg-secondary/50 p-4 space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Objednávka</span>
-          <span className="font-medium">{treeResult.orderNumber}</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Produkt</span>
-          <span className="font-medium">{treeResult.selectedProduct}</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Lehota na vrátenie</span>
-          <span className={`flex items-center gap-1 font-medium ${treeResult.withinReturnWindow ? 'text-success' : 'text-warning'}`}>
-            {treeResult.withinReturnWindow ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-            {treeResult.withinReturnWindow ? 'Oprávnený' : 'Vyžaduje posúdenie'}
-          </span>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">E-mailová adresa</label>
-          <input
-            type="email"
-            className={inputClass('customerEmail')}
-            placeholder="vas@email.com"
-            value={form.customerEmail}
-            onChange={e => setForm(f => ({ ...f, customerEmail: e.target.value }))}
-          />
-          {errors.customerEmail && <p className="mt-1 text-xs text-destructive">{errors.customerEmail}</p>}
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Dôvod vrátenia</label>
-          <textarea
-            rows={3}
-            className={inputClass('description')}
-            placeholder="Povedzte nám, prečo chcete vrátiť tento produkt..."
-            value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-          />
-          {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description}</p>}
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium">Preferovaný spôsob vrátenia peňazí</label>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {([
-              { method: 'bank_transfer' as RefundMethod, icon: Banknote, desc: 'Vrátenie na bankový účet (3-5 pracovných dní)' },
-              { method: 'original_payment' as RefundMethod, icon: CreditCard, desc: 'Vrátenie pôvodnou platobnou metódou (1-3 pracovné dni)' },
-            ]).map(({ method, icon: Icon, desc }) => (
-              <button
-                key={method}
-                type="button"
-                onClick={() => { setRefundMethod(method); setErrors(e => { const { refundMethod: _, ...rest } = e; return rest; }); }}
-                className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-all ${
-                  refundMethod === method ? 'border-primary bg-accent shadow-sm' : 'border-input bg-card hover:border-primary/30'
-                }`}
-              >
-                <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${refundMethod === method ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">{REFUND_METHOD_LABELS[method]}</p>
-                  <p className="text-xs text-muted-foreground">{desc}</p>
-                </div>
-              </button>
-            ))}
+      {/* Step 1: Order lookup */}
+      {step === 'lookup' && (
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Číslo objednávky</label>
+            <input
+              className={`w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${lookupError ? 'border-destructive' : 'border-input'}`}
+              placeholder="napr. ORD-10042"
+              value={orderNumber}
+              onChange={e => { setOrderNumber(e.target.value); setLookupError(''); }}
+            />
           </div>
-          {errors.refundMethod && <p className="mt-1.5 text-xs text-destructive">{errors.refundMethod}</p>}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">E-mailová adresa</label>
+            <input
+              type="email"
+              className={`w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${lookupError ? 'border-destructive' : 'border-input'}`}
+              placeholder="vas@email.com"
+              value={email}
+              onChange={e => { setEmail(e.target.value); setLookupError(''); }}
+              onKeyDown={e => e.key === 'Enter' && handleLookup()}
+            />
+          </div>
+          {lookupError && <p className="text-xs text-destructive">{lookupError}</p>}
+          <p className="text-xs text-muted-foreground">
+            Skúste: ORD-10042 / jana@example.com, ORD-10038 / marek@example.com
+          </p>
+          <button
+            onClick={handleLookup}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Search className="h-4 w-4" /> Vyhľadať objednávku
+          </button>
         </div>
+      )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-        >
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          {submitting ? 'Odosielanie...' : 'Odoslať žiadosť o vrátenie'}
-        </button>
-      </form>
+      {/* Step 2: Order details + product selection */}
+      {step === 'products' && order && (
+        <div className="space-y-6">
+          {/* Order info */}
+          <div className="rounded-xl border bg-card p-5 space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{order.customerName}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">{order.customerEmail}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Doručené: {order.deliveryDate}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">Platba: {PAYMENT_METHOD_LABELS[order.paymentMethod]}</span>
+            </div>
+          </div>
+
+          {/* Return window notice */}
+          <div className={`flex items-start gap-3 rounded-xl border p-4 ${withinWindow ? 'border-success/30 bg-success/10' : 'border-warning/30 bg-warning/10'}`}>
+            {withinWindow
+              ? <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+              : <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />}
+            <div>
+              <p className="text-sm font-medium">
+                {withinWindow ? 'V rámci 14-dňovej lehoty na vrátenie' : 'Mimo 14-dňovej lehoty na vrátenie'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {withinWindow
+                  ? 'Máte nárok na plné vrátenie peňazí.'
+                  : 'Stále môžete mať nárok na čiastočné vrátenie. Váš prípad posúdime.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Refund method info */}
+          <div className="flex items-start gap-3 rounded-xl border border-info/30 bg-info/10 p-4">
+            <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-info" />
+            <div>
+              <p className="text-sm font-medium">
+                {order.paymentMethod === 'card'
+                  ? 'Vrátenie na pôvodnú platobnú metódu'
+                  : 'Vrátenie bankovým prevodom'}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {order.paymentMethod === 'card'
+                  ? 'Platba bola uskutočnená kartou – peniaze vrátime na rovnakú kartu (1-3 pracovné dni).'
+                  : 'Platba bola uskutočnená prevodom/hotovosťou – na vrátenie potrebujeme váš IBAN.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Product selection */}
+          <div>
+            <p className="mb-3 text-sm font-medium">Vyberte produkty na vrátenie:</p>
+            <div className="space-y-3">
+              {order.products.map(product => {
+                const selected = selectedProducts.find(p => p.name === product.name);
+                return (
+                  <div key={product.name} className={`rounded-xl border transition-all ${selected ? 'border-primary/40 bg-primary/5' : 'bg-card'}`}>
+                    <button
+                      type="button"
+                      onClick={() => toggleProduct(product)}
+                      className="flex w-full items-center gap-3 p-4 text-left"
+                    >
+                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                        selected ? 'border-primary bg-primary' : 'border-muted-foreground'
+                      }`}>
+                        {selected && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
+                      </div>
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span className="flex-1 text-sm font-medium">{product.name}</span>
+                      <span className="text-xs text-muted-foreground">{product.quantity}×</span>
+                    </button>
+
+                    {selected && product.quantity > 1 && (
+                      <div className="border-t px-4 pb-4 pt-3">
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Množstvo na vrátenie</label>
+                        <select
+                          value={selected.qty}
+                          onChange={e => updateQty(product.name, Number(e.target.value))}
+                          className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          {Array.from({ length: product.quantity }, (_, i) => i + 1).map(n => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* IBAN - conditional */}
+          {needsIban && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">IBAN <span className="text-destructive">*</span></label>
+              <input
+                className={inputClass('iban')}
+                placeholder="SK00 0000 0000 0000 0000 0000"
+                value={iban}
+                onChange={e => { setIban(e.target.value); setErrors(prev => { const { iban: _, ...rest } = prev; return rest; }); }}
+              />
+              {errors.iban && <p className="mt-1 text-xs text-destructive">{errors.iban}</p>}
+            </div>
+          )}
+
+          {/* Description */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Dôvod vrátenia</label>
+            <textarea
+              rows={3}
+              className={inputClass('description')}
+              placeholder="Povedzte nám, prečo chcete vrátiť tento produkt..."
+              value={description}
+              onChange={e => { setDescription(e.target.value); setErrors(prev => { const { description: _, ...rest } = prev; return rest; }); }}
+            />
+            {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description}</p>}
+          </div>
+
+          <button
+            type="button"
+            onClick={validateAndConfirm}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Pokračovať <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Step 3: Confirmation */}
+      {step === 'confirm' && order && (
+        <div className="space-y-5">
+          <div className="rounded-xl border bg-card p-5 space-y-4">
+            <div className="text-sm space-y-1">
+              <p><span className="text-muted-foreground">Zákazník:</span> {order.customerName}</p>
+              <p><span className="text-muted-foreground">E-mail:</span> {order.customerEmail}</p>
+              <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
+              <p><span className="text-muted-foreground">Vrátenie:</span> {order.paymentMethod === 'card' ? 'Na pôvodnú kartu' : 'Bankový prevod'}</p>
+            </div>
+            <div className="border-t pt-3 space-y-2">
+              {selectedProducts.map(p => (
+                <div key={p.name} className="flex items-center gap-2 text-sm">
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{p.name}</span>
+                  <span className="text-muted-foreground">({p.qty}×)</span>
+                </div>
+              ))}
+            </div>
+            {needsIban && (
+              <div className="border-t pt-3 text-sm">
+                <span className="text-muted-foreground">IBAN:</span> {iban}
+              </div>
+            )}
+            <div className="border-t pt-3 text-sm">
+              <span className="text-muted-foreground">Dôvod:</span> {description}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+          >
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {submitting ? 'Odosielanie...' : 'Odoslať žiadosť o vrátenie'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
