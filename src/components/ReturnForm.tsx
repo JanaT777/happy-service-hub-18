@@ -85,8 +85,13 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
     if (!description.trim() || description.trim().length < 10) {
       newErrors.description = 'Popíšte dôvod vrátenia aspoň 10 znakmi.';
     }
-    if (needsIban && !iban.trim()) {
-      newErrors.iban = 'IBAN je povinný pri tomto type platby.';
+    if (needsIban) {
+      const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
+      if (!trimmedIban) {
+        newErrors.iban = 'IBAN je povinný pri tomto type platby.';
+      } else if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(trimmedIban)) {
+        newErrors.iban = 'Neplatný formát IBAN (napr. SK31 1200 0000 1987 4263 7541).';
+      }
     }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
@@ -234,12 +239,12 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
               <p className="text-sm font-medium">
                 {order.paymentMethod === 'card'
                   ? 'Vrátenie na pôvodnú platobnú metódu'
-                  : 'Vrátenie bankovým prevodom'}
+                  : 'Vrátenie na bankový účet'}
               </p>
               <p className="text-xs text-muted-foreground">
                 {order.paymentMethod === 'card'
                   ? 'Platba bola uskutočnená kartou – peniaze vrátime na rovnakú kartu (1-3 pracovné dni).'
-                  : 'Platba bola uskutočnená prevodom/hotovosťou – na vrátenie potrebujeme váš IBAN.'}
+                  : `Platba bola uskutočnená ${order.paymentMethod === 'cash' ? 'dobierkou' : 'bankovým prevodom'} – na vrátenie potrebujeme váš IBAN.`}
               </p>
             </div>
           </div>
@@ -332,7 +337,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
               <p><span className="text-muted-foreground">Zákazník:</span> {order.customerName}</p>
               <p><span className="text-muted-foreground">E-mail:</span> {order.customerEmail}</p>
               <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
-              <p><span className="text-muted-foreground">Vrátenie:</span> {order.paymentMethod === 'card' ? 'Na pôvodnú kartu' : 'Bankový prevod'}</p>
+              <p><span className="text-muted-foreground">Vrátenie:</span> {order.paymentMethod === 'card' ? 'Na pôvodnú kartu' : 'Na bankový účet'}</p>
             </div>
             <div className="border-t pt-3 space-y-2">
               {selectedProducts.map(p => (
