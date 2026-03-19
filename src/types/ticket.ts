@@ -2,7 +2,17 @@ export type RequestType = 'return' | 'complaint' | 'other';
 
 export type TicketStatus = 'new' | 'in_review' | 'approved' | 'rejected' | 'refund_processing' | 'completed';
 
-export type ComplaintStatus = 'complaint_new' | 'complaint_in_progress' | 'complaint_approved' | 'complaint_rejected' | 'complaint_resolved';
+export type ComplaintStatus =
+  | 'complaint_new'
+  | 'complaint_pickup_ordered'
+  | 'complaint_received'
+  | 'complaint_inspecting'
+  | 'complaint_in_progress'
+  | 'complaint_waiting_customer'
+  | 'complaint_approved'
+  | 'complaint_refund_processing'
+  | 'complaint_rejected'
+  | 'complaint_resolved';
 
 export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'other_issue';
 export type SuggestedSolution = 'exchange' | 'refund' | 'send_missing';
