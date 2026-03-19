@@ -331,63 +331,85 @@ const Admin = () => {
               </button>
 
               {isExpanded && (
-                <div className="border-t bg-secondary/30 p-4">
-                  <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="h-4 w-4" /> {ticket.customerEmail}
+                <div className="border-t bg-secondary/30 p-4 space-y-4">
+                  {/* Key info grid */}
+                  <div className="grid gap-3 text-sm sm:grid-cols-2">
+                    <div className="rounded-lg border bg-card p-3 space-y-1">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Typ požiadavky</span>
+                      <div className="flex items-center gap-2">
+                        <WorkflowIcon className="h-4 w-4 text-primary" />
+                        <span className="font-semibold">{REQUEST_TYPE_LABELS[ticket.requestType]}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Hash className="h-4 w-4" /> {ticket.orderNumber}
+                    <div className="rounded-lg border bg-card p-3 space-y-1">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Aktuálny stav</span>
+                      <div className="flex items-center gap-2">
+                        {workflowKey && workflowLabel ? (
+                          <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${WORKFLOW_STATUS_COLORS[workflowKey] || 'bg-secondary text-secondary-foreground'}`}>
+                            {workflowLabel}
+                          </span>
+                        ) : (
+                          <StatusBadge status={ticket.status} />
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Package className="h-4 w-4" /> {ticket.product}
+                    <div className="rounded-lg border bg-card p-3 space-y-1">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Produkty</span>
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{ticket.product}</span>
+                      </div>
                     </div>
+                    <div className="rounded-lg border bg-card p-3 space-y-1">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Spôsob riešenia</span>
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">
+                          {ticket.suggestedSolution ? SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution] : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Extra metadata */}
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> {ticket.customerEmail}</span>
+                    <span className="flex items-center gap-1.5"><Hash className="h-3.5 w-3.5" /> {ticket.orderNumber}</span>
+                    <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: sk })}</span>
                     {ticket.issueType && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span><span className="text-xs text-muted-foreground/70">Typ reklamácie:</span> {ISSUE_TYPE_LABELS[ticket.issueType]}</span>
-                      </div>
-                    )}
-                    {ticket.suggestedSolution && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <RefreshCw className="h-4 w-4" />
-                        <span><span className="text-xs text-muted-foreground/70">Navrhované riešenie:</span> {SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</span>
-                      </div>
+                      <span className="flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" /> {ISSUE_TYPE_LABELS[ticket.issueType]}</span>
                     )}
                     {ticket.severity && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <span className={`inline-block h-2.5 w-2.5 rounded-full ${
+                      <span className="flex items-center gap-1.5">
+                        <span className={`inline-block h-2 w-2 rounded-full ${
                           ticket.severity === 'critical' ? 'bg-destructive' :
                           ticket.severity === 'high' ? 'bg-warning' :
                           ticket.severity === 'medium' ? 'bg-info' : 'bg-success'
                         }`} />
-                        Závažnosť: {SEVERITY_LABELS[ticket.severity]}
-                      </div>
+                        {SEVERITY_LABELS[ticket.severity]}
+                      </span>
                     )}
                     {ticket.refundMethod && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Banknote className="h-4 w-4" /> {REFUND_METHOD_LABELS[ticket.refundMethod]}
-                      </div>
+                      <span className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5" /> {REFUND_METHOD_LABELS[ticket.refundMethod]}</span>
                     )}
                   </div>
-                  <p className="mt-3 text-sm">{ticket.description}</p>
+
+                  {/* Description */}
+                  <p className="rounded-lg border bg-card p-3 text-sm">{ticket.description}</p>
 
                   {ticket.attachments.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {ticket.attachments.map((src, i) => (
                         <img key={i} src={src} alt="" className="h-16 w-16 rounded-lg border object-cover" />
                       ))}
                     </div>
                   )}
 
-                  {/* Workflow status actions (per request type) */}
+                  {/* Workflow actions */}
                   {workflowNextStatuses.length > 0 && (
-                    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
+                    <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
                       <WorkflowIcon className="h-4 w-4 text-muted-foreground" />
-                      <span className="mr-1 text-xs font-medium text-muted-foreground">
-                        {ticket.requestType === 'complaint' ? 'Stav reklamácie:' :
-                         ticket.requestType === 'return' ? 'Stav vrátenia:' : 'Stav požiadavky:'}
-                      </span>
+                      <span className="mr-1 text-xs font-medium text-muted-foreground">Zmeniť stav:</span>
                       {workflowNextStatuses.map(ns => (
                         <button key={ns} onClick={() => handleWorkflowChange(ticket, ns)}
                           className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${getActionColor(ns)}`}>
@@ -397,22 +419,40 @@ const Admin = () => {
                     </div>
                   )}
 
-                  {nextStatuses.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2 border-t pt-4">
-                      <span className="mr-1 self-center text-xs text-muted-foreground">Akcie tiketu:</span>
-                      {nextStatuses.map(ns => (
-                        <button key={ns} onClick={() => handleStatusChange(ticket.id, ns)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                            ns === 'approved' || ns === 'completed' ? 'bg-success text-success-foreground hover:bg-success/90' :
-                            ns === 'rejected' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' :
-                            ns === 'refund_processing' ? 'bg-primary text-primary-foreground hover:bg-primary/90' :
-                            'bg-warning text-warning-foreground hover:bg-warning/90'
-                          }`}>
-                          {STATUS_LABELS[ns]}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {/* Quick action buttons */}
+                  <div className="flex flex-wrap gap-2 border-t pt-3">
+                    <span className="mr-1 self-center text-xs text-muted-foreground">Akcie:</span>
+                    {nextStatuses.includes('approved') && (
+                      <button onClick={() => handleStatusChange(ticket.id, 'approved')}
+                        className="rounded-lg bg-success px-4 py-2 text-xs font-semibold text-success-foreground hover:bg-success/90 transition-colors">
+                        ✓ Schváliť
+                      </button>
+                    )}
+                    {nextStatuses.includes('rejected') && (
+                      <button onClick={() => handleStatusChange(ticket.id, 'rejected')}
+                        className="rounded-lg bg-destructive px-4 py-2 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors">
+                        ✕ Zamietnuť
+                      </button>
+                    )}
+                    {nextStatuses.includes('completed') && (
+                      <button onClick={() => handleStatusChange(ticket.id, 'completed')}
+                        className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
+                        ✓ Označiť ako vybavené
+                      </button>
+                    )}
+                    {nextStatuses.includes('in_review') && (
+                      <button onClick={() => handleStatusChange(ticket.id, 'in_review')}
+                        className="rounded-lg bg-warning px-4 py-2 text-xs font-semibold text-warning-foreground hover:bg-warning/90 transition-colors">
+                        Preskúmať
+                      </button>
+                    )}
+                    {nextStatuses.includes('refund_processing') && (
+                      <button onClick={() => handleStatusChange(ticket.id, 'refund_processing')}
+                        className="rounded-lg border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors">
+                        <Banknote className="mr-1.5 inline h-3.5 w-3.5" />Spracovať vrátenie
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
