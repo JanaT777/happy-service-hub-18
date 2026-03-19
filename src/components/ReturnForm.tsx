@@ -337,7 +337,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
               <p><span className="text-muted-foreground">Zákazník:</span> {order.customerName}</p>
               <p><span className="text-muted-foreground">E-mail:</span> {order.customerEmail}</p>
               <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
-              <p><span className="text-muted-foreground">Vrátenie:</span> {order.paymentMethod === 'card' ? 'Na pôvodnú kartu' : 'Bankový prevod'}</p>
+              <p><span className="text-muted-foreground">Vrátenie:</span> {order.paymentMethod === 'card' ? 'Na pôvodnú kartu' : 'Na bankový účet'}</p>
             </div>
             <div className="border-t pt-3 space-y-2">
               {selectedProducts.map(p => (
