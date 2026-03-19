@@ -104,9 +104,9 @@ export const DecisionTree = ({ onComplete }: Props) => {
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {[
-              { type: 'return' as RequestType, title: 'Vrátenie tovaru', desc: 'Získajte vrátenie peňazí alebo výmenu za váš nákup', icon: RotateCcw, color: 'text-info' },
-              { type: 'complaint' as RequestType, title: 'Reklamácie', desc: 'Nahláste chybu, poškodenie alebo problém s objednávkou', icon: AlertTriangle, color: 'text-warning' },
-              { type: 'other' as RequestType, title: 'Interná požiadavka OZ', desc: 'Doručenie, účet alebo všeobecné otázky', icon: HelpCircle, color: 'text-muted-foreground' },
+              { type: 'return' as RequestType, title: 'Vrátenie tovaru', desc: 'Vrátenie tovaru v zákonnej 14-dňovej lehote', icon: RotateCcw, color: 'text-info' },
+              { type: 'complaint' as RequestType, title: 'Reklamácie', desc: 'Nahláste vadu alebo poškodenie produktu', icon: AlertTriangle, color: 'text-warning' },
+              { type: 'other' as RequestType, title: 'Interná požiadavka OZ', desc: 'Interné požiadavky k objednávkam', icon: HelpCircle, color: 'text-muted-foreground' },
             ].map(({ type, title, desc, icon: Icon, color }) => (
               <button
                 key={type}
