@@ -28,7 +28,7 @@ export type OtherStatus =
   | 'other_completed'
   | 'other_rejected';
 
-export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'other_issue';
+export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'wrong_quantity' | 'other_issue';
 export type SuggestedSolution = 'exchange' | 'refund' | 'send_missing';
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type RefundMethod = 'bank_transfer' | 'original_payment';
