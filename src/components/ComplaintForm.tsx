@@ -4,24 +4,33 @@ import { IssueType, SuggestedSolution, MOCK_ORDERS, MockOrder, MockOrderProduct,
 import { DecisionTreeResult } from '@/components/DecisionTree';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
-  User, Mail, CalendarDays, CheckCircle2, RefreshCw, Banknote, PackageX,
+  User, Mail, CalendarDays, CheckCircle2, RefreshCw, Banknote, PackageX, Camera, Percent,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type ComplaintReason = 'damaged' | 'missing_part' | 'wrong_product';
-type ProductSolution = 'exchange' | 'refund' | 'send_missing';
+type ComplaintReason = 'damaged' | 'missing_part' | 'wrong_product' | 'wrong_quantity';
+type ProductSolution = 'exchange' | 'refund' | 'send_missing' | 'discount';
 
-const REASON_OPTIONS: { value: ComplaintReason; label: string }[] = [
-  { value: 'damaged', label: 'Poškodený' },
-  { value: 'missing_part', label: 'Chýbajúci' },
-  { value: 'wrong_product', label: 'Nesprávny' },
+const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: boolean }[] = [
+  { value: 'damaged', label: 'Poškodený tovar', photoRequired: true },
+  { value: 'missing_part', label: 'Chýbajúci tovar', photoRequired: false },
+  { value: 'wrong_product', label: 'Nesprávny tovar', photoRequired: true },
+  { value: 'wrong_quantity', label: 'Nesprávne množstvo', photoRequired: false },
 ];
 
-const SOLUTION_OPTIONS: { value: ProductSolution; label: string; icon: typeof RefreshCw }[] = [
-  { value: 'exchange', label: 'Výmena', icon: RefreshCw },
-  { value: 'refund', label: 'Vrátenie peňazí', icon: Banknote },
-  { value: 'send_missing', label: 'Doposlanie', icon: PackageX },
-];
+const SOLUTIONS_BY_REASON: Record<ComplaintReason, ProductSolution[]> = {
+  damaged: ['refund', 'exchange', 'discount'],
+  missing_part: ['send_missing', 'refund'],
+  wrong_product: ['refund', 'exchange', 'discount'],
+  wrong_quantity: ['refund', 'exchange', 'discount'],
+};
+
+const SOLUTION_META: Record<ProductSolution, { label: string; icon: typeof RefreshCw }> = {
+  exchange: { label: 'Výmena', icon: RefreshCw },
+  refund: { label: 'Vrátenie peňazí', icon: Banknote },
+  send_missing: { label: 'Doposlanie', icon: PackageX },
+  discount: { label: 'Zľava', icon: Percent },
+};
 
 interface SelectedProduct {
   name: string;
@@ -29,6 +38,7 @@ interface SelectedProduct {
   qty: number;
   reason: ComplaintReason | null;
   solution: ProductSolution | null;
+  photoFile: File | null;
 }
 
 interface Props {
