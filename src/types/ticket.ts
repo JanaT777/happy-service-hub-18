@@ -2,7 +2,17 @@ export type RequestType = 'return' | 'complaint' | 'other';
 
 export type TicketStatus = 'new' | 'in_review' | 'approved' | 'rejected' | 'refund_processing' | 'completed';
 
-export type ComplaintStatus = 'complaint_new' | 'complaint_in_progress' | 'complaint_approved' | 'complaint_rejected' | 'complaint_resolved';
+export type ComplaintStatus =
+  | 'complaint_new'
+  | 'complaint_pickup_ordered'
+  | 'complaint_received'
+  | 'complaint_inspecting'
+  | 'complaint_in_progress'
+  | 'complaint_waiting_customer'
+  | 'complaint_approved'
+  | 'complaint_refund_processing'
+  | 'complaint_rejected'
+  | 'complaint_resolved';
 
 export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'other_issue';
 export type SuggestedSolution = 'exchange' | 'refund' | 'send_missing';
@@ -38,18 +48,28 @@ export const STATUS_LABELS: Record<TicketStatus, string> = {
 };
 
 export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
-  complaint_new: 'Nová',
+  complaint_new: 'Reklamácia zaevidovaná',
+  complaint_pickup_ordered: 'Objednávka zvozu',
+  complaint_received: 'Zásielka evidovaná na sklade',
+  complaint_inspecting: 'Kontrola tovaru',
   complaint_in_progress: 'V riešení',
-  complaint_approved: 'Schválená',
-  complaint_rejected: 'Zamietnutá',
-  complaint_resolved: 'Vybavená',
+  complaint_waiting_customer: 'Čaká na doplnenie od zákazníka',
+  complaint_approved: 'Akceptované',
+  complaint_refund_processing: 'Refundácia v procese',
+  complaint_rejected: 'Reklamácia zamietnutá',
+  complaint_resolved: 'Reklamácia vybavená',
 };
 
 export const COMPLAINT_STATUS_FLOW: Record<ComplaintStatus, ComplaintStatus[]> = {
-  complaint_new: ['complaint_in_progress'],
-  complaint_in_progress: ['complaint_approved', 'complaint_rejected'],
-  complaint_approved: ['complaint_resolved'],
-  complaint_rejected: ['complaint_resolved'],
+  complaint_new: ['complaint_pickup_ordered', 'complaint_in_progress'],
+  complaint_pickup_ordered: ['complaint_received'],
+  complaint_received: ['complaint_inspecting'],
+  complaint_inspecting: ['complaint_in_progress'],
+  complaint_in_progress: ['complaint_waiting_customer', 'complaint_approved', 'complaint_rejected'],
+  complaint_waiting_customer: ['complaint_in_progress'],
+  complaint_approved: ['complaint_refund_processing', 'complaint_resolved'],
+  complaint_refund_processing: ['complaint_resolved'],
+  complaint_rejected: [],
   complaint_resolved: [],
 };
 
