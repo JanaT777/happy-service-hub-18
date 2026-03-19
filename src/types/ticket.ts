@@ -93,9 +93,65 @@ export const STATUS_FLOW: Record<TicketStatus, TicketStatus[]> = {
   completed: [],
 };
 
-export const MOCK_ORDER_PRODUCTS: Record<string, { products: string[]; date: string }> = {
-  'ORD-10042': { products: ['Bezdrôtové slúchadlá', 'Obal na telefón', 'USB kábel'], date: '2026-03-05' },
-  'ORD-10038': { products: ['Bežecké topánky veľkosť 10', 'Športové ponožky'], date: '2026-02-20' },
-  'ORD-10051': { products: ['Inteligentné hodinky', 'Remienok na hodinky'], date: '2026-03-10' },
-  'ORD-10055': { products: ['Stojan na notebook', 'Klávesnica', 'Podložka pod myš'], date: '2026-01-15' },
+export interface MockOrderProduct {
+  name: string;
+  quantity: number;
+}
+
+export interface MockOrder {
+  customerName: string;
+  customerEmail: string;
+  products: MockOrderProduct[];
+  orderDate: string;
+  deliveryDate: string;
+}
+
+export const MOCK_ORDERS: Record<string, MockOrder> = {
+  'ORD-10042': {
+    customerName: 'Jana Nováková',
+    customerEmail: 'jana@example.com',
+    products: [
+      { name: 'Bezdrôtové slúchadlá', quantity: 1 },
+      { name: 'Obal na telefón', quantity: 2 },
+      { name: 'USB kábel', quantity: 3 },
+    ],
+    orderDate: '2026-03-01',
+    deliveryDate: '2026-03-05',
+  },
+  'ORD-10038': {
+    customerName: 'Marek Horváth',
+    customerEmail: 'marek@example.com',
+    products: [
+      { name: 'Bežecké topánky veľkosť 10', quantity: 1 },
+      { name: 'Športové ponožky', quantity: 2 },
+    ],
+    orderDate: '2026-02-15',
+    deliveryDate: '2026-02-20',
+  },
+  'ORD-10051': {
+    customerName: 'Sara Kováčová',
+    customerEmail: 'sara@example.com',
+    products: [
+      { name: 'Inteligentné hodinky', quantity: 1 },
+      { name: 'Remienok na hodinky', quantity: 1 },
+    ],
+    orderDate: '2026-03-06',
+    deliveryDate: '2026-03-10',
+  },
+  'ORD-10055': {
+    customerName: 'Peter Szabó',
+    customerEmail: 'peter@example.com',
+    products: [
+      { name: 'Stojan na notebook', quantity: 1 },
+      { name: 'Klávesnica', quantity: 1 },
+      { name: 'Podložka pod myš', quantity: 2 },
+    ],
+    orderDate: '2026-01-10',
+    deliveryDate: '2026-01-15',
+  },
 };
+
+// Backward compat helper
+export const MOCK_ORDER_PRODUCTS: Record<string, { products: string[]; date: string }> = Object.fromEntries(
+  Object.entries(MOCK_ORDERS).map(([k, v]) => [k, { products: v.products.map(p => p.name), date: v.deliveryDate }])
+);
