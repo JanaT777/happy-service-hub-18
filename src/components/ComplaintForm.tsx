@@ -4,24 +4,33 @@ import { IssueType, SuggestedSolution, MOCK_ORDERS, MockOrder, MockOrderProduct,
 import { DecisionTreeResult } from '@/components/DecisionTree';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
-  User, Mail, CalendarDays, CheckCircle2, RefreshCw, Banknote, PackageX,
+  User, Mail, CalendarDays, CheckCircle2, RefreshCw, Banknote, PackageX, Camera, Percent,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type ComplaintReason = 'damaged' | 'missing_part' | 'wrong_product';
-type ProductSolution = 'exchange' | 'refund' | 'send_missing';
+type ComplaintReason = 'damaged' | 'missing_part' | 'wrong_product' | 'wrong_quantity';
+type ProductSolution = 'exchange' | 'refund' | 'send_missing' | 'discount';
 
-const REASON_OPTIONS: { value: ComplaintReason; label: string }[] = [
-  { value: 'damaged', label: 'Poškodený' },
-  { value: 'missing_part', label: 'Chýbajúci' },
-  { value: 'wrong_product', label: 'Nesprávny' },
+const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: boolean }[] = [
+  { value: 'damaged', label: 'Poškodený tovar', photoRequired: true },
+  { value: 'missing_part', label: 'Chýbajúci tovar', photoRequired: false },
+  { value: 'wrong_product', label: 'Nesprávny tovar', photoRequired: true },
+  { value: 'wrong_quantity', label: 'Nesprávne množstvo', photoRequired: false },
 ];
 
-const SOLUTION_OPTIONS: { value: ProductSolution; label: string; icon: typeof RefreshCw }[] = [
-  { value: 'exchange', label: 'Výmena', icon: RefreshCw },
-  { value: 'refund', label: 'Vrátenie peňazí', icon: Banknote },
-  { value: 'send_missing', label: 'Doposlanie', icon: PackageX },
-];
+const SOLUTIONS_BY_REASON: Record<ComplaintReason, ProductSolution[]> = {
+  damaged: ['refund', 'exchange', 'discount'],
+  missing_part: ['send_missing', 'refund'],
+  wrong_product: ['refund', 'exchange', 'discount'],
+  wrong_quantity: ['refund', 'exchange', 'discount'],
+};
+
+const SOLUTION_META: Record<ProductSolution, { label: string; icon: typeof RefreshCw }> = {
+  exchange: { label: 'Výmena', icon: RefreshCw },
+  refund: { label: 'Vrátenie peňazí', icon: Banknote },
+  send_missing: { label: 'Doposlanie', icon: PackageX },
+  discount: { label: 'Zľava', icon: Percent },
+};
 
 interface SelectedProduct {
   name: string;
@@ -29,6 +38,7 @@ interface SelectedProduct {
   qty: number;
   reason: ComplaintReason | null;
   solution: ProductSolution | null;
+  photoFile: File | null;
 }
 
 interface Props {
@@ -81,12 +91,12 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     setSelectedProducts(prev => {
       const exists = prev.find(p => p.name === product.name);
       if (exists) return prev.filter(p => p.name !== product.name);
-      return [...prev, { name: product.name, maxQty: product.quantity, qty: 1, reason: null, solution: null }];
+      return [...prev, { name: product.name, maxQty: product.quantity, qty: 1, reason: null, solution: null, photoFile: null }];
     });
   };
 
   const updateProduct = (name: string, update: Partial<SelectedProduct>) => {
-    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, ...update } : p));
+    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, ...update, ...(update.reason && update.reason !== p.reason ? { solution: null } : {}) } : p));
   };
 
   const needsIban = selectedProducts.some(p => p.solution === 'refund');
@@ -100,6 +110,10 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     selectedProducts.forEach(p => {
       if (!p.reason) newErrors[`${p.name}_reason`] = 'Povinné';
       if (!p.solution) newErrors[`${p.name}_solution`] = 'Povinné';
+      const reasonMeta = REASON_OPTIONS.find(r => r.value === p.reason);
+      if (reasonMeta?.photoRequired && !p.photoFile) {
+        newErrors[`${p.name}_photo`] = 'Fotografia je povinná pre tento typ reklamácie.';
+      }
     });
     if (needsIban) {
       const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
@@ -301,31 +315,61 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
                           </div>
                           {errors[`${product.name}_reason`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_reason`]}</p>}
                         </div>
-                        {/* Solution */}
-                        <div>
-                          <label className="mb-1 block text-xs font-medium text-muted-foreground">Požadované riešenie</label>
-                          <div className="flex flex-wrap gap-2">
-                            {SOLUTION_OPTIONS.map(opt => {
-                              const Icon = opt.icon;
-                              return (
-                                <button
-                                  key={opt.value}
-                                  type="button"
-                                  onClick={() => updateProduct(product.name, { solution: opt.value })}
-                                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                                    selected.solution === opt.value
-                                      ? 'border-primary bg-primary text-primary-foreground'
-                                      : 'border-input bg-card hover:border-primary/30'
-                                  }`}
-                                >
-                                  <Icon className="h-3.5 w-3.5" />
-                                  {opt.label}
-                                </button>
-                              );
-                            })}
+                        {/* Photo upload - conditional */}
+                        {selected.reason && REASON_OPTIONS.find(r => r.value === selected.reason)?.photoRequired && (
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                              Fotografia <span className="text-destructive">*</span>
+                            </label>
+                            <label className={`flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2.5 text-xs transition-colors hover:border-primary/40 ${
+                              errors[`${product.name}_photo`] ? 'border-destructive' : 'border-input'
+                            }`}>
+                              <Camera className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">
+                                {selected.photoFile ? selected.photoFile.name : 'Nahrajte fotografiu'}
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={e => {
+                                  const file = e.target.files?.[0] || null;
+                                  updateProduct(product.name, { photoFile: file } as Partial<SelectedProduct>);
+                                  setErrors(prev => { const { [`${product.name}_photo`]: _, ...rest } = prev; return rest; });
+                                }}
+                              />
+                            </label>
+                            {errors[`${product.name}_photo`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_photo`]}</p>}
                           </div>
-                          {errors[`${product.name}_solution`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_solution`]}</p>}
-                        </div>
+                        )}
+                        {/* Solution - dynamic based on reason */}
+                        {selected.reason && (
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Požadované riešenie</label>
+                            <div className="flex flex-wrap gap-2">
+                              {SOLUTIONS_BY_REASON[selected.reason].map(solKey => {
+                                const meta = SOLUTION_META[solKey];
+                                const Icon = meta.icon;
+                                return (
+                                  <button
+                                    key={solKey}
+                                    type="button"
+                                    onClick={() => updateProduct(product.name, { solution: solKey })}
+                                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                                      selected.solution === solKey
+                                        ? 'border-primary bg-primary text-primary-foreground'
+                                        : 'border-input bg-card hover:border-primary/30'
+                                    }`}
+                                  >
+                                    <Icon className="h-3.5 w-3.5" />
+                                    {meta.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {errors[`${product.name}_solution`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_solution`]}</p>}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -387,7 +431,8 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
                   <span className="font-medium">{p.name}</span>
                   <span className="text-muted-foreground">({p.qty}×)</span>
                   <span className="rounded bg-secondary px-2 py-0.5 text-xs">{REASON_OPTIONS.find(r => r.value === p.reason)?.label}</span>
-                  <span className="rounded bg-primary/10 text-primary px-2 py-0.5 text-xs">{SOLUTION_OPTIONS.find(s => s.value === p.solution)?.label}</span>
+                  <span className="rounded bg-primary/10 text-primary px-2 py-0.5 text-xs">{SOLUTION_META[p.solution!]?.label}</span>
+                  {p.photoFile && <span className="rounded bg-accent px-2 py-0.5 text-xs">📷 {p.photoFile.name}</span>}
                 </div>
               ))}
             </div>
