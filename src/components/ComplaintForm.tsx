@@ -91,7 +91,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     setSelectedProducts(prev => {
       const exists = prev.find(p => p.name === product.name);
       if (exists) return prev.filter(p => p.name !== product.name);
-      return [...prev, { name: product.name, maxQty: product.quantity, qty: 1, reason: null, solution: null }];
+      return [...prev, { name: product.name, maxQty: product.quantity, qty: 1, reason: null, solution: null, photoFile: null }];
     });
   };
 
