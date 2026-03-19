@@ -315,31 +315,61 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
                           </div>
                           {errors[`${product.name}_reason`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_reason`]}</p>}
                         </div>
-                        {/* Solution */}
-                        <div>
-                          <label className="mb-1 block text-xs font-medium text-muted-foreground">Požadované riešenie</label>
-                          <div className="flex flex-wrap gap-2">
-                            {SOLUTION_OPTIONS.map(opt => {
-                              const Icon = opt.icon;
-                              return (
-                                <button
-                                  key={opt.value}
-                                  type="button"
-                                  onClick={() => updateProduct(product.name, { solution: opt.value })}
-                                  className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                                    selected.solution === opt.value
-                                      ? 'border-primary bg-primary text-primary-foreground'
-                                      : 'border-input bg-card hover:border-primary/30'
-                                  }`}
-                                >
-                                  <Icon className="h-3.5 w-3.5" />
-                                  {opt.label}
-                                </button>
-                              );
-                            })}
+                        {/* Photo upload - conditional */}
+                        {selected.reason && REASON_OPTIONS.find(r => r.value === selected.reason)?.photoRequired && (
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                              Fotografia <span className="text-destructive">*</span>
+                            </label>
+                            <label className={`flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2.5 text-xs transition-colors hover:border-primary/40 ${
+                              errors[`${product.name}_photo`] ? 'border-destructive' : 'border-input'
+                            }`}>
+                              <Camera className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">
+                                {selected.photoFile ? selected.photoFile.name : 'Nahrajte fotografiu'}
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={e => {
+                                  const file = e.target.files?.[0] || null;
+                                  updateProduct(product.name, { photoFile: file } as Partial<SelectedProduct>);
+                                  setErrors(prev => { const { [`${product.name}_photo`]: _, ...rest } = prev; return rest; });
+                                }}
+                              />
+                            </label>
+                            {errors[`${product.name}_photo`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_photo`]}</p>}
                           </div>
-                          {errors[`${product.name}_solution`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_solution`]}</p>}
-                        </div>
+                        )}
+                        {/* Solution - dynamic based on reason */}
+                        {selected.reason && (
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Požadované riešenie</label>
+                            <div className="flex flex-wrap gap-2">
+                              {SOLUTIONS_BY_REASON[selected.reason].map(solKey => {
+                                const meta = SOLUTION_META[solKey];
+                                const Icon = meta.icon;
+                                return (
+                                  <button
+                                    key={solKey}
+                                    type="button"
+                                    onClick={() => updateProduct(product.name, { solution: solKey })}
+                                    className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                                      selected.solution === solKey
+                                        ? 'border-primary bg-primary text-primary-foreground'
+                                        : 'border-input bg-card hover:border-primary/30'
+                                    }`}
+                                  >
+                                    <Icon className="h-3.5 w-3.5" />
+                                    {meta.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {errors[`${product.name}_solution`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_solution`]}</p>}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
