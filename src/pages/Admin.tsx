@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
 import {
   TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS, STATUS_FLOW,
