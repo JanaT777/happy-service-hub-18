@@ -28,10 +28,45 @@ export type OtherStatus =
   | 'other_completed'
   | 'other_rejected';
 
-export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'wrong_quantity' | 'other_issue';
+export type IssueType = 'damaged_in_transport' | 'not_delivered' | 'wrong_title' | 'manufacturing_defect' | 'wrong_quantity' | 'other_issue';
 export type SuggestedSolution = 'exchange' | 'replacement_with_pickup' | 'resend_order' | 'adjust_order' | 'internal_stock' | 'refund' | 'send_missing' | 'discount';
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type RefundMethod = 'bank_transfer' | 'original_payment';
+
+// Complaint type configuration for internal logic
+export type ComplaintType = 'damaged_in_transport' | 'not_delivered' | 'wrong_title' | 'manufacturing_defect' | 'wrong_quantity';
+
+export const COMPLAINT_TYPE_LABELS: Record<ComplaintType, string> = {
+  damaged_in_transport: 'Poškodený titul v preprave',
+  not_delivered: 'Nedoručená zásielka',
+  wrong_title: 'Nesprávny titul',
+  manufacturing_defect: 'Poškodený titul (výrobná vada)',
+  wrong_quantity: 'Nesprávne množstvo',
+};
+
+export const COMPLAINT_TYPE_SUGGESTED_SOLUTION: Record<ComplaintType, SuggestedSolution> = {
+  damaged_in_transport: 'replacement_with_pickup',
+  not_delivered: 'resend_order',
+  wrong_title: 'exchange',
+  manufacturing_defect: 'exchange',
+  wrong_quantity: 'adjust_order',
+};
+
+export const COMPLAINT_TYPE_ALLOWED_ACTIONS: Record<ComplaintType, SuggestedSolution[]> = {
+  damaged_in_transport: ['replacement_with_pickup', 'refund'],
+  not_delivered: ['resend_order', 'refund', 'internal_stock'],
+  wrong_title: ['exchange', 'refund', 'discount'],
+  manufacturing_defect: ['exchange', 'refund'],
+  wrong_quantity: ['adjust_order', 'refund', 'exchange', 'discount'],
+};
+
+export const COMPLAINT_TYPE_PHOTO_REQUIRED: Record<ComplaintType, boolean> = {
+  damaged_in_transport: true,
+  not_delivered: false,
+  wrong_title: false,
+  manufacturing_defect: true,
+  wrong_quantity: false,
+};
 
 export interface Ticket {
   id: string;
@@ -129,9 +164,10 @@ export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
 };
 
 export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
-  damaged: 'Poškodený tovar',
-  missing_part: 'Chýbajúci tovar',
-  wrong_product: 'Nesprávny tovar',
+  damaged_in_transport: 'Poškodený titul v preprave',
+  not_delivered: 'Nedoručená zásielka',
+  wrong_title: 'Nesprávny titul',
+  manufacturing_defect: 'Poškodený titul (výrobná vada)',
   wrong_quantity: 'Nesprávne množstvo',
   other_issue: 'Iný problém',
 };

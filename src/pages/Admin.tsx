@@ -6,6 +6,8 @@ import {
   SUGGESTED_SOLUTION_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_FLOW,
   RETURN_STATUS_LABELS, RETURN_STATUS_FLOW, OTHER_STATUS_LABELS, OTHER_STATUS_FLOW,
   RequestType, Ticket, ComplaintStatus, ReturnStatus, OtherStatus,
+  ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
+  COMPLAINT_TYPE_SUGGESTED_SOLUTION,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, CalendarIcon, RefreshCw, FileText, Truck, RotateCcw } from 'lucide-react';
@@ -360,15 +362,36 @@ const Admin = () => {
                         <span className="font-medium">{ticket.product}</span>
                       </div>
                     </div>
-                    <div className="rounded-lg border bg-card p-3 space-y-1">
-                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Spôsob riešenia</span>
-                      <div className="flex items-center gap-2">
-                        <RefreshCw className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">
-                          {ticket.suggestedSolution ? SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution] : '—'}
-                        </span>
+                    {ticket.requestType === 'complaint' && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS ? (
+                      <>
+                        <div className="rounded-lg border bg-card p-3 space-y-1">
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Typ reklamácie</span>
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-warning" />
+                            <span className="font-semibold">{COMPLAINT_TYPE_LABELS[ticket.issueType as ComplaintType]}</span>
+                          </div>
+                        </div>
+                        <div className="rounded-lg border bg-card p-3 space-y-1">
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Navrhované riešenie</span>
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-semibold">
+                              {SUGGESTED_SOLUTION_LABELS[COMPLAINT_TYPE_SUGGESTED_SOLUTION[ticket.issueType as ComplaintType]]}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="rounded-lg border bg-card p-3 space-y-1">
+                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Spôsob riešenia</span>
+                        <div className="flex items-center gap-2">
+                          <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">
+                            {ticket.suggestedSolution ? SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution] : '—'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Extra metadata */}
@@ -396,6 +419,25 @@ const Admin = () => {
                       <span className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5" /> IBAN: {ticket.iban}</span>
                     )}
                   </div>
+
+                  {/* Allowed resolution actions for complaints */}
+                  {ticket.requestType === 'complaint' && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS && (
+                    <div className="rounded-lg border bg-card p-3 space-y-2">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Povolené riešenia</span>
+                      <div className="flex flex-wrap gap-2">
+                        {COMPLAINT_TYPE_ALLOWED_ACTIONS[ticket.issueType as ComplaintType].map(action => (
+                          <span key={action} className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
+                            action === COMPLAINT_TYPE_SUGGESTED_SOLUTION[ticket.issueType as ComplaintType]
+                              ? 'border-primary/40 bg-primary/10 text-primary'
+                              : 'border-input bg-secondary text-secondary-foreground'
+                          }`}>
+                            {SUGGESTED_SOLUTION_LABELS[action]}
+                            {action === COMPLAINT_TYPE_SUGGESTED_SOLUTION[ticket.issueType as ComplaintType] && ' ★'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Description */}
                   <p className="rounded-lg border bg-card p-3 text-sm">{ticket.description}</p>
