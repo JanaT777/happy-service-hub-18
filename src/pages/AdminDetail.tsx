@@ -279,7 +279,7 @@ const AdminDetail = () => {
         </div>
 
         {/* RIGHT — Actions */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-8 lg:self-start">
           <h2 className="font-heading text-sm font-semibold uppercase tracking-wider text-muted-foreground">Akcie</h2>
 
           {/* Suggested solution for complaints */}
