@@ -131,36 +131,7 @@ const Admin = () => {
     });
   }, [tickets, statusFilter, typeFilter, complaintTypeFilter, search]);
 
-  const handleStatusChange = (id: string, newStatus: TicketStatus) => {
-    updateTicketStatus(id, newStatus);
-    toast.success(`Tiket aktualizovaný na ${STATUS_LABELS[newStatus]}`);
-  };
 
-  const handleWorkflowChange = (ticket: Ticket, newStatus: string) => {
-    if (ticket.requestType === 'complaint') {
-      updateComplaintStatus(ticket.id, newStatus as ComplaintStatus);
-      toast.success(`Stav reklamácie: "${COMPLAINT_STATUS_LABELS[newStatus as ComplaintStatus]}"`);
-    } else if (ticket.requestType === 'return') {
-      updateReturnStatus(ticket.id, newStatus as ReturnStatus);
-      toast.success(`Stav vrátenia: "${RETURN_STATUS_LABELS[newStatus as ReturnStatus]}"`);
-    } else {
-      updateOtherStatus(ticket.id, newStatus as OtherStatus);
-      toast.success(`Stav požiadavky: "${OTHER_STATUS_LABELS[newStatus as OtherStatus]}"`);
-    }
-  };
-
-  const getNextStatuses = (ticket: Ticket): string[] => {
-    if (ticket.requestType === 'complaint' && ticket.complaintStatus) return COMPLAINT_STATUS_FLOW[ticket.complaintStatus] || [];
-    if (ticket.requestType === 'return' && ticket.returnStatus) return RETURN_STATUS_FLOW[ticket.returnStatus] || [];
-    if (ticket.requestType === 'other' && ticket.otherStatus) return OTHER_STATUS_FLOW[ticket.otherStatus] || [];
-    return [];
-  };
-
-  const getStatusLabel = (ticket: Ticket, status: string): string => {
-    if (ticket.requestType === 'complaint') return COMPLAINT_STATUS_LABELS[status as ComplaintStatus] || status;
-    if (ticket.requestType === 'return') return RETURN_STATUS_LABELS[status as ReturnStatus] || status;
-    return OTHER_STATUS_LABELS[status as OtherStatus] || status;
-  };
 
   const clearFilters = () => {
     setStatusFilter('all');
