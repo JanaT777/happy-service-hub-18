@@ -13,8 +13,8 @@ import {
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, RefreshCw, FileText, Truck, RotateCcw } from 'lucide-react';
-import { toast } from 'sonner';
+import { Search, Clock, Package, Filter, X, FileText, Truck, RotateCcw } from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
 import { formatDistanceToNow, format } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
