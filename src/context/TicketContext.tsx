@@ -25,7 +25,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       description: 'Ľavé slúchadlo prestalo fungovať po 2 týždňoch používania.',
       attachments: [],
       requestType: 'complaint',
-      issueType: 'damaged',
+      issueType: 'manufacturing_defect',
       severity: 'high',
       suggestedSolution: 'exchange',
       complaintStatus: 'complaint_new',
