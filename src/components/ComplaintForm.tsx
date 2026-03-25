@@ -9,7 +9,7 @@ import {
 import { toast } from 'sonner';
 
 type ComplaintReason = 'damaged' | 'damaged_in_transport' | 'not_delivered' | 'missing_part' | 'wrong_product' | 'wrong_title' | 'wrong_quantity' | 'manufacturing_defect';
-type ProductSolution = 'exchange' | 'replacement_with_pickup' | 'resend_order' | 'refund' | 'send_missing' | 'discount';
+type ProductSolution = 'exchange' | 'replacement_with_pickup' | 'resend_order' | 'adjust_order' | 'refund' | 'send_missing' | 'discount';
 
 const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: boolean }[] = [
   { value: 'damaged', label: 'Poškodený tovar', photoRequired: true },
@@ -30,7 +30,7 @@ const SOLUTIONS_BY_REASON: Record<ComplaintReason, ProductSolution[]> = {
   missing_part: ['send_missing', 'refund'],
   wrong_product: ['refund', 'exchange', 'discount'],
   wrong_title: ['exchange', 'refund', 'discount'],
-  wrong_quantity: ['refund', 'exchange', 'discount'],
+  wrong_quantity: ['adjust_order', 'refund', 'exchange', 'discount'],
 };
 
 const DEFAULT_SOLUTION: Partial<Record<ComplaintReason, ProductSolution>> = {
@@ -38,12 +38,14 @@ const DEFAULT_SOLUTION: Partial<Record<ComplaintReason, ProductSolution>> = {
   not_delivered: 'resend_order',
   wrong_title: 'exchange',
   manufacturing_defect: 'exchange',
+  wrong_quantity: 'adjust_order',
 };
 
 const SOLUTION_META: Record<ProductSolution, { label: string; icon: typeof RefreshCw }> = {
   exchange: { label: 'Výmena', icon: RefreshCw },
   replacement_with_pickup: { label: 'Výmena so zvozom', icon: RefreshCw },
   resend_order: { label: 'Opätovné odoslanie', icon: PackageX },
+  adjust_order: { label: 'Úprava objednávky', icon: RefreshCw },
   refund: { label: 'Vrátenie peňazí', icon: Banknote },
   send_missing: { label: 'Doposlanie', icon: PackageX },
   discount: { label: 'Zľava', icon: Percent },
