@@ -392,6 +392,9 @@ const Admin = () => {
                     {ticket.refundMethod && (
                       <span className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5" /> {REFUND_METHOD_LABELS[ticket.refundMethod]}</span>
                     )}
+                    {ticket.iban && (
+                      <span className="flex items-center gap-1.5"><Banknote className="h-3.5 w-3.5" /> IBAN: {ticket.iban}</span>
+                    )}
                   </div>
 
                   {/* Description */}

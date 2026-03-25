@@ -40,8 +40,8 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // IBAN required when payment was NOT card
-  const needsIban = order ? order.paymentMethod !== 'card' : false;
+  // IBAN is always required for returns (refund is always a possible outcome)
+  const needsIban = true;
 
   const handleLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
@@ -85,13 +85,11 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
     if (!description.trim() || description.trim().length < 10) {
       newErrors.description = 'Popíšte dôvod vrátenia aspoň 10 znakmi.';
     }
-    if (needsIban) {
-      const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
-      if (!trimmedIban) {
-        newErrors.iban = 'IBAN je povinný pri tomto type platby.';
-      } else if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(trimmedIban)) {
-        newErrors.iban = 'Neplatný formát IBAN (napr. SK31 1200 0000 1987 4263 7541).';
-      }
+    const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
+    if (!trimmedIban) {
+      newErrors.iban = 'IBAN je povinný.';
+    } else if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(trimmedIban)) {
+      newErrors.iban = 'Neplatný formát IBAN (napr. SK31 1200 0000 1987 4263 7541).';
     }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
@@ -111,6 +109,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
         requestType: 'return',
         refundMethod: order!.paymentMethod === 'card' ? 'original_payment' : 'bank_transfer',
         withinReturnWindow: withinWindow,
+        iban: iban.replace(/\s/g, '').toUpperCase(),
       });
     }
     toast.success('Žiadosť o vrátenie bola odoslaná!');
@@ -295,13 +294,14 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
           {/* IBAN - conditional */}
           {needsIban && (
             <div>
-              <label className="mb-1.5 block text-sm font-medium">IBAN <span className="text-destructive">*</span></label>
+              <label className="mb-1.5 block text-sm font-medium">IBAN pre vrátenie peňazí <span className="text-destructive">*</span></label>
               <input
                 className={inputClass('iban')}
                 placeholder="SK00 0000 0000 0000 0000 0000"
                 value={iban}
                 onChange={e => { setIban(e.target.value); setErrors(prev => { const { iban: _, ...rest } = prev; return rest; }); }}
               />
+              <p className="mt-1 text-xs text-muted-foreground">Použije sa na vrátenie peňazí v prípade schválenia</p>
               {errors.iban && <p className="mt-1 text-xs text-destructive">{errors.iban}</p>}
             </div>
           )}

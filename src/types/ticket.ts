@@ -45,6 +45,7 @@ export interface Ticket {
   createdAt: string;
   updatedAt: string;
   refundMethod?: RefundMethod;
+  iban?: string;
   withinReturnWindow?: boolean;
   issueType?: IssueType;
   severity?: SeverityLevel;
