@@ -82,9 +82,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
       toast.error('Vyberte aspoň jeden produkt.');
       return;
     }
-    if (!description.trim() || description.trim().length < 10) {
-      newErrors.description = 'Popíšte dôvod vrátenia aspoň 10 znakmi.';
-    }
+    // Description is optional for returns
     const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
     if (!trimmedIban) {
       newErrors.iban = 'IBAN je povinný.';
@@ -308,7 +306,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
           {/* Description */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Dôvod vrátenia</label>
+            <label className="mb-1.5 block text-sm font-medium">Dôvod vrátenia (nepovinný údaj)</label>
             <textarea
               rows={3}
               className={inputClass('description')}
