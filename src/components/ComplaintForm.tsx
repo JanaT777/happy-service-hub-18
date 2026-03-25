@@ -8,11 +8,12 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type ComplaintReason = 'damaged' | 'missing_part' | 'wrong_product' | 'wrong_quantity';
-type ProductSolution = 'exchange' | 'refund' | 'send_missing' | 'discount';
+type ComplaintReason = 'damaged' | 'damaged_in_transport' | 'missing_part' | 'wrong_product' | 'wrong_quantity';
+type ProductSolution = 'exchange' | 'replacement_with_pickup' | 'refund' | 'send_missing' | 'discount';
 
 const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: boolean }[] = [
   { value: 'damaged', label: 'Poškodený tovar', photoRequired: true },
+  { value: 'damaged_in_transport', label: 'Poškodený v preprave', photoRequired: true },
   { value: 'missing_part', label: 'Chýbajúci tovar', photoRequired: false },
   { value: 'wrong_product', label: 'Nesprávny tovar', photoRequired: true },
   { value: 'wrong_quantity', label: 'Nesprávne množstvo', photoRequired: false },
@@ -20,13 +21,19 @@ const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: bo
 
 const SOLUTIONS_BY_REASON: Record<ComplaintReason, ProductSolution[]> = {
   damaged: ['refund', 'exchange', 'discount'],
+  damaged_in_transport: ['replacement_with_pickup', 'refund'],
   missing_part: ['send_missing', 'refund'],
   wrong_product: ['refund', 'exchange', 'discount'],
   wrong_quantity: ['refund', 'exchange', 'discount'],
 };
 
+const DEFAULT_SOLUTION: Partial<Record<ComplaintReason, ProductSolution>> = {
+  damaged_in_transport: 'replacement_with_pickup',
+};
+
 const SOLUTION_META: Record<ProductSolution, { label: string; icon: typeof RefreshCw }> = {
   exchange: { label: 'Výmena', icon: RefreshCw },
+  replacement_with_pickup: { label: 'Výmena so zvozom', icon: RefreshCw },
   refund: { label: 'Vrátenie peňazí', icon: Banknote },
   send_missing: { label: 'Doposlanie', icon: PackageX },
   discount: { label: 'Zľava', icon: Percent },
@@ -96,7 +103,17 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
   };
 
   const updateProduct = (name: string, update: Partial<SelectedProduct>) => {
-    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, ...update, ...(update.reason && update.reason !== p.reason ? { solution: null } : {}) } : p));
+    setSelectedProducts(prev => prev.map(p => {
+      if (p.name !== name) return p;
+      const newReason = update.reason && update.reason !== p.reason ? update.reason : undefined;
+      const autoSolution = newReason ? (DEFAULT_SOLUTION[newReason] ?? null) : undefined;
+      return {
+        ...p,
+        ...update,
+        ...(newReason ? { solution: autoSolution } : {}),
+      };
+    }));
+  };
   };
 
   const needsIban = selectedProducts.some(p => p.solution === 'refund');
