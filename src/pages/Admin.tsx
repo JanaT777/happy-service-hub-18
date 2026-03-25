@@ -320,52 +320,85 @@ const Admin = () => {
                     <TableRow key={`${ticket.id}-detail`} className="hover:bg-transparent">
                       <TableCell colSpan={7} className="p-0">
                         <div className="border-t bg-secondary/30 p-5 space-y-4">
-                          {/* Key info grid */}
-                          <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="rounded-lg border bg-card p-3 space-y-1">
-                              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Produkty</span>
-                              <div className="flex items-center gap-2">
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">{ticket.product}</span>
+                          {/* Structured detail fields */}
+                          <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                            <DetailField label="Typ" icon={<WorkflowIcon className="h-4 w-4 text-primary" />}>
+                              {REQUEST_TYPE_LABELS[ticket.requestType]}
+                            </DetailField>
+
+                            {complaintType && (
+                              <DetailField label="Typ problému" icon={<AlertTriangle className="h-4 w-4 text-warning" />}>
+                                {COMPLAINT_TYPE_LABELS[complaintType]}
+                              </DetailField>
+                            )}
+
+                            <DetailField label="Stav">
+                              <div className="flex flex-col gap-1.5">
+                                <StatusBadge status={ticket.status} />
+                                {workflowKey && workflowLabel && (
+                                  <span className={`inline-flex w-fit items-center rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${WORKFLOW_STATUS_COLORS[workflowKey] || 'bg-secondary text-secondary-foreground'}`}>
+                                    {workflowLabel}
+                                  </span>
+                                )}
                               </div>
-                            </div>
-                            <div className="rounded-lg border bg-card p-3 space-y-1">
-                              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Objednávka</span>
-                              <div className="flex items-center gap-2">
-                                <Hash className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">{ticket.orderNumber}</span>
+                            </DetailField>
+
+                            <DetailField label="Zákazník" icon={<Mail className="h-4 w-4 text-muted-foreground" />}>
+                              <div>
+                                <div className="font-semibold">{getCustomerName(ticket)}</div>
+                                <div className="text-[11px] text-muted-foreground">{ticket.customerEmail}</div>
                               </div>
-                            </div>
-                            <div className="rounded-lg border bg-card p-3 space-y-1">
-                              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Email</span>
-                              <div className="flex items-center gap-2">
-                                <Mail className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">{ticket.customerEmail}</span>
-                              </div>
-                            </div>
+                            </DetailField>
+
+                            <DetailField label="Produkt" icon={<Package className="h-4 w-4 text-muted-foreground" />}>
+                              {ticket.product}
+                            </DetailField>
+
+                            <DetailField label="Objednávka" icon={<Hash className="h-4 w-4 text-muted-foreground" />}>
+                              {ticket.orderNumber}
+                            </DetailField>
+
                             {ticket.severity && (
-                              <div className="rounded-lg border bg-card p-3 space-y-1">
-                                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Závažnosť</span>
+                              <DetailField label="Závažnosť">
                                 <div className="flex items-center gap-2">
                                   <span className={`inline-block h-2.5 w-2.5 rounded-full ${
                                     ticket.severity === 'critical' ? 'bg-destructive' :
                                     ticket.severity === 'high' ? 'bg-warning' :
                                     ticket.severity === 'medium' ? 'bg-info' : 'bg-success'
                                   }`} />
-                                  <span className="font-medium">{SEVERITY_LABELS[ticket.severity]}</span>
+                                  {SEVERITY_LABELS[ticket.severity]}
                                 </div>
-                              </div>
+                              </DetailField>
                             )}
+
                             {ticket.refundMethod && (
-                              <div className="rounded-lg border bg-card p-3 space-y-1">
-                                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Spôsob vrátenia</span>
-                                <div className="flex items-center gap-2">
-                                  <Banknote className="h-4 w-4 text-muted-foreground" />
-                                  <span className="font-medium">{REFUND_METHOD_LABELS[ticket.refundMethod]}</span>
-                                </div>
-                              </div>
+                              <DetailField label="Spôsob vrátenia" icon={<Banknote className="h-4 w-4 text-muted-foreground" />}>
+                                {REFUND_METHOD_LABELS[ticket.refundMethod]}
+                              </DetailField>
+                            )}
+
+                            {ticket.iban && (
+                              <DetailField label="IBAN" icon={<Banknote className="h-4 w-4 text-warning" />} highlight>
+                                <span className="font-mono font-bold tracking-wide">{ticket.iban}</span>
+                              </DetailField>
                             )}
                           </div>
+
+                          {/* Description */}
+                          <DetailField label="Popis" fullWidth>
+                            <p>{ticket.description}</p>
+                          </DetailField>
+
+                          {/* Attachments */}
+                          {ticket.attachments.length > 0 && (
+                            <DetailField label="Prílohy" fullWidth>
+                              <div className="flex flex-wrap gap-2">
+                                {ticket.attachments.map((src, i) => (
+                                  <img key={i} src={src} alt="" className="h-20 w-20 rounded-lg border object-cover" />
+                                ))}
+                              </div>
+                            </DetailField>
+                          )}
 
                           {/* Allowed resolution actions for complaints */}
                           {complaintType && (
@@ -383,17 +416,6 @@ const Admin = () => {
                                   </span>
                                 ))}
                               </div>
-                            </div>
-                          )}
-
-                          {/* Description */}
-                          <p className="rounded-lg border bg-card p-3 text-sm">{ticket.description}</p>
-
-                          {ticket.attachments.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {ticket.attachments.map((src, i) => (
-                                <img key={i} src={src} alt="" className="h-16 w-16 rounded-lg border object-cover" />
-                              ))}
                             </div>
                           )}
 
