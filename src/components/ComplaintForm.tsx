@@ -8,12 +8,13 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type ComplaintReason = 'damaged' | 'damaged_in_transport' | 'missing_part' | 'wrong_product' | 'wrong_quantity';
-type ProductSolution = 'exchange' | 'replacement_with_pickup' | 'refund' | 'send_missing' | 'discount';
+type ComplaintReason = 'damaged' | 'damaged_in_transport' | 'not_delivered' | 'missing_part' | 'wrong_product' | 'wrong_quantity';
+type ProductSolution = 'exchange' | 'replacement_with_pickup' | 'resend_order' | 'refund' | 'send_missing' | 'discount';
 
 const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: boolean }[] = [
   { value: 'damaged', label: 'Poškodený tovar', photoRequired: true },
   { value: 'damaged_in_transport', label: 'Poškodený v preprave', photoRequired: true },
+  { value: 'not_delivered', label: 'Nedoručená zásielka', photoRequired: false },
   { value: 'missing_part', label: 'Chýbajúci tovar', photoRequired: false },
   { value: 'wrong_product', label: 'Nesprávny tovar', photoRequired: true },
   { value: 'wrong_quantity', label: 'Nesprávne množstvo', photoRequired: false },
@@ -22,6 +23,7 @@ const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: bo
 const SOLUTIONS_BY_REASON: Record<ComplaintReason, ProductSolution[]> = {
   damaged: ['refund', 'exchange', 'discount'],
   damaged_in_transport: ['replacement_with_pickup', 'refund'],
+  not_delivered: ['resend_order', 'refund'],
   missing_part: ['send_missing', 'refund'],
   wrong_product: ['refund', 'exchange', 'discount'],
   wrong_quantity: ['refund', 'exchange', 'discount'],
@@ -29,11 +31,13 @@ const SOLUTIONS_BY_REASON: Record<ComplaintReason, ProductSolution[]> = {
 
 const DEFAULT_SOLUTION: Partial<Record<ComplaintReason, ProductSolution>> = {
   damaged_in_transport: 'replacement_with_pickup',
+  not_delivered: 'resend_order',
 };
 
 const SOLUTION_META: Record<ProductSolution, { label: string; icon: typeof RefreshCw }> = {
   exchange: { label: 'Výmena', icon: RefreshCw },
   replacement_with_pickup: { label: 'Výmena so zvozom', icon: RefreshCw },
+  resend_order: { label: 'Opätovné odoslanie', icon: PackageX },
   refund: { label: 'Vrátenie peňazí', icon: Banknote },
   send_missing: { label: 'Doposlanie', icon: PackageX },
   discount: { label: 'Zľava', icon: Percent },
@@ -113,7 +117,6 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
         ...(newReason ? { solution: autoSolution } : {}),
       };
     }));
-  };
   };
 
   const needsIban = selectedProducts.some(p => p.solution === 'refund');

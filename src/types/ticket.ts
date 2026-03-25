@@ -29,7 +29,7 @@ export type OtherStatus =
   | 'other_rejected';
 
 export type IssueType = 'damaged' | 'missing_part' | 'wrong_product' | 'wrong_quantity' | 'other_issue';
-export type SuggestedSolution = 'exchange' | 'replacement_with_pickup' | 'refund' | 'send_missing' | 'discount';
+export type SuggestedSolution = 'exchange' | 'replacement_with_pickup' | 'resend_order' | 'refund' | 'send_missing' | 'discount';
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type RefundMethod = 'bank_transfer' | 'original_payment';
 
@@ -139,6 +139,7 @@ export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
 export const SUGGESTED_SOLUTION_LABELS: Record<SuggestedSolution, string> = {
   exchange: 'Výmena produktov',
   replacement_with_pickup: 'Výmena so zvozom',
+  resend_order: 'Opätovné odoslanie objednávky',
   refund: 'Vrátenie finančných prostriedkov',
   send_missing: 'Doposlanie chýbajúcich produktov',
   discount: 'Zľava',
