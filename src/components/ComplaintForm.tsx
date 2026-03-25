@@ -8,12 +8,13 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type ComplaintReason = 'damaged' | 'damaged_in_transport' | 'not_delivered' | 'missing_part' | 'wrong_product' | 'wrong_title' | 'wrong_quantity';
+type ComplaintReason = 'damaged' | 'damaged_in_transport' | 'not_delivered' | 'missing_part' | 'wrong_product' | 'wrong_title' | 'wrong_quantity' | 'manufacturing_defect';
 type ProductSolution = 'exchange' | 'replacement_with_pickup' | 'resend_order' | 'refund' | 'send_missing' | 'discount';
 
 const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: boolean }[] = [
   { value: 'damaged', label: 'Poškodený tovar', photoRequired: true },
   { value: 'damaged_in_transport', label: 'Poškodený v preprave', photoRequired: true },
+  { value: 'manufacturing_defect', label: 'Výrobná vada', photoRequired: true },
   { value: 'not_delivered', label: 'Nedoručená zásielka', photoRequired: false },
   { value: 'missing_part', label: 'Chýbajúci tovar', photoRequired: false },
   { value: 'wrong_product', label: 'Nesprávny tovar', photoRequired: true },
@@ -24,6 +25,7 @@ const REASON_OPTIONS: { value: ComplaintReason; label: string; photoRequired: bo
 const SOLUTIONS_BY_REASON: Record<ComplaintReason, ProductSolution[]> = {
   damaged: ['refund', 'exchange', 'discount'],
   damaged_in_transport: ['replacement_with_pickup', 'refund'],
+  manufacturing_defect: ['exchange', 'refund'],
   not_delivered: ['resend_order', 'refund'],
   missing_part: ['send_missing', 'refund'],
   wrong_product: ['refund', 'exchange', 'discount'],
@@ -35,6 +37,7 @@ const DEFAULT_SOLUTION: Partial<Record<ComplaintReason, ProductSolution>> = {
   damaged_in_transport: 'replacement_with_pickup',
   not_delivered: 'resend_order',
   wrong_title: 'exchange',
+  manufacturing_defect: 'exchange',
 };
 
 const SOLUTION_META: Record<ProductSolution, { label: string; icon: typeof RefreshCw }> = {
