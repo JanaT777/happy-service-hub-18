@@ -362,15 +362,36 @@ const Admin = () => {
                         <span className="font-medium">{ticket.product}</span>
                       </div>
                     </div>
-                    <div className="rounded-lg border bg-card p-3 space-y-1">
-                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Spôsob riešenia</span>
-                      <div className="flex items-center gap-2">
-                        <RefreshCw className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">
-                          {ticket.suggestedSolution ? SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution] : '—'}
-                        </span>
+                    {ticket.requestType === 'complaint' && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS ? (
+                      <>
+                        <div className="rounded-lg border bg-card p-3 space-y-1">
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Typ reklamácie</span>
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-warning" />
+                            <span className="font-semibold">{COMPLAINT_TYPE_LABELS[ticket.issueType as ComplaintType]}</span>
+                          </div>
+                        </div>
+                        <div className="rounded-lg border bg-card p-3 space-y-1">
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Navrhované riešenie</span>
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-semibold">
+                              {SUGGESTED_SOLUTION_LABELS[COMPLAINT_TYPE_SUGGESTED_SOLUTION[ticket.issueType as ComplaintType]]}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="rounded-lg border bg-card p-3 space-y-1">
+                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Spôsob riešenia</span>
+                        <div className="flex items-center gap-2">
+                          <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">
+                            {ticket.suggestedSolution ? SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution] : '—'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Extra metadata */}
