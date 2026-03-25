@@ -1,43 +1,19 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
 import {
-  TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS, STATUS_FLOW,
-  ISSUE_TYPE_LABELS, SEVERITY_LABELS, REFUND_METHOD_LABELS,
-  SUGGESTED_SOLUTION_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_FLOW,
-  RETURN_STATUS_LABELS, RETURN_STATUS_FLOW, OTHER_STATUS_LABELS, OTHER_STATUS_FLOW,
-  RequestType, Ticket, ComplaintStatus, ReturnStatus, OtherStatus,
-  ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
-  COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
+  TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS,
+  SUGGESTED_SOLUTION_LABELS,
+  COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
+  RequestType, Ticket,
+  ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, RefreshCw, FileText, Truck, RotateCcw } from 'lucide-react';
-import { toast } from 'sonner';
-import { formatDistanceToNow, format } from 'date-fns';
+import { Search, Filter, X, FileText, Truck, RotateCcw } from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import React from 'react';
-
-const DetailField = ({ label, icon, children, highlight, fullWidth }: {
-  label: string;
-  icon?: React.ReactNode;
-  children: React.ReactNode;
-  highlight?: boolean;
-  fullWidth?: boolean;
-}) => (
-  <div className={cn(
-    'rounded-lg border p-3 space-y-1',
-    highlight ? 'border-warning/50 bg-warning/10' : 'bg-card',
-    fullWidth && 'sm:col-span-2 lg:col-span-3'
-  )}>
-    <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
-    <div className="flex items-start gap-2 font-medium">
-      {icon}
-      <div>{children}</div>
-    </div>
-  </div>
-);
 
 const ALL_STATUSES: TicketStatus[] = ['new', 'in_review', 'approved', 'rejected', 'refund_processing', 'completed'];
 const ALL_REQUEST_TYPES: RequestType[] = ['return', 'complaint', 'other'];
@@ -66,20 +42,6 @@ const WORKFLOW_STATUS_COLORS: Record<string, string> = {
   other_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
 };
 
-const getActionColor = (status: string) => {
-  if (status.includes('completed') || status.includes('resolved') || status.includes('approved'))
-    return 'bg-success text-success-foreground hover:bg-success/90';
-  if (status.includes('rejected'))
-    return 'bg-destructive text-destructive-foreground hover:bg-destructive/90';
-  if (status.includes('refund'))
-    return 'bg-primary text-primary-foreground hover:bg-primary/90';
-  if (status.includes('waiting'))
-    return 'bg-destructive/80 text-destructive-foreground hover:bg-destructive/70';
-  if (status.includes('in_progress'))
-    return 'bg-warning text-warning-foreground hover:bg-warning/90';
-  return 'bg-secondary text-secondary-foreground hover:bg-muted';
-};
-
 const getWorkflowLabel = (ticket: Ticket): string | undefined => {
   if (ticket.requestType === 'complaint' && ticket.complaintStatus) return COMPLAINT_STATUS_LABELS[ticket.complaintStatus];
   if (ticket.requestType === 'return' && ticket.returnStatus) return RETURN_STATUS_LABELS[ticket.returnStatus];
@@ -106,12 +68,12 @@ const getCustomerName = (ticket: Ticket): string => {
 };
 
 const Admin = () => {
-  const { tickets, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus } = useTickets();
+  const navigate = useNavigate();
+  const { tickets } = useTickets();
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all');
   const [complaintTypeFilter, setComplaintTypeFilter] = useState<ComplaintType | 'all'>('all');
   const [search, setSearch] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const filtered = useMemo(() => {
@@ -129,37 +91,6 @@ const Admin = () => {
       return true;
     });
   }, [tickets, statusFilter, typeFilter, complaintTypeFilter, search]);
-
-  const handleStatusChange = (id: string, newStatus: TicketStatus) => {
-    updateTicketStatus(id, newStatus);
-    toast.success(`Tiket aktualizovaný na ${STATUS_LABELS[newStatus]}`);
-  };
-
-  const handleWorkflowChange = (ticket: Ticket, newStatus: string) => {
-    if (ticket.requestType === 'complaint') {
-      updateComplaintStatus(ticket.id, newStatus as ComplaintStatus);
-      toast.success(`Stav reklamácie: "${COMPLAINT_STATUS_LABELS[newStatus as ComplaintStatus]}"`);
-    } else if (ticket.requestType === 'return') {
-      updateReturnStatus(ticket.id, newStatus as ReturnStatus);
-      toast.success(`Stav vrátenia: "${RETURN_STATUS_LABELS[newStatus as ReturnStatus]}"`);
-    } else {
-      updateOtherStatus(ticket.id, newStatus as OtherStatus);
-      toast.success(`Stav požiadavky: "${OTHER_STATUS_LABELS[newStatus as OtherStatus]}"`);
-    }
-  };
-
-  const getNextStatuses = (ticket: Ticket): string[] => {
-    if (ticket.requestType === 'complaint' && ticket.complaintStatus) return COMPLAINT_STATUS_FLOW[ticket.complaintStatus] || [];
-    if (ticket.requestType === 'return' && ticket.returnStatus) return RETURN_STATUS_FLOW[ticket.returnStatus] || [];
-    if (ticket.requestType === 'other' && ticket.otherStatus) return OTHER_STATUS_FLOW[ticket.otherStatus] || [];
-    return [];
-  };
-
-  const getStatusLabel = (ticket: Ticket, status: string): string => {
-    if (ticket.requestType === 'complaint') return COMPLAINT_STATUS_LABELS[status as ComplaintStatus] || status;
-    if (ticket.requestType === 'return') return RETURN_STATUS_LABELS[status as ReturnStatus] || status;
-    return OTHER_STATUS_LABELS[status as OtherStatus] || status;
-  };
 
   const clearFilters = () => {
     setStatusFilter('all');
@@ -270,244 +201,69 @@ const Admin = () => {
               </TableRow>
             )}
             {filtered.map(ticket => {
-              const isExpanded = expandedId === ticket.id;
-              const nextStatuses = STATUS_FLOW[ticket.status];
               const workflowLabel = getWorkflowLabel(ticket);
               const workflowKey = getWorkflowStatusKey(ticket);
-              const workflowNextStatuses = getNextStatuses(ticket);
               const WorkflowIcon = getWorkflowIcon(ticket.requestType);
               const isComplaint = ticket.requestType === 'complaint';
               const complaintType = isComplaint && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS
                 ? ticket.issueType as ComplaintType : null;
 
               return (
-                <>
-                  <TableRow
-                    key={ticket.id}
-                    className={`cursor-pointer transition-colors ${isExpanded ? 'bg-accent/50' : ''}`}
-                    onClick={() => setExpandedId(isExpanded ? null : ticket.id)}
-                  >
-                    <TableCell className="font-heading font-bold text-sm">{ticket.id}</TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
-                        <WorkflowIcon className="h-3 w-3" />
-                        {REQUEST_TYPE_LABELS[ticket.requestType]}
+                <TableRow
+                  key={ticket.id}
+                  className="cursor-pointer transition-colors hover:bg-accent/50"
+                  onClick={() => navigate(`/admin/${ticket.id}`)}
+                >
+                  <TableCell className="font-heading font-bold text-sm">{ticket.id}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                      <WorkflowIcon className="h-3 w-3" />
+                      {REQUEST_TYPE_LABELS[ticket.requestType]}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {complaintType ? (
+                      <span className="text-xs font-medium">{COMPLAINT_TYPE_LABELS[complaintType]}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <StatusBadge status={ticket.status} />
+                      {workflowKey && workflowLabel && (
+                        <span className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${WORKFLOW_STATUS_COLORS[workflowKey] || 'bg-secondary text-secondary-foreground'}`}>
+                          {workflowLabel}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {complaintType ? (
+                      <span className="text-xs font-medium">
+                        {SUGGESTED_SOLUTION_LABELS[COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType]]}
                       </span>
-                    </TableCell>
-                    <TableCell>
-                      {complaintType ? (
-                        <span className="text-xs font-medium">{COMPLAINT_TYPE_LABELS[complaintType]}</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <StatusBadge status={ticket.status} />
-                        {workflowKey && workflowLabel && (
-                          <span className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${WORKFLOW_STATUS_COLORS[workflowKey] || 'bg-secondary text-secondary-foreground'}`}>
-                            {workflowLabel}
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {complaintType ? (
-                        <span className="text-xs font-medium">
-                          {SUGGESTED_SOLUTION_LABELS[COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType]]}
-                        </span>
-                      ) : ticket.suggestedSolution ? (
-                        <span className="text-xs font-medium">{SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{getCustomerName(ticket)}</span>
-                        <span className="text-[11px] text-muted-foreground">{ticket.customerEmail}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex flex-col items-end">
-                        <span className="text-xs">{format(new Date(ticket.createdAt), 'd. MMM yyyy', { locale: sk })}</span>
-                        <span className="text-[11px] text-muted-foreground">
-                          {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: sk })}
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-
-                  {isExpanded && (
-                    <TableRow key={`${ticket.id}-detail`} className="hover:bg-transparent">
-                      <TableCell colSpan={7} className="p-0">
-                        <div className="border-t bg-secondary/30 p-5 space-y-4">
-                          {/* Structured detail fields */}
-                          <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
-                            <DetailField label="Typ" icon={<WorkflowIcon className="h-4 w-4 text-primary" />}>
-                              {REQUEST_TYPE_LABELS[ticket.requestType]}
-                            </DetailField>
-
-                            {complaintType && (
-                              <DetailField label="Typ problému" icon={<AlertTriangle className="h-4 w-4 text-warning" />}>
-                                {COMPLAINT_TYPE_LABELS[complaintType]}
-                              </DetailField>
-                            )}
-
-                            <DetailField label="Stav">
-                              <div className="flex flex-col gap-1.5">
-                                <StatusBadge status={ticket.status} />
-                                {workflowKey && workflowLabel && (
-                                  <span className={`inline-flex w-fit items-center rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${WORKFLOW_STATUS_COLORS[workflowKey] || 'bg-secondary text-secondary-foreground'}`}>
-                                    {workflowLabel}
-                                  </span>
-                                )}
-                              </div>
-                            </DetailField>
-
-                            <DetailField label="Zákazník" icon={<Mail className="h-4 w-4 text-muted-foreground" />}>
-                              <div>
-                                <div className="font-semibold">{getCustomerName(ticket)}</div>
-                                <div className="text-[11px] text-muted-foreground">{ticket.customerEmail}</div>
-                              </div>
-                            </DetailField>
-
-                            <DetailField label="Produkt" icon={<Package className="h-4 w-4 text-muted-foreground" />}>
-                              {ticket.product}
-                            </DetailField>
-
-                            <DetailField label="Objednávka" icon={<Hash className="h-4 w-4 text-muted-foreground" />}>
-                              {ticket.orderNumber}
-                            </DetailField>
-
-                            {ticket.severity && (
-                              <DetailField label="Závažnosť">
-                                <div className="flex items-center gap-2">
-                                  <span className={`inline-block h-2.5 w-2.5 rounded-full ${
-                                    ticket.severity === 'critical' ? 'bg-destructive' :
-                                    ticket.severity === 'high' ? 'bg-warning' :
-                                    ticket.severity === 'medium' ? 'bg-info' : 'bg-success'
-                                  }`} />
-                                  {SEVERITY_LABELS[ticket.severity]}
-                                </div>
-                              </DetailField>
-                            )}
-
-                            {ticket.refundMethod && (
-                              <DetailField label="Spôsob vrátenia" icon={<Banknote className="h-4 w-4 text-muted-foreground" />}>
-                                {REFUND_METHOD_LABELS[ticket.refundMethod]}
-                              </DetailField>
-                            )}
-
-                            {ticket.iban && (
-                              <DetailField label="IBAN" icon={<Banknote className="h-4 w-4 text-warning" />} highlight>
-                                <span className="font-mono font-bold tracking-wide">{ticket.iban}</span>
-                              </DetailField>
-                            )}
-                          </div>
-
-                          {/* Description */}
-                          <DetailField label="Popis" fullWidth>
-                            <p>{ticket.description}</p>
-                          </DetailField>
-
-                          {/* Attachments */}
-                          {ticket.attachments.length > 0 && (
-                            <DetailField label="Prílohy" fullWidth>
-                              <div className="flex flex-wrap gap-2">
-                                {ticket.attachments.map((src, i) => (
-                                  <img key={i} src={src} alt="" className="h-20 w-20 rounded-lg border object-cover" />
-                                ))}
-                              </div>
-                            </DetailField>
-                          )}
-
-                          {/* Suggested solution + action buttons for complaints */}
-                          {complaintType && (
-                            <div className="rounded-lg border bg-card p-4 space-y-3">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Navrhované riešenie:</span>
-                                <span className="rounded-full border border-primary/40 bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
-                                  {SUGGESTED_SOLUTION_LABELS[COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType]]} ★
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Možnosti:</div>
-                              <div className="flex flex-wrap gap-2">
-                                {COMPLAINT_TYPE_ALLOWED_ACTIONS[complaintType].map(action => (
-                                  <button key={action} onClick={e => { e.stopPropagation(); handleWorkflowChange(ticket, action === 'refund' ? 'complaint_refund_processing' : 'complaint_approved'); toast.info(`Riešenie: ${SUGGESTED_SOLUTION_LABELS[action]}`); }}
-                                    className={`rounded-lg border px-4 py-2 text-xs font-semibold transition-colors ${
-                                      action === COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType]
-                                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                                        : 'bg-secondary text-secondary-foreground hover:bg-muted'
-                                    }`}>
-                                    {SUGGESTED_SOLUTION_LABELS[action]}
-                                  </button>
-                                ))}
-                                <button onClick={e => { e.stopPropagation(); handleWorkflowChange(ticket, 'complaint_rejected'); }}
-                                  className="rounded-lg border bg-destructive px-4 py-2 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors">
-                                  ✕ Zamietnuť
-                                </button>
-                                <button onClick={e => { e.stopPropagation(); handleWorkflowChange(ticket, 'complaint_waiting_customer'); }}
-                                  className="rounded-lg border border-warning/50 bg-warning/10 px-4 py-2 text-xs font-semibold text-warning hover:bg-warning/20 transition-colors">
-                                  ⏳ Vyžiadať doplnenie
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Workflow actions (non-complaint or generic) */}
-                          {!complaintType && workflowNextStatuses.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card p-3">
-                              <WorkflowIcon className="h-4 w-4 text-muted-foreground" />
-                              <span className="mr-1 text-xs font-medium text-muted-foreground">Zmeniť stav:</span>
-                              {workflowNextStatuses.map(ns => (
-                                <button key={ns} onClick={e => { e.stopPropagation(); handleWorkflowChange(ticket, ns); }}
-                                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${getActionColor(ns)}`}>
-                                  {getStatusLabel(ticket, ns)}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Quick action buttons */}
-                          <div className="flex flex-wrap gap-2 border-t pt-3">
-                            <span className="mr-1 self-center text-xs text-muted-foreground">Akcie:</span>
-                            {nextStatuses.includes('approved') && (
-                              <button onClick={e => { e.stopPropagation(); handleStatusChange(ticket.id, 'approved'); }}
-                                className="rounded-lg bg-success px-4 py-2 text-xs font-semibold text-success-foreground hover:bg-success/90 transition-colors">
-                                ✓ Schváliť
-                              </button>
-                            )}
-                            {nextStatuses.includes('rejected') && (
-                              <button onClick={e => { e.stopPropagation(); handleStatusChange(ticket.id, 'rejected'); }}
-                                className="rounded-lg bg-destructive px-4 py-2 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90 transition-colors">
-                                ✕ Zamietnuť
-                              </button>
-                            )}
-                            {nextStatuses.includes('completed') && (
-                              <button onClick={e => { e.stopPropagation(); handleStatusChange(ticket.id, 'completed'); }}
-                                className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
-                                ✓ Označiť ako vybavené
-                              </button>
-                            )}
-                            {nextStatuses.includes('in_review') && (
-                              <button onClick={e => { e.stopPropagation(); handleStatusChange(ticket.id, 'in_review'); }}
-                                className="rounded-lg bg-warning px-4 py-2 text-xs font-semibold text-warning-foreground hover:bg-warning/90 transition-colors">
-                                Preskúmať
-                              </button>
-                            )}
-                            {nextStatuses.includes('refund_processing') && (
-                              <button onClick={e => { e.stopPropagation(); handleStatusChange(ticket.id, 'refund_processing'); }}
-                                className="rounded-lg border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors">
-                                <Banknote className="mr-1.5 inline h-3.5 w-3.5" />Spracovať vrátenie
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </>
+                    ) : ticket.suggestedSolution ? (
+                      <span className="text-xs font-medium">{SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{getCustomerName(ticket)}</span>
+                      <span className="text-[11px] text-muted-foreground">{ticket.customerEmail}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs">{format(new Date(ticket.createdAt), 'd. MMM yyyy', { locale: sk })}</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: sk })}
+                      </span>
+                    </div>
+                  </TableCell>
+                </TableRow>
               );
             })}
           </TableBody>
