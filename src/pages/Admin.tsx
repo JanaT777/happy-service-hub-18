@@ -6,6 +6,8 @@ import {
   SUGGESTED_SOLUTION_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_FLOW,
   RETURN_STATUS_LABELS, RETURN_STATUS_FLOW, OTHER_STATUS_LABELS, OTHER_STATUS_FLOW,
   RequestType, Ticket, ComplaintStatus, ReturnStatus, OtherStatus,
+  ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
+  COMPLAINT_TYPE_SUGGESTED_SOLUTION,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Search, ChevronDown, Clock, Mail, Package, Hash, AlertTriangle, Banknote, Filter, X, CalendarIcon, RefreshCw, FileText, Truck, RotateCcw } from 'lucide-react';
