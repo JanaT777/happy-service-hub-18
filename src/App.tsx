@@ -7,6 +7,7 @@ import { TicketProvider } from "@/context/TicketContext";
 import { AppHeader } from "@/components/AppHeader";
 import Index from "./pages/Index.tsx";
 import Admin from "./pages/Admin.tsx";
+import AdminDetail from "./pages/AdminDetail.tsx";
 import TrackRequest from "./pages/TrackRequest.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/track" element={<TrackRequest />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/:id" element={<AdminDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
