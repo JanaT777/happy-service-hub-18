@@ -121,25 +121,26 @@ const AdminDetail = () => {
     if (action === 'refund') {
       updateComplaintStatus(ticket.id, 'complaint_refund_processing');
       updateTicketStatus(ticket.id, 'refund_processing');
-      toast.success('Refundácia zahájená');
+      toast.success('Refundácia zahájená — stav: APPROVED → REFUND_PROCESSING');
     } else {
       updateComplaintStatus(ticket.id, 'complaint_approved');
       updateTicketStatus(ticket.id, 'approved');
-      toast.success(`Riešenie schválené: ${SUGGESTED_SOLUTION_LABELS[action]}`);
+      toast.success(`Riešenie schválené: ${SUGGESTED_SOLUTION_LABELS[action]} — stav: APPROVED`);
     }
   };
 
   const handleReject = () => {
     updateComplaintStatus(ticket.id, 'complaint_rejected');
     updateTicketStatus(ticket.id, 'rejected');
-    toast.success('Požiadavka zamietnutá');
+    toast.success('Požiadavka zamietnutá — stav: REJECTED');
   };
 
   const handleRequestInfo = () => {
     updateComplaintStatus(ticket.id, 'complaint_waiting_customer');
-    updateTicketStatus(ticket.id, 'in_review');
-    toast.success('Vyžiadané doplnenie od zákazníka');
+    updateTicketStatus(ticket.id, 'needs_info');
+    toast.success('Vyžiadané doplnenie od zákazníka — stav: NEEDS_INFO');
   };
+
 
   const handleReturnAction = (status: ReturnStatus) => {
     updateReturnStatus(ticket.id, status);
