@@ -107,12 +107,12 @@ const getCustomerName = (ticket: Ticket): string => {
 };
 
 const Admin = () => {
-  const { tickets, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus } = useTickets();
+  const navigate = useNavigate();
+  const { tickets } = useTickets();
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all');
   const [complaintTypeFilter, setComplaintTypeFilter] = useState<ComplaintType | 'all'>('all');
   const [search, setSearch] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const filtered = useMemo(() => {
