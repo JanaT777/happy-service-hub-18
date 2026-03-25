@@ -202,15 +202,13 @@ const AdminDetail = () => {
 
           <InfoRow label="Typ požiadavky" icon={<RequestTypeIcon className="h-4 w-4" />}>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-              {REQUEST_TYPE_LABELS[ticket.requestType]}
+              {REQUEST_TYPE_LABELS[ticket.requestType] || ticket.requestType || '—'}
             </span>
           </InfoRow>
 
-          {complaintType && (
-            <InfoRow label="Typ reklamácie" icon={<AlertTriangle className="h-4 w-4 text-warning" />}>
-              {COMPLAINT_TYPE_LABELS[complaintType]}
-            </InfoRow>
-          )}
+          <InfoRow label="Typ reklamácie" icon={<AlertTriangle className="h-4 w-4 text-warning" />}>
+            {complaintType ? COMPLAINT_TYPE_LABELS[complaintType] : <span className="text-muted-foreground">—</span>}
+          </InfoRow>
 
           <InfoRow label="Stav">
             <div className="flex flex-wrap items-center gap-2">
@@ -226,20 +224,20 @@ const AdminDetail = () => {
           <InfoRow label="Zákazník" icon={<User className="h-4 w-4" />}>
             <div>
               <div className="font-semibold">{getCustomerName(ticket)}</div>
-              <div className="text-xs text-muted-foreground">{ticket.customerEmail}</div>
+              <div className="text-xs text-muted-foreground">{ticket.customerEmail || '—'}</div>
             </div>
           </InfoRow>
 
           <InfoRow label="Produkt" icon={<Package className="h-4 w-4" />}>
-            {ticket.product}
+            {ticket.product || <span className="text-muted-foreground">—</span>}
           </InfoRow>
 
           <InfoRow label="Objednávka" icon={<Hash className="h-4 w-4" />}>
-            {ticket.orderNumber}
+            {ticket.orderNumber || <span className="text-muted-foreground">—</span>}
           </InfoRow>
 
-          {ticket.severity && (
-            <InfoRow label="Závažnosť">
+          <InfoRow label="Závažnosť">
+            {ticket.severity ? (
               <div className="flex items-center gap-2">
                 <span className={`inline-block h-2.5 w-2.5 rounded-full ${
                   ticket.severity === 'critical' ? 'bg-destructive' :
@@ -248,34 +246,32 @@ const AdminDetail = () => {
                 }`} />
                 {SEVERITY_LABELS[ticket.severity]}
               </div>
-            </InfoRow>
-          )}
-
-          <InfoRow label="Popis">
-            <p className="whitespace-pre-wrap">{ticket.description}</p>
+            ) : <span className="text-muted-foreground">—</span>}
           </InfoRow>
 
-          {ticket.attachments.length > 0 && (
-            <InfoRow label="Prílohy" icon={<ImageIcon className="h-4 w-4" />}>
+          <InfoRow label="Popis">
+            <p className="whitespace-pre-wrap">{ticket.description || <span className="text-muted-foreground">Bez popisu</span>}</p>
+          </InfoRow>
+
+          <InfoRow label="Prílohy" icon={<ImageIcon className="h-4 w-4" />}>
+            {ticket.attachments && ticket.attachments.length > 0 ? (
               <div className="flex flex-wrap gap-2 pt-1">
                 {ticket.attachments.map((src, i) => (
                   <img key={i} src={src} alt={`Príloha ${i + 1}`} className="h-24 w-24 rounded-lg border object-cover" />
                 ))}
               </div>
-            </InfoRow>
-          )}
+            ) : <span className="text-muted-foreground">Žiadne prílohy</span>}
+          </InfoRow>
 
-          {ticket.refundMethod && (
-            <InfoRow label="Spôsob vrátenia" icon={<Banknote className="h-4 w-4" />}>
-              {REFUND_METHOD_LABELS[ticket.refundMethod]}
-            </InfoRow>
-          )}
+          <InfoRow label="Spôsob vrátenia" icon={<Banknote className="h-4 w-4" />}>
+            {ticket.refundMethod ? REFUND_METHOD_LABELS[ticket.refundMethod] : <span className="text-muted-foreground">—</span>}
+          </InfoRow>
 
-          {ticket.iban && (
-            <InfoRow label="IBAN" icon={<Banknote className="h-4 w-4 text-warning" />} highlight>
-              <span className="font-mono text-base font-bold tracking-wider">{ticket.iban}</span>
-            </InfoRow>
-          )}
+          <InfoRow label="IBAN" icon={<Banknote className="h-4 w-4 text-warning" />} highlight={!!ticket.iban}>
+            {ticket.iban
+              ? <span className="font-mono text-base font-bold tracking-wider">{ticket.iban}</span>
+              : <span className="text-muted-foreground">Nezadaný</span>}
+          </InfoRow>
         </div>
 
         {/* RIGHT — Actions */}
