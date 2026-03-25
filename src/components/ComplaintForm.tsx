@@ -396,7 +396,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
           {/* Description */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Popis problému</label>
+            <label className="mb-1.5 block text-sm font-medium">Dôvod reklamácie <span className="text-destructive">*</span></label>
             <textarea
               rows={3}
               className={inputClass('description')}
