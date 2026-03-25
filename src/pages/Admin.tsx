@@ -420,6 +420,25 @@ const Admin = () => {
                     )}
                   </div>
 
+                  {/* Allowed resolution actions for complaints */}
+                  {ticket.requestType === 'complaint' && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS && (
+                    <div className="rounded-lg border bg-card p-3 space-y-2">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Povolené riešenia</span>
+                      <div className="flex flex-wrap gap-2">
+                        {COMPLAINT_TYPE_ALLOWED_ACTIONS[ticket.issueType as ComplaintType].map(action => (
+                          <span key={action} className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
+                            action === COMPLAINT_TYPE_SUGGESTED_SOLUTION[ticket.issueType as ComplaintType]
+                              ? 'border-primary/40 bg-primary/10 text-primary'
+                              : 'border-input bg-secondary text-secondary-foreground'
+                          }`}>
+                            {SUGGESTED_SOLUTION_LABELS[action]}
+                            {action === COMPLAINT_TYPE_SUGGESTED_SOLUTION[ticket.issueType as ComplaintType] && ' ★'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Description */}
                   <p className="rounded-lg border bg-card p-3 text-sm">{ticket.description}</p>
 
