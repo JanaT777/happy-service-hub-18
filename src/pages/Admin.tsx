@@ -4,21 +4,93 @@ import { useTickets } from '@/context/TicketContext';
 import {
   TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS,
   SUGGESTED_SOLUTION_LABELS,
-  COMPLAINT_STATUS_LABELS,
-  RETURN_STATUS_LABELS,
-  OTHER_STATUS_LABELS,
+  COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   RequestType, Ticket,
-  ComplaintType, COMPLAINT_TYPE_LABELS,
-  COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
+  ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Clock, Package, Filter, X, FileText, Truck, RotateCcw } from 'lucide-react';
+import { Search, Filter, X, FileText, Truck, RotateCcw } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 
+const ALL_STATUSES: TicketStatus[] = ['new', 'in_review', 'approved', 'rejected', 'refund_processing', 'completed'];
+const ALL_REQUEST_TYPES: RequestType[] = ['return', 'complaint', 'other'];
+const ALL_COMPLAINT_TYPES: ComplaintType[] = ['damaged_in_transport', 'not_delivered', 'wrong_title', 'manufacturing_defect', 'wrong_quantity'];
 
+const WORKFLOW_STATUS_COLORS: Record<string, string> = {
+  complaint_new: 'bg-info/15 text-info border-info/30',
+  complaint_pickup_ordered: 'bg-primary/15 text-primary border-primary/30',
+  complaint_received: 'bg-primary/15 text-primary border-primary/30',
+  complaint_inspecting: 'bg-warning/15 text-warning border-warning/30',
+  complaint_in_progress: 'bg-warning/15 text-warning border-warning/30',
+  complaint_waiting_customer: 'bg-destructive/15 text-destructive border-destructive/30',
+  complaint_approved: 'bg-success/15 text-success border-success/30',
+  complaint_refund_processing: 'bg-primary/15 text-primary border-primary/30',
+  complaint_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
+  complaint_resolved: 'bg-muted text-muted-foreground border-muted',
+  return_submitted: 'bg-info/15 text-info border-info/30',
+  return_received: 'bg-primary/15 text-primary border-primary/30',
+  return_inspecting: 'bg-warning/15 text-warning border-warning/30',
+  return_refund_processing: 'bg-primary/15 text-primary border-primary/30',
+  return_completed: 'bg-muted text-muted-foreground border-muted',
+  return_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
+  other_submitted: 'bg-info/15 text-info border-info/30',
+  other_in_progress: 'bg-warning/15 text-warning border-warning/30',
+  other_completed: 'bg-muted text-muted-foreground border-muted',
+  other_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
+};
+
+const getWorkflowLabel = (ticket: Ticket): string | undefined => {
+  if (ticket.requestType === 'complaint' && ticket.complaintStatus) return COMPLAINT_STATUS_LABELS[ticket.complaintStatus];
+  if (ticket.requestType === 'return' && ticket.returnStatus) return RETURN_STATUS_LABELS[ticket.returnStatus];
+  if (ticket.requestType === 'other' && ticket.otherStatus) return OTHER_STATUS_LABELS[ticket.otherStatus];
+  return undefined;
+};
+
+const getWorkflowStatusKey = (ticket: Ticket): string | undefined => {
+  if (ticket.requestType === 'complaint') return ticket.complaintStatus;
+  if (ticket.requestType === 'return') return ticket.returnStatus;
+  if (ticket.requestType === 'other') return ticket.otherStatus;
+  return undefined;
+};
+
+const getWorkflowIcon = (type: RequestType) => {
+  if (type === 'complaint') return FileText;
+  if (type === 'return') return RotateCcw;
+  return Truck;
+};
+
+const getCustomerName = (ticket: Ticket): string => {
+  const order = MOCK_ORDERS[ticket.orderNumber];
+  return order?.customerName || ticket.customerEmail.split('@')[0];
+};
+
+const Admin = () => {
+  const navigate = useNavigate();
+  const { tickets } = useTickets();
+  const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all');
+  const [complaintTypeFilter, setComplaintTypeFilter] = useState<ComplaintType | 'all'>('all');
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  const filtered = useMemo(() => {
+    return tickets.filter(t => {
+      if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+      if (typeFilter !== 'all' && t.requestType !== typeFilter) return false;
+      if (complaintTypeFilter !== 'all') {
+        if (t.requestType !== 'complaint') return false;
+        if (t.issueType !== complaintTypeFilter) return false;
+      }
+      if (search) {
+        const q = search.toLowerCase();
+        return t.id.toLowerCase().includes(q) || t.customerEmail.toLowerCase().includes(q) || t.orderNumber.toLowerCase().includes(q) || t.product.toLowerCase().includes(q) || getCustomerName(t).toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [tickets, statusFilter, typeFilter, complaintTypeFilter, search]);
 
   const clearFilters = () => {
     setStatusFilter('all');
