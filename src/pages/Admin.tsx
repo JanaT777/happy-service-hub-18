@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
 import {
-  TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS, STATUS_FLOW,
-  ISSUE_TYPE_LABELS, SEVERITY_LABELS, REFUND_METHOD_LABELS,
-  SUGGESTED_SOLUTION_LABELS, COMPLAINT_STATUS_LABELS, COMPLAINT_STATUS_FLOW,
-  RETURN_STATUS_LABELS, RETURN_STATUS_FLOW, OTHER_STATUS_LABELS, OTHER_STATUS_FLOW,
-  RequestType, Ticket, ComplaintStatus, ReturnStatus, OtherStatus,
-  ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
+  TicketStatus, STATUS_LABELS, REQUEST_TYPE_LABELS,
+  SUGGESTED_SOLUTION_LABELS,
+  COMPLAINT_STATUS_LABELS,
+  RETURN_STATUS_LABELS,
+  OTHER_STATUS_LABELS,
+  RequestType, Ticket,
+  ComplaintType, COMPLAINT_TYPE_LABELS,
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
