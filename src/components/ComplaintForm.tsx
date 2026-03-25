@@ -149,6 +149,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
         requestType: 'complaint',
         issueType: (p.reason || issueType) as IssueType,
         suggestedSolution: (p.solution || undefined) as SuggestedSolution | undefined,
+        iban: needsIban ? iban.replace(/\s/g, '').toUpperCase() : undefined,
       });
     }
     toast.success('Reklamácia bola odoslaná!');
@@ -381,13 +382,14 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
           {/* IBAN - conditional */}
           {needsIban && (
             <div>
-              <label className="mb-1.5 block text-sm font-medium">IBAN <span className="text-destructive">*</span></label>
+              <label className="mb-1.5 block text-sm font-medium">IBAN pre vrátenie peňazí <span className="text-destructive">*</span></label>
               <input
                 className={inputClass('iban')}
                 placeholder="SK00 0000 0000 0000 0000 0000"
                 value={iban}
                 onChange={e => { setIban(e.target.value); setErrors(prev => { const { iban: _, ...rest } = prev; return rest; }); }}
               />
+              <p className="mt-1 text-xs text-muted-foreground">Použije sa na vrátenie peňazí v prípade schválenia</p>
               {errors.iban && <p className="mt-1 text-xs text-destructive">{errors.iban}</p>}
             </div>
           )}
