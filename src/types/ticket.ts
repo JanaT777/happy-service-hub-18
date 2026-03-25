@@ -138,6 +138,7 @@ export const ISSUE_TYPE_LABELS: Record<IssueType, string> = {
 
 export const SUGGESTED_SOLUTION_LABELS: Record<SuggestedSolution, string> = {
   exchange: 'Výmena produktov',
+  replacement_with_pickup: 'Výmena so zvozom',
   refund: 'Vrátenie finančných prostriedkov',
   send_missing: 'Doposlanie chýbajúcich produktov',
   discount: 'Zľava',
