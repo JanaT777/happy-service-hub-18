@@ -16,6 +16,28 @@ import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import React from 'react';
+
+const DetailField = ({ label, icon, children, highlight, fullWidth }: {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  highlight?: boolean;
+  fullWidth?: boolean;
+}) => (
+  <div className={cn(
+    'rounded-lg border p-3 space-y-1',
+    highlight ? 'border-warning/50 bg-warning/10' : 'bg-card',
+    fullWidth && 'sm:col-span-2 lg:col-span-3'
+  )}>
+    <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+    <div className="flex items-start gap-2 font-medium">
+      {icon}
+      <div>{children}</div>
+    </div>
+  </div>
+);
 
 const ALL_STATUSES: TicketStatus[] = ['new', 'in_review', 'approved', 'rejected', 'refund_processing', 'completed'];
 const ALL_REQUEST_TYPES: RequestType[] = ['return', 'complaint', 'other'];
