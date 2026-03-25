@@ -103,7 +103,17 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
   };
 
   const updateProduct = (name: string, update: Partial<SelectedProduct>) => {
-    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, ...update, ...(update.reason && update.reason !== p.reason ? { solution: null } : {}) } : p));
+    setSelectedProducts(prev => prev.map(p => {
+      if (p.name !== name) return p;
+      const newReason = update.reason && update.reason !== p.reason ? update.reason : undefined;
+      const autoSolution = newReason ? (DEFAULT_SOLUTION[newReason] ?? null) : undefined;
+      return {
+        ...p,
+        ...update,
+        ...(newReason ? { solution: autoSolution } : {}),
+      };
+    }));
+  };
   };
 
   const needsIban = selectedProducts.some(p => p.solution === 'refund');
