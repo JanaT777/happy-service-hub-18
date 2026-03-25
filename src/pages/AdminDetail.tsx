@@ -195,7 +195,7 @@ const AdminDetail = () => {
       </div>
 
       {/* Two-column layout */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid gap-6 lg:grid-cols-[7fr_3fr]">
         {/* LEFT — Request details */}
         <div className="space-y-3">
           <h2 className="font-heading text-sm font-semibold uppercase tracking-wider text-muted-foreground">Detail požiadavky</h2>
@@ -279,7 +279,7 @@ const AdminDetail = () => {
         </div>
 
         {/* RIGHT — Actions */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-8 lg:self-start">
           <h2 className="font-heading text-sm font-semibold uppercase tracking-wider text-muted-foreground">Akcie</h2>
 
           {/* Suggested solution for complaints */}
