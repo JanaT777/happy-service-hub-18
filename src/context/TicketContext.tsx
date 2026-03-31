@@ -81,7 +81,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const addTicket = useCallback((data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
     const now = new Date().toISOString();
     const complaintItems = data.requestType === 'complaint' && data.complaintItems
-      ? autoApproveItems(data.complaintItems)
+      ? processNewItems(data.complaintItems)
       : data.complaintItems;
 
     setTickets(prev => [{
