@@ -55,6 +55,7 @@ export const OtherRequestForm = ({ onBack, onSubmit, createdBy }: Props) => {
       description: result.data.description,
       attachments,
       requestType: 'other',
+      ...(createdBy ? { createdBy } : {}),
     });
     toast.success('Požiadavka bola odoslaná!');
     setSubmitting(false);

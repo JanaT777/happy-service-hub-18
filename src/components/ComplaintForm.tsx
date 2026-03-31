@@ -163,6 +163,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props
       requestedResolution: firstItem.requestedResolution!,
       complaintItems,
       iban: iban.replace(/\s/g, '').toUpperCase(),
+      ...(createdBy ? { createdBy } : {}),
     });
 
     setTicketId(id);
