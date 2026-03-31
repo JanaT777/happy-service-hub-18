@@ -227,6 +227,8 @@ const Admin = () => {
                   <TableCell>
                     {complaintType ? (
                       <span className="text-xs font-medium">{COMPLAINT_TYPE_LABELS[complaintType]}</span>
+                    ) : ticket.requestType === 'return' ? (
+                      <span className="text-xs font-medium">Odstúpenie od zmluvy</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
