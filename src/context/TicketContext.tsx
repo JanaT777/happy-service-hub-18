@@ -73,31 +73,15 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     },
   ]);
 
-  const autoApproveItems = (items: ComplaintItem[]): ComplaintItem[] => {
-    const resolutionToAction: Record<string, SuggestedSolution> = {
-      resend: 'resend_order',
-      exchange: 'exchange',
-      refund: 'refund',
-    };
-
-    return items.map(item => {
-      const systemSuggestion = item.outOfStock ? 'refund' as SuggestedSolution : COMPLAINT_TYPE_SUGGESTED_SOLUTION[item.complaintReason as ComplaintType];
-      const customerAction = resolutionToAction[item.requestedResolution];
-      const hasMismatch = customerAction !== systemSuggestion;
-      const isExchange = systemSuggestion === 'exchange';
-      const isInStock = !item.outOfStock;
-
-      if (isExchange && !hasMismatch && isInStock) {
-        return { ...item, itemStatus: 'item_approved' as ComplaintItemStatus };
-      }
-      return item;
-    });
+  // Items always start as item_new — warehouse workflow handles progression
+  const processNewItems = (items: ComplaintItem[]): ComplaintItem[] => {
+    return items.map(item => ({ ...item, itemStatus: 'item_new' as ComplaintItemStatus }));
   };
 
   const addTicket = useCallback((data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
     const now = new Date().toISOString();
     const complaintItems = data.requestType === 'complaint' && data.complaintItems
-      ? autoApproveItems(data.complaintItems)
+      ? processNewItems(data.complaintItems)
       : data.complaintItems;
 
     setTickets(prev => [{

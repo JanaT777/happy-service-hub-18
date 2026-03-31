@@ -80,13 +80,36 @@ export interface ReturnItem {
   quantity: number;
 }
 
-export type ComplaintItemStatus = 'item_new' | 'item_approved' | 'item_rejected' | 'item_refunded';
+export type ComplaintItemStatus =
+  | 'item_new'
+  | 'item_in_transit'
+  | 'item_received_warehouse'
+  | 'item_quality_check'
+  | 'item_approved'
+  | 'item_rejected'
+  | 'item_refunded'
+  | 'item_completed';
 
 export const COMPLAINT_ITEM_STATUS_LABELS: Record<ComplaintItemStatus, string> = {
   item_new: 'Nová',
+  item_in_transit: 'Na ceste',
+  item_received_warehouse: 'Prijaté na sklad',
+  item_quality_check: 'Kontrola kvality',
   item_approved: 'Schválená',
   item_rejected: 'Zamietnutá',
   item_refunded: 'Refundovaná',
+  item_completed: 'Vybavené',
+};
+
+export const ITEM_STATUS_FLOW: Record<ComplaintItemStatus, ComplaintItemStatus[]> = {
+  item_new: ['item_in_transit'],
+  item_in_transit: ['item_received_warehouse'],
+  item_received_warehouse: ['item_quality_check'],
+  item_quality_check: ['item_approved', 'item_rejected'],
+  item_approved: ['item_refunded', 'item_completed'],
+  item_rejected: [],
+  item_refunded: ['item_completed'],
+  item_completed: [],
 };
 
 export interface ItemActionLog {
@@ -154,7 +177,8 @@ export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | nu
   const statuses = ticket.complaintItems.map(i => i.itemStatus);
   if (statuses.every(s => s === 'item_new')) return 'new';
   if (statuses.every(s => s === 'item_rejected')) return 'rejected';
-  if (statuses.every(s => s === 'item_approved' || s === 'item_refunded')) return 'completed';
+  if (statuses.every(s => s === 'item_completed')) return 'completed';
+  if (statuses.every(s => s === 'item_approved' || s === 'item_refunded' || s === 'item_completed')) return 'completed';
   return 'processing';
 }
 
