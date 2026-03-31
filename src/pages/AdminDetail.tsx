@@ -38,9 +38,13 @@ const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
 
 const ITEM_STATUS_COLORS: Record<ComplaintItemStatus, string> = {
   item_new: 'bg-muted text-muted-foreground',
+  item_in_transit: 'bg-info/15 text-info border-info/30',
+  item_received_warehouse: 'bg-primary/15 text-primary border-primary/30',
+  item_quality_check: 'bg-warning/15 text-warning border-warning/30',
   item_approved: 'bg-primary/15 text-primary border-primary/30',
   item_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
   item_refunded: 'bg-green-500/15 text-green-700 border-green-500/30',
+  item_completed: 'bg-green-500/15 text-green-700 border-green-500/30',
 };
 
 // Map RequestedResolution → SuggestedSolution for button matching
