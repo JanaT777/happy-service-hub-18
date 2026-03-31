@@ -306,9 +306,18 @@ const AdminDetail = () => {
                             <span className="inline-flex items-center rounded-full bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 text-[11px] font-semibold">
                               Zákazník: {REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}
                             </span>
-                            <span className="inline-flex items-center rounded-full bg-muted border border-border text-muted-foreground px-2.5 py-0.5 text-[11px] font-semibold">
-                              Systém: {SUGGESTED_SOLUTION_LABELS[systemSuggestion]}
-                            </span>
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex items-center rounded-full bg-muted border border-border text-muted-foreground px-2.5 py-0.5 text-[11px] font-semibold cursor-help">
+                                    Systém: {SUGGESTED_SOLUTION_LABELS[systemSuggestion]}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+                                  Navrhnuté automaticky podľa typu reklamácie
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </div>
                       )}
