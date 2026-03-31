@@ -177,7 +177,8 @@ export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | nu
   const statuses = ticket.complaintItems.map(i => i.itemStatus);
   if (statuses.every(s => s === 'item_new')) return 'new';
   if (statuses.every(s => s === 'item_rejected')) return 'rejected';
-  if (statuses.every(s => s === 'item_approved' || s === 'item_refunded')) return 'completed';
+  if (statuses.every(s => s === 'item_completed')) return 'completed';
+  if (statuses.every(s => s === 'item_approved' || s === 'item_refunded' || s === 'item_completed')) return 'completed';
   return 'processing';
 }
 
