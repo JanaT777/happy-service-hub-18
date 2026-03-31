@@ -203,6 +203,16 @@ const AdminDetail = () => {
         {/* ──── RIGHT: Actions ──── */}
         <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
 
+          {/* Customer requested resolution */}
+          {ticket.requestedResolution && (
+            <div className="rounded-xl border-2 border-accent/50 bg-accent/10 p-5">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Požiadavka zákazníka</p>
+              <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
+                {REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution]}
+              </span>
+            </div>
+          )}
+
           {/* Suggested solution card */}
           <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-5">
             <div>
