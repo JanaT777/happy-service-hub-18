@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import {
   ArrowLeft, Star, XCircle, MessageSquare, CheckCircle2,
-  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle,
+  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle, Info,
 } from 'lucide-react';
 
 const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
@@ -329,6 +329,35 @@ const AdminDetail = () => {
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Agent instruction for resolved items */}
+                      {item.itemStatus === 'item_approved' && (
+                        <div className="flex items-start gap-2.5 rounded-lg bg-primary/10 border border-primary/30 px-4 py-3">
+                          <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-semibold text-primary">Inštrukcia</p>
+                            <p className="text-xs text-primary/80">Vytvor náhradnú objednávku v systéme (0 €)</p>
+                          </div>
+                        </div>
+                      )}
+                      {item.itemStatus === 'item_refunded' && (
+                        <div className="flex items-start gap-2.5 rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-3">
+                          <Info className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-semibold text-green-700">Inštrukcia</p>
+                            <p className="text-xs text-green-600">Spracuj refundáciu v platobnom systéme</p>
+                          </div>
+                        </div>
+                      )}
+                      {item.itemStatus === 'item_rejected' && (
+                        <div className="flex items-start gap-2.5 rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3">
+                          <Info className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-semibold text-destructive">Inštrukcia</p>
+                            <p className="text-xs text-destructive/80">Informuj zákazníka o zamietnutí</p>
                           </div>
                         </div>
                       )}
