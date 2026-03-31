@@ -141,6 +141,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
         requestType: 'complaint',
         issueType: complaintType as IssueType,
         suggestedSolution,
+        requestedResolution: requestedResolution!,
         iban: iban.replace(/\s/g, '').toUpperCase(),
       });
     }

@@ -92,6 +92,7 @@ export interface Ticket {
   issueType?: IssueType;
   severity?: SeverityLevel;
   suggestedSolution?: SuggestedSolution;
+  requestedResolution?: RequestedResolution;
   complaintStatus?: ComplaintStatus;
   returnStatus?: ReturnStatus;
   otherStatus?: OtherStatus;
