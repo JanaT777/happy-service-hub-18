@@ -5,7 +5,7 @@ import { DecisionTreeResult } from '@/components/DecisionTree';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
   User, Mail, CalendarDays, CreditCard, CheckCircle2,
-  Banknote, CheckCircle, XCircle,
+  Banknote, CheckCircle, XCircle, Truck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,11 +37,15 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
   const [description, setDescription] = useState('');
   const [iban, setIban] = useState('');
+  const [alreadySent, setAlreadySent] = useState<boolean | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   // IBAN is always required for returns (refund is always a possible outcome)
   const needsIban = true;
+
+  // Overall wizard: Step 1 = type selection (done), Step 2 = this form, Step 3 = confirm
+  const overallStep = step === 'confirm' ? 3 : 2;
 
   const handleLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
@@ -82,7 +86,9 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
       toast.error('Vyberte aspoň jeden produkt.');
       return;
     }
-    // Description is optional for returns
+    if (alreadySent === null) {
+      newErrors.alreadySent = 'Prosím odpovedzte na túto otázku.';
+    }
     const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
     if (!trimmedIban) {
       newErrors.iban = 'IBAN je povinný.';
@@ -114,7 +120,6 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
     onSubmit();
   };
 
-  const stepNumber = step === 'lookup' ? 1 : step === 'products' ? 2 : 3;
   const goBack = () => {
     if (step === 'confirm') setStep('products');
     else if (step === 'products') { setStep('lookup'); setOrder(null); setSelectedProducts([]); }
@@ -130,14 +135,14 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
         <ArrowLeft className="h-4 w-4" /> Späť
       </button>
 
-      {/* Progress */}
+      {/* Progress — overall wizard */}
       <div className="mb-6">
         <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Krok {stepNumber} z 3</span>
-          <span>{Math.round((stepNumber / 3) * 100)}%</span>
+          <span>Krok {overallStep} z 3</span>
+          <span>{Math.round((overallStep / 3) * 100)}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${(stepNumber / 3) * 100}%` }} />
+          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${(overallStep / 3) * 100}%` }} />
         </div>
       </div>
 
@@ -152,7 +157,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
         </h1>
       </div>
 
-      {/* Step 1: Order lookup */}
+      {/* Sub-step: Order lookup (part of overall Step 2) */}
       {step === 'lookup' && (
         <div className="space-y-4">
           <div>
@@ -188,7 +193,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
         </div>
       )}
 
-      {/* Step 2: Order details + product selection */}
+      {/* Sub-step: Product selection + details (part of overall Step 2) */}
       {step === 'products' && order && (
         <div className="space-y-6">
           {/* Order info */}
@@ -247,7 +252,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
           {/* Product selection */}
           <div>
-            <p className="mb-3 text-sm font-medium">Vyberte produkty na vrátenie:</p>
+            <p className="mb-3 text-sm font-medium">Ktoré produkty chcete vrátiť?</p>
             <div className="space-y-3">
               {order.products.map(product => {
                 const selected = selectedProducts.find(p => p.name === product.name);
@@ -288,6 +293,37 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
             </div>
           </div>
 
+          {/* Already sent package? */}
+          <div>
+            <p className="mb-2 text-sm font-medium">Už ste balík odoslali?</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setAlreadySent(true); setErrors(prev => { const { alreadySent: _, ...rest } = prev; return rest; }); }}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
+                  alreadySent === true
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-input bg-card text-muted-foreground hover:border-primary/40'
+                }`}
+              >
+                <Truck className="h-4 w-4" />
+                Áno, už som odoslal/a
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAlreadySent(false); setErrors(prev => { const { alreadySent: _, ...rest } = prev; return rest; }); }}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
+                  alreadySent === false
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-input bg-card text-muted-foreground hover:border-primary/40'
+                }`}
+              >
+                Nie, ešte nie
+              </button>
+            </div>
+            {errors.alreadySent && <p className="mt-1.5 text-xs text-destructive">{errors.alreadySent}</p>}
+          </div>
+
           {/* IBAN - conditional */}
           {needsIban && (
             <div>
@@ -313,7 +349,6 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
               value={description}
               onChange={e => { setDescription(e.target.value); setErrors(prev => { const { description: _, ...rest } = prev; return rest; }); }}
             />
-            {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description}</p>}
           </div>
 
           <button
@@ -335,6 +370,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
               <p><span className="text-muted-foreground">E-mail:</span> {order.customerEmail}</p>
               <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
               <p><span className="text-muted-foreground">Vrátenie:</span> {order.paymentMethod === 'card' ? 'Na pôvodnú kartu' : 'Na bankový účet'}</p>
+              <p><span className="text-muted-foreground">Balík odoslaný:</span> {alreadySent ? 'Áno' : 'Nie'}</p>
             </div>
             <div className="border-t pt-3 space-y-2">
               {selectedProducts.map(p => (
@@ -350,9 +386,11 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
                 <span className="text-muted-foreground">IBAN:</span> {iban}
               </div>
             )}
-            <div className="border-t pt-3 text-sm">
-              <span className="text-muted-foreground">Dôvod:</span> {description}
-            </div>
+            {description && (
+              <div className="border-t pt-3 text-sm">
+                <span className="text-muted-foreground">Dôvod:</span> {description}
+              </div>
+            )}
           </div>
 
           <button

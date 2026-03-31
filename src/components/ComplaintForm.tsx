@@ -3,14 +3,13 @@ import { useTickets } from '@/context/TicketContext';
 import {
   MOCK_ORDERS, MockOrder, MockOrderProduct,
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION,
-  COMPLAINT_TYPE_PHOTO_REQUIRED,
   RequestedResolution, REQUESTED_RESOLUTION_LABELS,
   ComplaintItem,
 } from '@/types/ticket';
 import { DecisionTreeResult } from '@/components/DecisionTree';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
-  User, Mail, CalendarDays, Camera,
+  User, Mail, CalendarDays, Camera, PackageX,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -28,6 +27,7 @@ interface SelectedProduct {
   complaintReason: ComplaintType | null;
   requestedResolution: RequestedResolution | null;
   photoFile: File | null;
+  issueDescription: string;
 }
 
 interface Props {
@@ -50,8 +50,12 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
   const [iban, setIban] = useState('');
+  const [damagedOnDelivery, setDamagedOnDelivery] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Overall wizard: Step 1 = type selection (done), Step 2 = this form, Step 3 = confirm
+  const overallStep = step === 'confirm' ? 3 : 2;
 
   const handleLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
@@ -68,14 +72,14 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     setOrder(found);
     setFoundOrderNumber(trimmed);
     setLookupError('');
-    // Auto-add all products
     setSelectedProducts(found.products.map(p => ({
       name: p.name,
       maxQty: p.quantity,
-      qty: 0, // 0 means not complaining about this item
+      qty: 0,
       complaintReason: null,
       requestedResolution: null,
       photoFile: null,
+      issueDescription: '',
     })));
     setStep('products');
   };
@@ -103,11 +107,17 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       if (!p.requestedResolution) {
         newErrors[`${p.name}_resolution`] = 'Vyberte požadované riešenie.';
       }
-      if (p.complaintReason && COMPLAINT_TYPE_PHOTO_REQUIRED[p.complaintReason] && !p.photoFile) {
-        newErrors[`${p.name}_photo`] = 'Fotografia je povinná pre tento typ reklamácie.';
+      if (!p.issueDescription.trim()) {
+        newErrors[`${p.name}_issue`] = 'Popíšte problém.';
+      }
+      if (!p.photoFile) {
+        newErrors[`${p.name}_photo`] = 'Fotografia je povinná.';
       }
     });
 
+    if (damagedOnDelivery === null) {
+      newErrors.damagedOnDelivery = 'Prosím odpovedzte na túto otázku.';
+    }
 
     const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
     if (!trimmedIban) {
@@ -134,7 +144,6 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       itemStatus: 'item_new' as const,
     }));
 
-    // Use the first item's data for backward-compat top-level fields
     const firstItem = activeProducts[0];
     const suggestedSolution = COMPLAINT_TYPE_SUGGESTED_SOLUTION[firstItem.complaintReason!];
 
@@ -142,7 +151,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       customerEmail: order.customerEmail,
       orderNumber: foundOrderNumber,
       product: activeProducts.map(p => `${p.name} (${p.qty}×)`).join(', '),
-      description: activeProducts.map(p => `${p.name}: ${p.complaintReason ? COMPLAINT_TYPE_LABELS[p.complaintReason] : ''}`).join('; '),
+      description: activeProducts.map(p => `${p.name}: ${p.issueDescription}`).join('; '),
       attachments: [],
       requestType: 'complaint',
       issueType: firstItem.complaintReason!,
@@ -157,7 +166,6 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     onSubmit();
   };
 
-  const stepNumber = step === 'lookup' ? 1 : step === 'products' ? 2 : 3;
   const goBack = () => {
     if (step === 'confirm') setStep('products');
     else if (step === 'products') { setStep('lookup'); setOrder(null); setSelectedProducts([]); }
@@ -176,14 +184,14 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
         <ArrowLeft className="h-4 w-4" /> Späť
       </button>
 
-      {/* Progress */}
+      {/* Progress — overall wizard */}
       <div className="mb-6">
         <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Krok {stepNumber} z 3</span>
-          <span>{Math.round((stepNumber / 3) * 100)}%</span>
+          <span>Krok {overallStep} z 3</span>
+          <span>{Math.round((overallStep / 3) * 100)}%</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${(stepNumber / 3) * 100}%` }} />
+          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${(overallStep / 3) * 100}%` }} />
         </div>
       </div>
 
@@ -198,7 +206,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
         </h1>
       </div>
 
-      {/* Step 1: Order lookup */}
+      {/* Sub-step: Order lookup (part of overall Step 2) */}
       {step === 'lookup' && (
         <div className="space-y-4">
           <div>
@@ -234,7 +242,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
         </div>
       )}
 
-      {/* Step 2: Per-item complaint details */}
+      {/* Sub-step: Per-item complaint details (part of overall Step 2) */}
       {step === 'products' && order && (
         <div className="space-y-6">
           {/* Order info */}
@@ -255,11 +263,10 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
           {/* Per-item blocks */}
           <div>
-            <p className="mb-3 text-sm font-medium">Produkty z objednávky:</p>
+            <p className="mb-3 text-sm font-medium">Ktorý produkt reklamujete?</p>
             <div className="space-y-4">
               {selectedProducts.map(product => {
                 const isActive = product.qty > 0;
-                const photoRequired = product.complaintReason ? COMPLAINT_TYPE_PHOTO_REQUIRED[product.complaintReason] : false;
 
                 return (
                   <div key={product.name} className={`rounded-xl border transition-all ${isActive ? 'border-primary/40 bg-primary/5' : 'bg-card'}`}>
@@ -272,7 +279,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
                     {/* Item inputs */}
                     <div className="border-t px-4 pb-4 pt-3 space-y-3">
-                      {/* Quantity to complain */}
+                      {/* Quantity */}
                       <div>
                         <label className="mb-1 block text-xs font-medium text-muted-foreground">
                           Reklamované množstvo
@@ -293,7 +300,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
                       {isActive && (
                         <>
-                          {/* Complaint reason dropdown */}
+                          {/* Complaint reason */}
                           <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">
                               Dôvod reklamácie <span className="text-destructive">*</span>
@@ -314,7 +321,25 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
                             {errors[`${product.name}_reason`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_reason`]}</p>}
                           </div>
 
-                          {/* Requested resolution dropdown */}
+                          {/* Issue description */}
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                              Popis problému <span className="text-destructive">*</span>
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={product.issueDescription}
+                              onChange={e => {
+                                updateProduct(product.name, { issueDescription: e.target.value });
+                                setErrors(prev => { const { [`${product.name}_issue`]: _, ...rest } = prev; return rest; });
+                              }}
+                              placeholder="Popíšte, čo sa stalo s produktom..."
+                              className={`w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${errors[`${product.name}_issue`] ? 'border-destructive' : 'border-input'}`}
+                            />
+                            {errors[`${product.name}_issue`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_issue`]}</p>}
+                          </div>
+
+                          {/* Requested resolution */}
                           <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">
                               Požadované riešenie <span className="text-destructive">*</span>
@@ -335,33 +360,31 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
                             {errors[`${product.name}_resolution`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_resolution`]}</p>}
                           </div>
 
-                          {/* Photo upload - conditional */}
-                          {photoRequired && (
-                            <div>
-                              <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                Fotografia <span className="text-destructive">*</span>
-                              </label>
-                              <label className={`flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2.5 text-xs transition-colors hover:border-primary/40 ${
-                                errors[`${product.name}_photo`] ? 'border-destructive' : 'border-input'
-                              }`}>
-                                <Camera className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-muted-foreground">
-                                  {product.photoFile ? product.photoFile.name : 'Nahrajte fotografiu'}
-                                </span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={e => {
-                                    const file = e.target.files?.[0] || null;
-                                    updateProduct(product.name, { photoFile: file });
-                                    setErrors(prev => { const { [`${product.name}_photo`]: _, ...rest } = prev; return rest; });
-                                  }}
-                                />
-                              </label>
-                              {errors[`${product.name}_photo`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_photo`]}</p>}
-                            </div>
-                          )}
+                          {/* Photo upload — always required */}
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                              Fotografia <span className="text-destructive">*</span>
+                            </label>
+                            <label className={`flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2.5 text-xs transition-colors hover:border-primary/40 ${
+                              errors[`${product.name}_photo`] ? 'border-destructive' : 'border-input'
+                            }`}>
+                              <Camera className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">
+                                {product.photoFile ? product.photoFile.name : 'Nahrajte fotografiu produktu'}
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={e => {
+                                  const file = e.target.files?.[0] || null;
+                                  updateProduct(product.name, { photoFile: file });
+                                  setErrors(prev => { const { [`${product.name}_photo`]: _, ...rest } = prev; return rest; });
+                                }}
+                              />
+                            </label>
+                            {errors[`${product.name}_photo`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_photo`]}</p>}
+                          </div>
                         </>
                       )}
                     </div>
@@ -369,6 +392,37 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
                 );
               })}
             </div>
+          </div>
+
+          {/* Damaged on delivery? */}
+          <div>
+            <p className="mb-2 text-sm font-medium">Bol balík poškodený pri doručení?</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setDamagedOnDelivery(true); setErrors(prev => { const { damagedOnDelivery: _, ...rest } = prev; return rest; }); }}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
+                  damagedOnDelivery === true
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-input bg-card text-muted-foreground hover:border-primary/40'
+                }`}
+              >
+                <PackageX className="h-4 w-4" />
+                Áno, bol poškodený
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDamagedOnDelivery(false); setErrors(prev => { const { damagedOnDelivery: _, ...rest } = prev; return rest; }); }}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
+                  damagedOnDelivery === false
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-input bg-card text-muted-foreground hover:border-primary/40'
+                }`}
+              >
+                Nie, nebol
+              </button>
+            </div>
+            {errors.damagedOnDelivery && <p className="mt-1.5 text-xs text-destructive">{errors.damagedOnDelivery}</p>}
           </div>
 
           {/* IBAN */}
@@ -402,6 +456,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
               <p><span className="text-muted-foreground">Zákazník:</span> {order.customerName}</p>
               <p><span className="text-muted-foreground">E-mail:</span> {order.customerEmail}</p>
               <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
+              <p><span className="text-muted-foreground">Poškodený balík pri doručení:</span> {damagedOnDelivery ? 'Áno' : 'Nie'}</p>
             </div>
             <div className="border-t pt-3 space-y-3">
               {activeProducts.map(p => (
@@ -413,6 +468,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
                   </div>
                   <div className="text-xs text-muted-foreground pl-6 space-y-0.5">
                     <p>Dôvod: {p.complaintReason ? COMPLAINT_TYPE_LABELS[p.complaintReason] : '—'}</p>
+                    <p>Popis: {p.issueDescription || '—'}</p>
                     <p>Riešenie: {p.requestedResolution ? REQUESTED_RESOLUTION_LABELS[p.requestedResolution] : '—'}</p>
                     {p.photoFile && <p>📷 {p.photoFile.name}</p>}
                   </div>
