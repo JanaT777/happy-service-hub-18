@@ -52,6 +52,17 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) =
   // Overall wizard: Step 1 = type selection (done), Step 2 = this form, Step 3 = confirm
   const overallStep = step === 'confirm' || step === 'submitted' ? 3 : 2;
 
+  const isCRM = !!createdBy;
+
+  const handleCRMSelect = (orderNum: string, orderData: MockOrder) => {
+    const deliveryDate = new Date(orderData.deliveryDate);
+    const daysDiff = Math.floor((Date.now() - deliveryDate.getTime()) / 86400000);
+    setWithinWindow(daysDiff <= 14);
+    setOrder(orderData);
+    setFoundOrderNumber(orderNum);
+    setStep('products');
+  };
+
   const handleLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
     const trimmedEmail = email.trim().toLowerCase();
