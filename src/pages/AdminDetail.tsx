@@ -257,7 +257,7 @@ const AdminDetail = () => {
               <h2 className="font-heading text-base font-semibold">Reklamované položky</h2>
               {ticket.complaintItems!.map((item, index) => {
                 const itemComplaintType = item.complaintReason as ComplaintType;
-                const systemSuggestion = COMPLAINT_TYPE_SUGGESTED_SOLUTION[itemComplaintType];
+                const systemSuggestion = item.outOfStock ? 'refund' as SuggestedSolution : COMPLAINT_TYPE_SUGGESTED_SOLUTION[itemComplaintType];
                 const customerPreferred = RESOLUTION_TO_ACTION[item.requestedResolution];
                 const isFinal = item.itemStatus === 'item_refunded' || item.itemStatus === 'item_rejected' || item.itemStatus === 'item_approved';
 
