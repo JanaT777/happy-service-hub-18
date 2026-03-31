@@ -22,7 +22,7 @@ interface Props {
   onSubmit: () => void;
 }
 
-type Step = 'lookup' | 'products' | 'confirm';
+type Step = 'lookup' | 'products' | 'confirm' | 'submitted';
 
 export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const { addTicket } = useTickets();
