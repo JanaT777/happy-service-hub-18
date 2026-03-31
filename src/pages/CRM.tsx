@@ -254,6 +254,7 @@ const CRM = () => {
               <TableHead className="w-[120px]">ID</TableHead>
               <TableHead>Typ</TableHead>
               <TableHead>Typ / Dôvod</TableHead>
+              <TableHead>Podtyp</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead>Navrhované riešenie</TableHead>
               <TableHead>Požiadavka zákazníka</TableHead>
