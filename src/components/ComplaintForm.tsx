@@ -8,6 +8,7 @@ import {
   ComplaintItem,
 } from '@/types/ticket';
 import { DecisionTreeResult } from '@/components/DecisionTree';
+import { OrderSelector } from '@/components/OrderSelector';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
   User, Mail, CalendarDays, Camera, PackageX, CheckCircle2,
