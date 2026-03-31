@@ -11,6 +11,7 @@ import AdminDetail from "./pages/AdminDetail.tsx";
 import TrackRequest from "./pages/TrackRequest.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
+
 const queryClient = new QueryClient();
 
 const App = () => (
