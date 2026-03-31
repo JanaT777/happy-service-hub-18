@@ -37,6 +37,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         { productName: 'Obal na telefón', quantity: 2, complaintReason: 'damaged_in_transport', requestedResolution: 'exchange', itemStatus: 'item_new' },
       ],
       complaintStatus: 'complaint_new',
+      assignedTo: 'customer_care',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
