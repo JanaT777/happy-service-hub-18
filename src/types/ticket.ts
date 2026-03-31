@@ -95,6 +95,7 @@ export interface ComplaintItem {
   complaintReason: ComplaintType;
   requestedResolution: RequestedResolution;
   itemStatus: ComplaintItemStatus;
+  outOfStock?: boolean;
 }
 
 export interface Ticket {
