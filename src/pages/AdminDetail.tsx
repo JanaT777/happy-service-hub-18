@@ -22,8 +22,11 @@ import { sk } from 'date-fns/locale';
 import {
   ArrowLeft, Star, XCircle, MessageSquare, CheckCircle2,
   Send, Banknote, Package, RefreshCw, Replace, AlertTriangle, Info,
-  Truck, Warehouse, ClipboardCheck,
+  Truck, Warehouse, ClipboardCheck, CalendarDays, Clock, UserCheck,
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn as cnUtil } from '@/lib/utils';
 
 const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
   resend_order: Send,
