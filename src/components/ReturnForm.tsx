@@ -408,6 +408,63 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
           </button>
         </div>
       )}
+
+      {/* Step 3: Submitted confirmation */}
+      {step === 'submitted' && (
+        <div className="space-y-6 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/15">
+            <CheckCircle2 className="h-10 w-10 text-success" />
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold">Vaša požiadavka bola prijatá</h2>
+            <p className="mt-2 text-muted-foreground">Prijali sme vašu žiadosť a budeme vás informovať o jej stave.</p>
+          </div>
+
+          <div className="rounded-xl border bg-card p-5 text-left space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Číslo požiadavky</span>
+              <span className="font-heading text-lg font-bold text-primary">{ticketId}</span>
+            </div>
+            <div className="border-t pt-3 text-sm space-y-1">
+              <p><span className="text-muted-foreground">Typ:</span> Vrátenie tovaru</p>
+              <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
+              <p><span className="text-muted-foreground">Produkty:</span> {selectedProducts.map(p => `${p.name} (${p.qty}×)`).join(', ')}</p>
+              <p><span className="text-muted-foreground">Stav:</span> <span className="inline-flex items-center rounded-full bg-info/15 border border-info/30 px-2 py-0.5 text-xs font-semibold text-info">Prijaté</span></p>
+            </div>
+
+            <div className="border-t pt-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Priebeh spracovania</p>
+              <div className="flex items-center gap-2">
+                {['Prijaté', 'V procese', 'Vyriešené'].map((label, i) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
+                      i === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>{i + 1}</div>
+                    <span className={`text-xs ${i === 0 ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>{label}</span>
+                    {i < 2 && <div className="h-0.5 w-4 bg-border" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              onClick={() => navigate('/track')}
+              className="flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <Search className="h-4 w-4" />
+              Sledovať požiadavku
+            </button>
+            <button
+              onClick={onBack}
+              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Odoslať ďalšiu požiadavku
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
