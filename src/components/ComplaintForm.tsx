@@ -8,6 +8,7 @@ import {
   ComplaintItem,
 } from '@/types/ticket';
 import { DecisionTreeResult } from '@/components/DecisionTree';
+import { OrderSelector } from '@/components/OrderSelector';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
   User, Mail, CalendarDays, Camera, PackageX, CheckCircle2,
@@ -61,6 +62,27 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props
   // Overall wizard: Step 1 = type selection (done), Step 2 = this form, Step 3 = confirm/submitted
   const overallStep = step === 'confirm' || step === 'submitted' ? 3 : 2;
 
+  const isCRM = !!createdBy;
+
+  const selectOrder = (orderNum: string, orderData: MockOrder) => {
+    setOrder(orderData);
+    setFoundOrderNumber(orderNum);
+    setSelectedProducts(orderData.products.map(p => ({
+      name: p.name,
+      maxQty: p.quantity,
+      qty: 0,
+      complaintReason: null,
+      requestedResolution: null,
+      photoFile: null,
+      issueDescription: '',
+    })));
+    setStep('products');
+  };
+
+  const handleCRMSelect = (orderNum: string, orderData: MockOrder) => {
+    selectOrder(orderNum, orderData);
+  };
+
   const handleLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
     const trimmedEmail = email.trim().toLowerCase();
@@ -73,19 +95,8 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props
       setLookupError('Objednávka nenájdená. Skontrolujte údaje a skúste znova.');
       return;
     }
-    setOrder(found);
-    setFoundOrderNumber(trimmed);
+    selectOrder(trimmed, found);
     setLookupError('');
-    setSelectedProducts(found.products.map(p => ({
-      name: p.name,
-      maxQty: p.quantity,
-      qty: 0,
-      complaintReason: null,
-      requestedResolution: null,
-      photoFile: null,
-      issueDescription: '',
-    })));
-    setStep('products');
   };
 
   const updateProduct = (name: string, updates: Partial<SelectedProduct>) => {
@@ -215,36 +226,46 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props
       {/* Sub-step: Order lookup (part of overall Step 2) */}
       {step === 'lookup' && (
         <div className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">Číslo objednávky</label>
-            <input
-              className={`w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${lookupError ? 'border-destructive' : 'border-input'}`}
-              placeholder="napr. ORD-10042"
-              value={orderNumber}
-              onChange={e => { setOrderNumber(e.target.value); setLookupError(''); }}
+          {isCRM ? (
+            <OrderSelector
+              onSelect={handleCRMSelect}
+              selectedOrderNumber={foundOrderNumber || undefined}
+              error={lookupError || undefined}
             />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">E-mailová adresa</label>
-            <input
-              type="email"
-              className={`w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${lookupError ? 'border-destructive' : 'border-input'}`}
-              placeholder="vas@email.com"
-              value={email}
-              onChange={e => { setEmail(e.target.value); setLookupError(''); }}
-              onKeyDown={e => e.key === 'Enter' && handleLookup()}
-            />
-          </div>
-          {lookupError && <p className="text-xs text-destructive">{lookupError}</p>}
-          <p className="text-xs text-muted-foreground">
-            Skúste: ORD-10042 / jana@example.com, ORD-10038 / marek@example.com
-          </p>
-          <button
-            onClick={handleLookup}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Search className="h-4 w-4" /> Vyhľadať objednávku
-          </button>
+          ) : (
+            <>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">Číslo objednávky</label>
+                <input
+                  className={`w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${lookupError ? 'border-destructive' : 'border-input'}`}
+                  placeholder="napr. ORD-10042"
+                  value={orderNumber}
+                  onChange={e => { setOrderNumber(e.target.value); setLookupError(''); }}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">E-mailová adresa</label>
+                <input
+                  type="email"
+                  className={`w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${lookupError ? 'border-destructive' : 'border-input'}`}
+                  placeholder="vas@email.com"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setLookupError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleLookup()}
+                />
+              </div>
+              {lookupError && <p className="text-xs text-destructive">{lookupError}</p>}
+              <p className="text-xs text-muted-foreground">
+                Skúste: ORD-10042 / jana@example.com, ORD-10038 / marek@example.com
+              </p>
+              <button
+                onClick={handleLookup}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                <Search className="h-4 w-4" /> Vyhľadať objednávku
+              </button>
+            </>
+          )}
         </div>
       )}
 
