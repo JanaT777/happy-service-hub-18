@@ -386,19 +386,6 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
             {errors.iban && <p className="mt-1 text-xs text-destructive">{errors.iban}</p>}
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium">Dôvod reklamácie <span className="text-destructive">*</span></label>
-            <textarea
-              rows={3}
-              className={inputClass('description')}
-              placeholder="Popíšte problém s vybranými produktmi..."
-              value={description}
-              onChange={e => { setDescription(e.target.value); setErrors(prev => { const { description: _, ...rest } = prev; return rest; }); }}
-            />
-            {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description}</p>}
-          </div>
-
           <button
             type="button"
             onClick={validateAndConfirm}
