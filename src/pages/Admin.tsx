@@ -197,7 +197,7 @@ const Admin = () => {
           <TableBody>
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                   Žiadne požiadavky neboli nájdené.
                 </TableCell>
               </TableRow>
