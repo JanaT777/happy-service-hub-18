@@ -546,24 +546,30 @@ const AdminDetail = () => {
 
                   {(() => {
                     const days = differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
-                    const limit = ticket.requestType === 'return' ? 14 : 30;
-                    const overDeadline = days > limit;
+                    const isReturn = ticket.requestType === 'return';
+                    const limit = isReturn ? 14 : 30;
+                    const warnAt = isReturn ? 10 : 25;
+                    const level = days > limit ? 'critical' : days >= warnAt ? 'warning' : 'ok';
                     return (
                       <div className={cn(
-                        'rounded-lg border px-3 py-2 flex items-center gap-2',
-                        overDeadline
-                          ? 'bg-destructive/10 border-destructive/30'
-                          : 'bg-warning/10 border-warning/20'
+                        'rounded-lg border px-3 py-2.5 flex items-center gap-2',
+                        level === 'critical' && 'bg-destructive/10 border-destructive/30',
+                        level === 'warning' && 'bg-warning/10 border-warning/20',
+                        level === 'ok' && 'bg-muted/50 border-border'
                       )}>
-                        {overDeadline ? (
-                          <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
-                        ) : (
-                          <Clock className="h-4 w-4 text-warning shrink-0" />
-                        )}
-                        <span className={cn('text-sm font-bold', overDeadline ? 'text-destructive' : 'text-warning')}>
-                          Dní od prijatia: {days}/{limit} dní
-                          {overDeadline && ' — PREKROČENÁ LEHOTA!'}
-                        </span>
+                        {level === 'critical' && <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />}
+                        {level === 'warning' && <Clock className="h-4 w-4 text-warning shrink-0" />}
+                        {level === 'ok' && <Clock className="h-4 w-4 text-muted-foreground shrink-0" />}
+                        <div>
+                          <span className={cn('text-sm font-bold block', level === 'critical' ? 'text-destructive' : level === 'warning' ? 'text-warning' : 'text-foreground')}>
+                            {days}/{limit} dní
+                          </span>
+                          <span className={cn('text-[11px]', level === 'critical' ? 'text-destructive/80' : level === 'warning' ? 'text-warning/80' : 'text-muted-foreground')}>
+                            {level === 'critical' && 'Zákonná lehota prekročená!'}
+                            {level === 'warning' && `Blíži sa lehota (zostáva ${limit - days} dní)`}
+                            {level === 'ok' && `Do lehoty zostáva ${limit - days} dní`}
+                          </span>
+                        </div>
                       </div>
                     );
                   })()}
