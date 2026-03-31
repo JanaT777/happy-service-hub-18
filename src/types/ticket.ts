@@ -147,6 +147,12 @@ export const DERIVED_TICKET_STATUS_COLORS: Record<DerivedTicketStatus, string> =
   rejected: 'bg-destructive/15 text-destructive border-destructive/30',
 };
 
+export interface WarehouseReceiptAudit {
+  receivedAt: string;
+  recordedBy: string;
+  recordedAt: string;
+}
+
 export interface Ticket {
   id: string;
   customerEmail: string;
@@ -170,6 +176,7 @@ export interface Ticket {
   complaintStatus?: ComplaintStatus;
   returnStatus?: ReturnStatus;
   otherStatus?: OtherStatus;
+  warehouseReceipt?: WarehouseReceiptAudit;
 }
 
 export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | null {
