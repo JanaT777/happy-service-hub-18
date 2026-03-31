@@ -422,6 +422,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
               <p><span className="text-muted-foreground">E-mail:</span> {order.customerEmail}</p>
               <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
               <p><span className="text-muted-foreground">Typ reklamácie:</span> {COMPLAINT_TYPE_LABELS[complaintType]}</p>
+              <p><span className="text-muted-foreground">Požadované riešenie:</span> {requestedResolution ? REQUESTED_RESOLUTION_LABELS[requestedResolution] : '—'}</p>
             </div>
             <div className="border-t pt-3 space-y-2">
               {selectedProducts.map(p => (
