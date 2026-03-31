@@ -69,6 +69,19 @@ const getCustomerName = (ticket: Ticket): string => {
   return order?.customerName || ticket.customerEmail.split('@')[0];
 };
 
+const getDeadlineLimit = (ticket: Ticket): number => ticket.requestType === 'return' ? 14 : 30;
+
+const isOverDeadline = (ticket: Ticket): boolean => {
+  if (!ticket.warehouseReceipt) return false;
+  const days = differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
+  return days > getDeadlineLimit(ticket);
+};
+
+const getDaysSinceReceipt = (ticket: Ticket): number | null => {
+  if (!ticket.warehouseReceipt) return null;
+  return differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
+};
+
 const Admin = () => {
   const navigate = useNavigate();
   const { tickets } = useTickets();
