@@ -72,6 +72,18 @@ const AdminDetail = () => {
       ? SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]
       : null;
 
+  // Map requestedResolution to SuggestedSolution for button matching
+  const RESOLUTION_TO_ACTION: Record<RequestedResolution, SuggestedSolution> = {
+    resend: 'resend_order',
+    exchange: 'exchange',
+    refund: 'refund',
+  };
+  const customerPreferredAction = ticket.requestedResolution
+    ? RESOLUTION_TO_ACTION[ticket.requestedResolution]
+    : null;
+  const systemSuggestion = complaintType ? COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType] : null;
+  const mismatch = customerPreferredAction && systemSuggestion && customerPreferredAction !== systemSuggestion;
+
   // ---- Actions ----
   const handleComplaintAction = (action: SuggestedSolution) => {
     if (action === 'refund') {
