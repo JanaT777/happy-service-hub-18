@@ -106,7 +106,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const handleSubmit = async () => {
     setSubmitting(true);
     await new Promise(r => setTimeout(r, 600));
-    addTicket({
+    const id = addTicket({
       customerEmail: order!.customerEmail,
       orderNumber: foundOrderNumber,
       product: selectedProducts.map(p => `${p.name} (${p.qty}×)`).join(', '),
@@ -118,9 +118,10 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
       returnItems: selectedProducts.map(p => ({ name: p.name, quantity: p.qty })),
       iban: iban.replace(/\s/g, '').toUpperCase(),
     });
+    setTicketId(id);
     toast.success('Žiadosť o vrátenie bola odoslaná!');
     setSubmitting(false);
-    onSubmit();
+    setStep('submitted');
   };
 
   const goBack = () => {
