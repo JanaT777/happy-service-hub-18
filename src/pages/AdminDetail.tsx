@@ -6,7 +6,7 @@ import {
   COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
-  ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution,
+  ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
