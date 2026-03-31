@@ -230,9 +230,11 @@ const Admin = () => {
                 <TableRow
                   key={ticket.id}
                   className={cn(
-                    'cursor-pointer transition-colors hover:bg-accent/50',
-                    deadline?.level === 'critical' && 'bg-destructive/10 hover:bg-destructive/15 border-l-4 border-l-destructive',
-                    deadline?.level === 'warning' && 'bg-warning/10 hover:bg-warning/15 border-l-4 border-l-warning'
+                    'cursor-pointer transition-colors',
+                    deadline?.level === 'critical' && 'bg-destructive/8 hover:bg-destructive/15 border-l-[5px] border-l-destructive',
+                    deadline?.level === 'warning' && 'bg-warning/8 hover:bg-warning/15 border-l-[5px] border-l-warning',
+                    deadline?.level === 'ok' && 'border-l-[5px] border-l-success/60 hover:bg-accent/50',
+                    !deadline && 'hover:bg-accent/50'
                   )}
                   onClick={() => navigate(`/admin/${ticket.id}`)}
                 >
