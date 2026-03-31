@@ -141,7 +141,15 @@ export interface Ticket {
   otherStatus?: OtherStatus;
 }
 
-export const STATUS_LABELS: Record<TicketStatus, string> = {
+export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | null {
+  if (!ticket.complaintItems || ticket.complaintItems.length === 0) return null;
+  const statuses = ticket.complaintItems.map(i => i.itemStatus);
+  if (statuses.every(s => s === 'item_new')) return 'new';
+  if (statuses.every(s => s === 'item_rejected')) return 'rejected';
+  if (statuses.every(s => s === 'item_approved' || s === 'item_refunded')) return 'completed';
+  return 'processing';
+}
+
   new: 'Nový',
   in_review: 'V preskúmaní',
   needs_info: 'Čaká na doplnenie',
