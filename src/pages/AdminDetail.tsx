@@ -528,6 +528,85 @@ const AdminDetail = () => {
             </div>
           )}
 
+          {/* Warehouse Receipt — staff only */}
+          {(ticket.requestType === 'return' || ticket.requestType === 'complaint') && (
+            <div className="rounded-xl border-2 border-warning/30 bg-warning/5 p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <Warehouse className="h-4 w-4 text-warning" />
+                <p className="text-sm font-semibold">Príjem zásielky na sklad</p>
+              </div>
+
+              {ticket.warehouseReceipt ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Prijaté:</span>
+                    <span className="font-medium">{format(new Date(ticket.warehouseReceipt.receivedAt), 'd. MMMM yyyy', { locale: sk })}</span>
+                  </div>
+
+                  <div className="rounded-lg bg-warning/10 border border-warning/20 px-3 py-2 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-warning shrink-0" />
+                    <span className="text-sm font-bold text-warning">
+                      Dní od prijatia: {differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt))} dní
+                    </span>
+                  </div>
+
+                  <div className="border-t border-warning/20 pt-3 space-y-1">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Audit</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <UserCheck className="h-3.5 w-3.5 shrink-0" />
+                      <span>Zapísal: <span className="font-medium text-foreground">{ticket.warehouseReceipt.recordedBy}</span></span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5 shrink-0" />
+                      <span>Dňa: {format(new Date(ticket.warehouseReceipt.recordedAt), 'd. MMM yyyy, HH:mm', { locale: sk })}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Zadajte dátum prijatia zásielky na sklad. Od tohto dátumu sa počítajú zákonné lehoty.
+                  </p>
+                  <Popover open={receiptPopoverOpen} onOpenChange={setReceiptPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <button className={cn(
+                        'flex w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition-colors',
+                        receiptDate ? 'border-primary bg-primary/5 font-medium' : 'border-input bg-background text-muted-foreground hover:border-primary/40'
+                      )}>
+                        <CalendarDays className="h-4 w-4" />
+                        {receiptDate ? format(receiptDate, 'd. MMMM yyyy', { locale: sk }) : 'Vybrať dátum prijatia'}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={receiptDate}
+                        onSelect={(date) => { setReceiptDate(date); }}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {receiptDate && (
+                    <button
+                      onClick={() => {
+                        setWarehouseReceipt(ticket.id, receiptDate.toISOString(), 'Agent');
+                        setReceiptPopoverOpen(false);
+                        toast.success('Dátum prijatia zásielky bol zaznamenaný');
+                      }}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-warning text-warning-foreground px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-warning/90"
+                    >
+                      <Warehouse className="h-4 w-4" />
+                      Potvrdiť príjem zásielky
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Timestamps */}
           <div className="rounded-xl border bg-card p-4 text-sm space-y-1 text-muted-foreground">
             <p>Vytvorené: {format(new Date(ticket.createdAt), 'd. MMM yyyy, HH:mm', { locale: sk })}</p>
