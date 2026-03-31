@@ -552,19 +552,38 @@ const AdminDetail = () => {
                     const level = days > limit ? 'critical' : days >= warnAt ? 'warning' : 'ok';
                     return (
                       <div className={cn(
-                        'rounded-lg border px-3 py-2.5 flex items-center gap-2',
-                        level === 'critical' && 'bg-destructive/10 border-destructive/30',
-                        level === 'warning' && 'bg-warning/10 border-warning/20',
-                        level === 'ok' && 'bg-muted/50 border-border'
+                        'rounded-xl border-2 px-4 py-3 flex items-start gap-3',
+                        level === 'critical' && 'bg-destructive/10 border-destructive/40',
+                        level === 'warning' && 'bg-warning/10 border-warning/40',
+                        level === 'ok' && 'bg-success/10 border-success/40'
                       )}>
-                        {level === 'critical' && <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />}
-                        {level === 'warning' && <Clock className="h-4 w-4 text-warning shrink-0" />}
-                        {level === 'ok' && <Clock className="h-4 w-4 text-muted-foreground shrink-0" />}
-                        <div>
-                          <span className={cn('text-sm font-bold block', level === 'critical' ? 'text-destructive' : level === 'warning' ? 'text-warning' : 'text-foreground')}>
-                            {days}/{limit} dní
-                          </span>
-                          <span className={cn('text-[11px]', level === 'critical' ? 'text-destructive/80' : level === 'warning' ? 'text-warning/80' : 'text-muted-foreground')}>
+                        <div className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-full mt-0.5',
+                          level === 'critical' && 'bg-destructive/20',
+                          level === 'warning' && 'bg-warning/20',
+                          level === 'ok' && 'bg-success/20'
+                        )}>
+                          {level === 'critical' && <AlertTriangle className="h-5 w-5 text-destructive" />}
+                          {level === 'warning' && <Clock className="h-5 w-5 text-warning" />}
+                          {level === 'ok' && <CheckCircle2 className="h-5 w-5 text-success" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={cn('text-lg font-bold', level === 'critical' ? 'text-destructive' : level === 'warning' ? 'text-warning' : 'text-success')}>
+                              {days}/{limit} dní
+                            </span>
+                            <span className={cn(
+                              'rounded-full px-2 py-0.5 text-[10px] font-bold border',
+                              level === 'critical' && 'bg-destructive/15 text-destructive border-destructive/30',
+                              level === 'warning' && 'bg-warning/15 text-warning border-warning/30',
+                              level === 'ok' && 'bg-success/15 text-success border-success/30'
+                            )}>
+                              {level === 'critical' && 'Po termíne'}
+                              {level === 'warning' && 'Blíži sa'}
+                              {level === 'ok' && 'OK'}
+                            </span>
+                          </div>
+                          <span className={cn('text-xs', level === 'critical' ? 'text-destructive/80' : level === 'warning' ? 'text-warning/80' : 'text-muted-foreground')}>
                             {level === 'critical' && 'Zákonná lehota prekročená!'}
                             {level === 'warning' && `Blíži sa lehota (zostáva ${limit - days} dní)`}
                             {level === 'ok' && `Do lehoty zostáva ${limit - days} dní`}
