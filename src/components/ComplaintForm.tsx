@@ -3,13 +3,14 @@ import { useTickets } from '@/context/TicketContext';
 import {
   MOCK_ORDERS, MockOrder, MockOrderProduct,
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION,
-  COMPLAINT_TYPE_PHOTO_REQUIRED, SuggestedSolution, IssueType,
+  COMPLAINT_TYPE_PHOTO_REQUIRED,
   RequestedResolution, REQUESTED_RESOLUTION_LABELS,
+  ComplaintItem,
 } from '@/types/ticket';
 import { DecisionTreeResult } from '@/components/DecisionTree';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
-  User, Mail, CalendarDays, CheckCircle2, Camera,
+  User, Mail, CalendarDays, Camera,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,13 +19,14 @@ const COMPLAINT_TYPES: ComplaintType[] = [
   'not_delivered',
   'wrong_title',
   'manufacturing_defect',
-  'wrong_quantity',
 ];
 
 interface SelectedProduct {
   name: string;
   maxQty: number;
   qty: number;
+  complaintReason: ComplaintType | null;
+  requestedResolution: RequestedResolution | null;
   photoFile: File | null;
 }
 
@@ -46,15 +48,11 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const [order, setOrder] = useState<MockOrder | null>(null);
   const [foundOrderNumber, setFoundOrderNumber] = useState('');
 
-  const [complaintType, setComplaintType] = useState<ComplaintType | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
-  const [requestedResolution, setRequestedResolution] = useState<RequestedResolution | null>(null);
   const [iban, setIban] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const photoRequired = complaintType ? COMPLAINT_TYPE_PHOTO_REQUIRED[complaintType] : false;
 
   const handleLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
@@ -71,80 +69,92 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     setOrder(found);
     setFoundOrderNumber(trimmed);
     setLookupError('');
+    // Auto-add all products
+    setSelectedProducts(found.products.map(p => ({
+      name: p.name,
+      maxQty: p.quantity,
+      qty: 0, // 0 means not complaining about this item
+      complaintReason: null,
+      requestedResolution: null,
+      photoFile: null,
+    })));
     setStep('products');
   };
 
-  const toggleProduct = (product: MockOrderProduct) => {
-    setSelectedProducts(prev => {
-      const exists = prev.find(p => p.name === product.name);
-      if (exists) return prev.filter(p => p.name !== product.name);
-      return [...prev, { name: product.name, maxQty: product.quantity, qty: 1, photoFile: null }];
-    });
+  const updateProduct = (name: string, updates: Partial<SelectedProduct>) => {
+    setSelectedProducts(prev => prev.map(p =>
+      p.name === name ? { ...p, ...updates } : p
+    ));
   };
 
-  const updateProductQty = (name: string, qty: number) => {
-    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, qty } : p));
-  };
-
-  const updateProductPhoto = (name: string, file: File | null) => {
-    setSelectedProducts(prev => prev.map(p => p.name === name ? { ...p, photoFile: file } : p));
-  };
+  const activeProducts = selectedProducts.filter(p => p.qty > 0);
 
   const validateAndConfirm = () => {
     const newErrors: Record<string, string> = {};
-    if (!complaintType) {
-      newErrors.complaintType = 'Vyberte typ reklamácie.';
-    }
-    if (!requestedResolution) {
-      newErrors.requestedResolution = 'Vyberte požadovaný spôsob vybavenia.';
-    }
-    if (selectedProducts.length === 0) {
-      toast.error('Vyberte aspoň jeden produkt.');
+
+    if (activeProducts.length === 0) {
+      toast.error('Zadajte množstvo aspoň pri jednom produkte.');
       return;
     }
-    if (photoRequired) {
-      selectedProducts.forEach(p => {
-        if (!p.photoFile) {
-          newErrors[`${p.name}_photo`] = 'Fotografia je povinná pre tento typ reklamácie.';
-        }
-      });
-    }
+
+    activeProducts.forEach(p => {
+      if (!p.complaintReason) {
+        newErrors[`${p.name}_reason`] = 'Vyberte dôvod reklamácie.';
+      }
+      if (!p.requestedResolution) {
+        newErrors[`${p.name}_resolution`] = 'Vyberte požadované riešenie.';
+      }
+      if (p.complaintReason && COMPLAINT_TYPE_PHOTO_REQUIRED[p.complaintReason] && !p.photoFile) {
+        newErrors[`${p.name}_photo`] = 'Fotografia je povinná pre tento typ reklamácie.';
+      }
+    });
+
     if (!description.trim() || description.trim().length < 10) {
       newErrors.description = 'Popíšte problém aspoň 10 znakmi.';
     }
-    // IBAN always collected for complaints (refund is always a possible outcome)
+
     const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
     if (!trimmedIban) {
       newErrors.iban = 'IBAN je povinný.';
     } else if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(trimmedIban)) {
       newErrors.iban = 'Neplatný formát IBAN (napr. SK31 1200 0000 1987 4263 7541).';
     }
+
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
     setStep('confirm');
   };
 
   const handleSubmit = async () => {
-    if (!complaintType || !order) return;
+    if (!order || activeProducts.length === 0) return;
     setSubmitting(true);
     await new Promise(r => setTimeout(r, 600));
 
-    const suggestedSolution = COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType];
+    const complaintItems: ComplaintItem[] = activeProducts.map(p => ({
+      productName: p.name,
+      quantity: p.qty,
+      complaintReason: p.complaintReason!,
+      requestedResolution: p.requestedResolution!,
+    }));
 
-    for (const p of selectedProducts) {
-      addTicket({
-        customerEmail: order.customerEmail,
-        orderNumber: foundOrderNumber,
-        product: `${p.name} (${p.qty}×)`,
-        description,
-        attachments: [],
-        requestType: 'complaint',
-        issueType: complaintType as IssueType,
-        suggestedSolution,
-        requestedResolution: requestedResolution!,
-        iban: iban.replace(/\s/g, '').toUpperCase(),
-      });
-    }
+    // Use the first item's data for backward-compat top-level fields
+    const firstItem = activeProducts[0];
+    const suggestedSolution = COMPLAINT_TYPE_SUGGESTED_SOLUTION[firstItem.complaintReason!];
+
+    addTicket({
+      customerEmail: order.customerEmail,
+      orderNumber: foundOrderNumber,
+      product: activeProducts.map(p => `${p.name} (${p.qty}×)`).join(', '),
+      description,
+      attachments: [],
+      requestType: 'complaint',
+      issueType: firstItem.complaintReason!,
+      suggestedSolution,
+      requestedResolution: firstItem.requestedResolution!,
+      complaintItems,
+      iban: iban.replace(/\s/g, '').toUpperCase(),
+    });
+
     toast.success('Reklamácia bola odoslaná!');
     setSubmitting(false);
     onSubmit();
@@ -153,12 +163,15 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const stepNumber = step === 'lookup' ? 1 : step === 'products' ? 2 : 3;
   const goBack = () => {
     if (step === 'confirm') setStep('products');
-    else if (step === 'products') { setStep('lookup'); setOrder(null); setSelectedProducts([]); setComplaintType(null); }
+    else if (step === 'products') { setStep('lookup'); setOrder(null); setSelectedProducts([]); }
     else onBack();
   };
 
   const inputClass = (field: string) =>
     `w-full rounded-lg border bg-background px-3.5 py-2.5 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${errors[field] ? 'border-destructive' : 'border-input'}`;
+
+  const selectClass = (field: string) =>
+    `w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring ${errors[field] ? 'border-destructive' : 'border-input'}`;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -224,7 +237,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
         </div>
       )}
 
-      {/* Step 2: Complaint type + product selection */}
+      {/* Step 2: Per-item complaint details */}
       {step === 'products' && order && (
         <div className="space-y-6">
           {/* Order info */}
@@ -243,134 +256,118 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
             </div>
           </div>
 
-          {/* Complaint type selection */}
+          {/* Per-item blocks */}
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              Typ reklamácie <span className="text-destructive">*</span>
-            </label>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {COMPLAINT_TYPES.map(type => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => {
-                    setComplaintType(type);
-                    setErrors(prev => { const { complaintType: _, ...rest } = prev; return rest; });
-                  }}
-                  className={`rounded-xl border p-3 text-left text-sm font-medium transition-all ${
-                    complaintType === type
-                      ? 'border-primary bg-primary/5 text-foreground'
-                      : 'border-input bg-card text-muted-foreground hover:border-primary/30'
-                  }`}
-                >
-                  {COMPLAINT_TYPE_LABELS[type]}
-                </button>
-              ))}
-            </div>
-            {errors.complaintType && <p className="mt-1 text-xs text-destructive">{errors.complaintType}</p>}
-          </div>
+            <p className="mb-3 text-sm font-medium">Produkty z objednávky:</p>
+            <div className="space-y-4">
+              {selectedProducts.map(product => {
+                const isActive = product.qty > 0;
+                const photoRequired = product.complaintReason ? COMPLAINT_TYPE_PHOTO_REQUIRED[product.complaintReason] : false;
 
-          {/* Requested resolution */}
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Požadovaný spôsob vybavenia reklamácie <span className="text-destructive">*</span>
-            </label>
-            <div className="space-y-2">
-              {(['resend', 'exchange', 'refund'] as RequestedResolution[]).map(res => (
-                <button
-                  key={res}
-                  type="button"
-                  onClick={() => {
-                    setRequestedResolution(res);
-                    setErrors(prev => { const { requestedResolution: _, ...rest } = prev; return rest; });
-                  }}
-                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left text-sm font-medium transition-all ${
-                    requestedResolution === res
-                      ? 'border-primary bg-primary/5 text-foreground'
-                      : 'border-input bg-card text-muted-foreground hover:border-primary/30'
-                  }`}
-                >
-                  <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                    requestedResolution === res ? 'border-primary' : 'border-muted-foreground'
-                  }`}>
-                    {requestedResolution === res && <div className="h-2 w-2 rounded-full bg-primary" />}
-                  </div>
-                  {REQUESTED_RESOLUTION_LABELS[res]}
-                </button>
-              ))}
-            </div>
-            {errors.requestedResolution && <p className="mt-1 text-xs text-destructive">{errors.requestedResolution}</p>}
-          </div>
-
-          {/* Product selection */}
-          <div>
-            <p className="mb-3 text-sm font-medium">Vyberte produkty na reklamáciu:</p>
-            <div className="space-y-3">
-              {order.products.map(product => {
-                const selected = selectedProducts.find(p => p.name === product.name);
                 return (
-                  <div key={product.name} className={`rounded-xl border transition-all ${selected ? 'border-primary/40 bg-primary/5' : 'bg-card'}`}>
-                    <button
-                      type="button"
-                      onClick={() => toggleProduct(product)}
-                      className="flex w-full items-center gap-3 p-4 text-left"
-                    >
-                      <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors ${
-                        selected ? 'border-primary bg-primary' : 'border-muted-foreground'
-                      }`}>
-                        {selected && <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />}
-                      </div>
-                      <Package className="h-4 w-4 text-muted-foreground" />
+                  <div key={product.name} className={`rounded-xl border transition-all ${isActive ? 'border-primary/40 bg-primary/5' : 'bg-card'}`}>
+                    {/* Product header */}
+                    <div className="flex items-center gap-3 p-4">
+                      <Package className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span className="flex-1 text-sm font-medium">{product.name}</span>
-                      <span className="text-xs text-muted-foreground">{product.quantity}×</span>
-                    </button>
+                      <span className="text-xs text-muted-foreground">obj. {product.maxQty}×</span>
+                    </div>
 
-                    {selected && (
-                      <div className="border-t px-4 pb-4 pt-3 space-y-3">
-                        {/* Quantity */}
-                        {product.quantity > 1 && (
-                          <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Množstvo</label>
-                            <select
-                              value={selected.qty}
-                              onChange={e => updateProductQty(product.name, Number(e.target.value))}
-                              className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                            >
-                              {Array.from({ length: product.quantity }, (_, i) => i + 1).map(n => (
-                                <option key={n} value={n}>{n}</option>
-                              ))}
-                            </select>
-                          </div>
-                        )}
-                        {/* Photo upload - conditional based on complaint type */}
-                        {photoRequired && (
+                    {/* Item inputs */}
+                    <div className="border-t px-4 pb-4 pt-3 space-y-3">
+                      {/* Quantity to complain */}
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                          Reklamované množstvo
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={product.maxQty}
+                          value={product.qty}
+                          onChange={e => {
+                            const val = Math.max(0, Math.min(product.maxQty, Number(e.target.value) || 0));
+                            updateProduct(product.name, { qty: val });
+                          }}
+                          className="w-24 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <span className="ml-2 text-xs text-muted-foreground">max {product.maxQty}</span>
+                      </div>
+
+                      {isActive && (
+                        <>
+                          {/* Complaint reason dropdown */}
                           <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                              Fotografia <span className="text-destructive">*</span>
+                              Dôvod reklamácie <span className="text-destructive">*</span>
                             </label>
-                            <label className={`flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2.5 text-xs transition-colors hover:border-primary/40 ${
-                              errors[`${product.name}_photo`] ? 'border-destructive' : 'border-input'
-                            }`}>
-                              <Camera className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-muted-foreground">
-                                {selected.photoFile ? selected.photoFile.name : 'Nahrajte fotografiu'}
-                              </span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={e => {
-                                  const file = e.target.files?.[0] || null;
-                                  updateProductPhoto(product.name, file);
-                                  setErrors(prev => { const { [`${product.name}_photo`]: _, ...rest } = prev; return rest; });
-                                }}
-                              />
-                            </label>
-                            {errors[`${product.name}_photo`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_photo`]}</p>}
+                            <select
+                              value={product.complaintReason || ''}
+                              onChange={e => {
+                                updateProduct(product.name, { complaintReason: (e.target.value || null) as ComplaintType | null });
+                                setErrors(prev => { const { [`${product.name}_reason`]: _, ...rest } = prev; return rest; });
+                              }}
+                              className={selectClass(`${product.name}_reason`)}
+                            >
+                              <option value="">— Vyberte dôvod —</option>
+                              {COMPLAINT_TYPES.map(type => (
+                                <option key={type} value={type}>{COMPLAINT_TYPE_LABELS[type]}</option>
+                              ))}
+                            </select>
+                            {errors[`${product.name}_reason`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_reason`]}</p>}
                           </div>
-                        )}
-                      </div>
-                    )}
+
+                          {/* Requested resolution dropdown */}
+                          <div>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                              Požadované riešenie <span className="text-destructive">*</span>
+                            </label>
+                            <select
+                              value={product.requestedResolution || ''}
+                              onChange={e => {
+                                updateProduct(product.name, { requestedResolution: (e.target.value || null) as RequestedResolution | null });
+                                setErrors(prev => { const { [`${product.name}_resolution`]: _, ...rest } = prev; return rest; });
+                              }}
+                              className={selectClass(`${product.name}_resolution`)}
+                            >
+                              <option value="">— Vyberte riešenie —</option>
+                              {(['resend', 'exchange', 'refund'] as RequestedResolution[]).map(res => (
+                                <option key={res} value={res}>{REQUESTED_RESOLUTION_LABELS[res]}</option>
+                              ))}
+                            </select>
+                            {errors[`${product.name}_resolution`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_resolution`]}</p>}
+                          </div>
+
+                          {/* Photo upload - conditional */}
+                          {photoRequired && (
+                            <div>
+                              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                Fotografia <span className="text-destructive">*</span>
+                              </label>
+                              <label className={`flex cursor-pointer items-center gap-2 rounded-lg border border-dashed px-3 py-2.5 text-xs transition-colors hover:border-primary/40 ${
+                                errors[`${product.name}_photo`] ? 'border-destructive' : 'border-input'
+                              }`}>
+                                <Camera className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">
+                                  {product.photoFile ? product.photoFile.name : 'Nahrajte fotografiu'}
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={e => {
+                                    const file = e.target.files?.[0] || null;
+                                    updateProduct(product.name, { photoFile: file });
+                                    setErrors(prev => { const { [`${product.name}_photo`]: _, ...rest } = prev; return rest; });
+                                  }}
+                                />
+                              </label>
+                              {errors[`${product.name}_photo`] && <p className="mt-1 text-xs text-destructive">{errors[`${product.name}_photo`]}</p>}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -414,23 +411,27 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       )}
 
       {/* Step 3: Confirmation */}
-      {step === 'confirm' && order && complaintType && (
+      {step === 'confirm' && order && (
         <div className="space-y-5">
           <div className="rounded-xl border bg-card p-5 space-y-4">
             <div className="text-sm space-y-1">
               <p><span className="text-muted-foreground">Zákazník:</span> {order.customerName}</p>
               <p><span className="text-muted-foreground">E-mail:</span> {order.customerEmail}</p>
               <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
-              <p><span className="text-muted-foreground">Typ reklamácie:</span> {COMPLAINT_TYPE_LABELS[complaintType]}</p>
-              <p><span className="text-muted-foreground">Požadované riešenie:</span> {requestedResolution ? REQUESTED_RESOLUTION_LABELS[requestedResolution] : '—'}</p>
             </div>
-            <div className="border-t pt-3 space-y-2">
-              {selectedProducts.map(p => (
-                <div key={p.name} className="flex flex-wrap items-center gap-2 text-sm">
-                  <Package className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{p.name}</span>
-                  <span className="text-muted-foreground">({p.qty}×)</span>
-                  {p.photoFile && <span className="rounded bg-accent px-2 py-0.5 text-xs">📷 {p.photoFile.name}</span>}
+            <div className="border-t pt-3 space-y-3">
+              {activeProducts.map(p => (
+                <div key={p.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">{p.name}</span>
+                    <span className="text-muted-foreground">({p.qty}×)</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground pl-6 space-y-0.5">
+                    <p>Dôvod: {p.complaintReason ? COMPLAINT_TYPE_LABELS[p.complaintReason] : '—'}</p>
+                    <p>Riešenie: {p.requestedResolution ? REQUESTED_RESOLUTION_LABELS[p.requestedResolution] : '—'}</p>
+                    {p.photoFile && <p>📷 {p.photoFile.name}</p>}
+                  </div>
                 </div>
               ))}
             </div>
