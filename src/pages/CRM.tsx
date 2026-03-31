@@ -132,15 +132,15 @@ const CRM = () => {
     setTreeResult(null);
   };
 
-  // Creation flows
-  if (createMode === 'return' || (createMode === 'select' && treeResult?.requestType === 'return')) {
-    return <ReturnForm treeResult={treeResult} onBack={resetCreate} onSubmit={resetCreate} />;
+  // Creation flows – pass createdBy so tickets are attributed to CRM user
+  if (createMode === 'return') {
+    return <ReturnForm treeResult={treeResult} onBack={resetCreate} onSubmit={resetCreate} createdBy={CRM_USER_EMAIL} />;
   }
-  if (createMode === 'complaint' || (createMode === 'select' && treeResult?.requestType === 'complaint')) {
-    return <ComplaintForm treeResult={treeResult} onBack={resetCreate} onSubmit={resetCreate} />;
+  if (createMode === 'complaint') {
+    return <ComplaintForm treeResult={treeResult} onBack={resetCreate} onSubmit={resetCreate} createdBy={CRM_USER_EMAIL} />;
   }
   if (createMode === 'other') {
-    return <OtherRequestForm onBack={resetCreate} onSubmit={resetCreate} />;
+    return <OtherRequestForm onBack={resetCreate} onSubmit={resetCreate} createdBy={CRM_USER_EMAIL} />;
   }
 
   return (
