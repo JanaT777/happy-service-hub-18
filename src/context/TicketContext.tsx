@@ -3,7 +3,7 @@ import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, Retur
 
 interface TicketContextType {
   tickets: Ticket[];
-  addTicket: (ticket: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => void;
+  addTicket: (ticket: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => string;
   updateTicketStatus: (id: string, status: TicketStatus) => void;
   updateComplaintStatus: (id: string, complaintStatus: ComplaintStatus) => void;
   updateReturnStatus: (id: string, returnStatus: ReturnStatus) => void;
