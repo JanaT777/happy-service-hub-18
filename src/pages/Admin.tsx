@@ -221,6 +221,8 @@ const Admin = () => {
               const workflowKey = getWorkflowStatusKey(ticket);
               const typeConfig = TYPE_CONFIG[ticket.requestType];
               const TypeIcon = typeConfig.icon;
+              const isComplaint = ticket.requestType === 'complaint';
+              const complaintType = isComplaint && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS
                 ? ticket.issueType as ComplaintType : null;
 
               const deadline = getDeadlineInfo(ticket);
