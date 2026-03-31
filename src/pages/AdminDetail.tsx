@@ -281,7 +281,9 @@ const AdminDetail = () => {
                 const itemComplaintType = item.complaintReason as ComplaintType;
                 const systemSuggestion = item.outOfStock ? 'refund' as SuggestedSolution : COMPLAINT_TYPE_SUGGESTED_SOLUTION[itemComplaintType];
                 const customerPreferred = RESOLUTION_TO_ACTION[item.requestedResolution];
-                const isFinal = item.itemStatus === 'item_refunded' || item.itemStatus === 'item_rejected' || item.itemStatus === 'item_approved';
+                const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
+                const nextStatuses = ITEM_STATUS_FLOW[item.itemStatus] || [];
+                const isDecisionPoint = item.itemStatus === 'item_quality_check';
 
                 return (
                   <div key={index} className="rounded-xl border bg-card overflow-hidden">
