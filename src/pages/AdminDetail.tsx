@@ -258,7 +258,7 @@ const AdminDetail = () => {
                 const itemComplaintType = item.complaintReason as ComplaintType;
                 const systemSuggestion = COMPLAINT_TYPE_SUGGESTED_SOLUTION[itemComplaintType];
                 const customerPreferred = RESOLUTION_TO_ACTION[item.requestedResolution];
-                const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
+                const isFinal = item.itemStatus === 'item_refunded' || item.itemStatus === 'item_rejected' || item.itemStatus === 'item_approved';
 
                 return (
                   <div key={index} className="rounded-xl border bg-card overflow-hidden">
