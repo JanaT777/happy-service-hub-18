@@ -14,9 +14,10 @@ const otherSchema = z.object({
 interface Props {
   onBack: () => void;
   onSubmit: () => void;
+  createdBy?: string;
 }
 
-export const OtherRequestForm = ({ onBack, onSubmit }: Props) => {
+export const OtherRequestForm = ({ onBack, onSubmit, createdBy }: Props) => {
   const { addTicket } = useTickets();
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ customerEmail: '', orderNumber: '', product: '', description: '' });
