@@ -98,6 +98,24 @@ export interface ComplaintItem {
   outOfStock?: boolean;
 }
 
+export type DerivedTicketStatus = 'new' | 'processing' | 'waiting_customer' | 'completed' | 'rejected';
+
+export const DERIVED_TICKET_STATUS_LABELS: Record<DerivedTicketStatus, string> = {
+  new: 'Nový',
+  processing: 'Na spracovanie',
+  waiting_customer: 'Čaká na zákazníka',
+  completed: 'Vybavené',
+  rejected: 'Zamietnuté',
+};
+
+export const DERIVED_TICKET_STATUS_COLORS: Record<DerivedTicketStatus, string> = {
+  new: 'bg-info/15 text-info border-info/30',
+  processing: 'bg-warning/15 text-warning border-warning/30',
+  waiting_customer: 'bg-destructive/15 text-destructive border-destructive/30',
+  completed: 'bg-green-500/15 text-green-700 border-green-500/30',
+  rejected: 'bg-destructive/15 text-destructive border-destructive/30',
+};
+
 export interface Ticket {
   id: string;
   customerEmail: string;
@@ -121,6 +139,15 @@ export interface Ticket {
   complaintStatus?: ComplaintStatus;
   returnStatus?: ReturnStatus;
   otherStatus?: OtherStatus;
+}
+
+export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | null {
+  if (!ticket.complaintItems || ticket.complaintItems.length === 0) return null;
+  const statuses = ticket.complaintItems.map(i => i.itemStatus);
+  if (statuses.every(s => s === 'item_new')) return 'new';
+  if (statuses.every(s => s === 'item_rejected')) return 'rejected';
+  if (statuses.every(s => s === 'item_approved' || s === 'item_refunded')) return 'completed';
+  return 'processing';
 }
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
