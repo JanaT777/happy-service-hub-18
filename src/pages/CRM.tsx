@@ -92,7 +92,7 @@ type CreateMode = null | 'select' | 'return' | 'complaint' | 'other';
 const CRM = () => {
   const navigate = useNavigate();
   const { tickets } = useTickets();
-  const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<RequestType | 'all' | 'my_assigned'>('my_assigned');
   const [search, setSearch] = useState('');
   const [createMode, setCreateMode] = useState<CreateMode>(null);
   const [treeResult, setTreeResult] = useState<DecisionTreeResult | null>(null);
