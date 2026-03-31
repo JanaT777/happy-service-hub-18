@@ -71,6 +71,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       attachments: [],
       requestType: 'other',
       otherStatus: 'other_submitted',
+      assignedTo: 'customer_care',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 0.5).toISOString(),
