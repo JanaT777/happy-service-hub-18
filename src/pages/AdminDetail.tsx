@@ -352,7 +352,16 @@ const AdminDetail = () => {
                                     <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">★ Odporúčané podľa zákazníka</span>
                                   )}
                                   {!isCustomerPick && isSuggested && action.variant === 'default' && (
-                                    <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Systém</span>
+                                    <TooltipProvider delayDuration={200}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground cursor-help">Systém</span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="text-xs max-w-[220px]">
+                                          Navrhnuté automaticky podľa typu reklamácie
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   )}
                                 </button>
                               );
