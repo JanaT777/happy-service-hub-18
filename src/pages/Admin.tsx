@@ -306,15 +306,18 @@ const Admin = () => {
                       <span className="text-[11px] text-muted-foreground">
                         {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: sk })}
                       </span>
-                      {daysSince !== null && (
+                      {deadline && (
                         <span className={cn(
-                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                          overDeadline
-                            ? 'bg-destructive/15 text-destructive border border-destructive/30'
-                            : 'bg-muted text-muted-foreground'
+                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border',
+                          deadline.level === 'critical' && 'bg-destructive/15 text-destructive border-destructive/30',
+                          deadline.level === 'warning' && 'bg-warning/15 text-warning border-warning/30',
+                          deadline.level === 'ok' && 'bg-muted text-muted-foreground border-border'
                         )}>
-                          {overDeadline && <AlertTriangle className="h-3 w-3" />}
-                          {daysSince}/{deadlineLimit} dní
+                          {deadline.level === 'critical' && <AlertTriangle className="h-3 w-3" />}
+                          {deadline.level === 'warning' && <Clock className="h-3 w-3" />}
+                          {deadline.days}/{deadline.limit} dní
+                          {deadline.level === 'critical' && ' · Prekročené'}
+                          {deadline.level === 'warning' && ' · Blíži sa'}
                         </span>
                       )}
                     </div>
