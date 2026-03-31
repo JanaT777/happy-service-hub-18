@@ -70,17 +70,16 @@ const getCustomerName = (ticket: Ticket): string => {
   return order?.customerName || ticket.customerEmail.split('@')[0];
 };
 
-const getDeadlineLimit = (ticket: Ticket): number => ticket.requestType === 'return' ? 14 : 30;
+type DeadlineLevel = 'ok' | 'warning' | 'critical';
 
-const isOverDeadline = (ticket: Ticket): boolean => {
-  if (!ticket.warehouseReceipt) return false;
-  const days = differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
-  return days > getDeadlineLimit(ticket);
-};
-
-const getDaysSinceReceipt = (ticket: Ticket): number | null => {
+const getDeadlineInfo = (ticket: Ticket): { days: number; limit: number; warnAt: number; level: DeadlineLevel } | null => {
   if (!ticket.warehouseReceipt) return null;
-  return differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
+  const days = differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
+  const isReturn = ticket.requestType === 'return';
+  const limit = isReturn ? 14 : 30;
+  const warnAt = isReturn ? 10 : 25;
+  const level: DeadlineLevel = days > limit ? 'critical' : days >= warnAt ? 'warning' : 'ok';
+  return { days, limit, warnAt, level };
 };
 
 const Admin = () => {
