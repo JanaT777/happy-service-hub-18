@@ -7,11 +7,12 @@ import {
   COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
-  COMPLAINT_ITEM_STATUS_LABELS,
+  COMPLAINT_ITEM_STATUS_LABELS, OTHER_SUBTYPE_LABELS,
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
   ComplaintItemStatus, ITEM_STATUS_FLOW,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
+  AssignedTeam, ASSIGNED_TEAM_LABELS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
