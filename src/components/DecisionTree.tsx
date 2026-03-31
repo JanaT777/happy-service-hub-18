@@ -34,7 +34,7 @@ export const DecisionTree = ({ onComplete }: Props) => {
   const handleTypeSelect = (type: RequestType) => {
     setRequestType(type);
     if (type === 'return') onComplete({ requestType: 'return' });
-    else if (type === 'complaint') setStep('complaint-issue');
+    else if (type === 'complaint') onComplete({ requestType: 'complaint' });
     else onComplete({ requestType: 'other' });
   };
 
