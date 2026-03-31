@@ -96,8 +96,8 @@ const CRM = () => {
   const [createMode, setCreateMode] = useState<CreateMode>(null);
   const [treeResult, setTreeResult] = useState<DecisionTreeResult | null>(null);
 
-  // In a real app, filter by logged-in user. For demo, show all tickets.
-  const myTickets = tickets;
+  // Show only tickets created by this CRM user
+  const myTickets = useMemo(() => tickets.filter(t => t.createdBy === CRM_USER_EMAIL), [tickets]);
 
   const filtered = useMemo(() => {
     const list = myTickets.filter(t => {
