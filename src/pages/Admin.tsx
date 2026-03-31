@@ -12,8 +12,9 @@ import {
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Filter, X, FileText, Truck, RotateCcw } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { Search, Filter, X, FileText, Truck, RotateCcw, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 
@@ -67,6 +68,19 @@ const getWorkflowIcon = (type: RequestType) => {
 const getCustomerName = (ticket: Ticket): string => {
   const order = MOCK_ORDERS[ticket.orderNumber];
   return order?.customerName || ticket.customerEmail.split('@')[0];
+};
+
+const getDeadlineLimit = (ticket: Ticket): number => ticket.requestType === 'return' ? 14 : 30;
+
+const isOverDeadline = (ticket: Ticket): boolean => {
+  if (!ticket.warehouseReceipt) return false;
+  const days = differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
+  return days > getDeadlineLimit(ticket);
+};
+
+const getDaysSinceReceipt = (ticket: Ticket): number | null => {
+  if (!ticket.warehouseReceipt) return null;
+  return differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
 };
 
 const Admin = () => {
@@ -211,10 +225,17 @@ const Admin = () => {
               const complaintType = isComplaint && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS
                 ? ticket.issueType as ComplaintType : null;
 
+              const overDeadline = isOverDeadline(ticket);
+              const daysSince = getDaysSinceReceipt(ticket);
+              const deadlineLimit = getDeadlineLimit(ticket);
+
               return (
                 <TableRow
                   key={ticket.id}
-                  className="cursor-pointer transition-colors hover:bg-accent/50"
+                  className={cn(
+                    'cursor-pointer transition-colors hover:bg-accent/50',
+                    overDeadline && 'bg-destructive/10 hover:bg-destructive/15 border-l-4 border-l-destructive'
+                  )}
                   onClick={() => navigate(`/admin/${ticket.id}`)}
                 >
                   <TableCell className="font-heading font-bold text-sm">{ticket.id}</TableCell>
@@ -282,11 +303,22 @@ const Admin = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-end gap-0.5">
                       <span className="text-xs">{format(new Date(ticket.createdAt), 'd. MMM yyyy', { locale: sk })}</span>
                       <span className="text-[11px] text-muted-foreground">
                         {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: sk })}
                       </span>
+                      {daysSince !== null && (
+                        <span className={cn(
+                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                          overDeadline
+                            ? 'bg-destructive/15 text-destructive border border-destructive/30'
+                            : 'bg-muted text-muted-foreground'
+                        )}>
+                          {overDeadline && <AlertTriangle className="h-3 w-3" />}
+                          {daysSince}/{deadlineLimit} dní
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

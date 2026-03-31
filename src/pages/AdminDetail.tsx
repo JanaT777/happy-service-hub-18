@@ -544,12 +544,29 @@ const AdminDetail = () => {
                     <span className="font-medium">{format(new Date(ticket.warehouseReceipt.receivedAt), 'd. MMMM yyyy', { locale: sk })}</span>
                   </div>
 
-                  <div className="rounded-lg bg-warning/10 border border-warning/20 px-3 py-2 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-warning shrink-0" />
-                    <span className="text-sm font-bold text-warning">
-                      Dní od prijatia: {differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt))} dní
-                    </span>
-                  </div>
+                  {(() => {
+                    const days = differenceInDays(new Date(), new Date(ticket.warehouseReceipt.receivedAt));
+                    const limit = ticket.requestType === 'return' ? 14 : 30;
+                    const overDeadline = days > limit;
+                    return (
+                      <div className={cn(
+                        'rounded-lg border px-3 py-2 flex items-center gap-2',
+                        overDeadline
+                          ? 'bg-destructive/10 border-destructive/30'
+                          : 'bg-warning/10 border-warning/20'
+                      )}>
+                        {overDeadline ? (
+                          <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                        ) : (
+                          <Clock className="h-4 w-4 text-warning shrink-0" />
+                        )}
+                        <span className={cn('text-sm font-bold', overDeadline ? 'text-destructive' : 'text-warning')}>
+                          Dní od prijatia: {days}/{limit} dní
+                          {overDeadline && ' — PREKROČENÁ LEHOTA!'}
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   <div className="border-t border-warning/20 pt-3 space-y-1">
                     <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Audit</p>
