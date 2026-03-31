@@ -67,7 +67,9 @@ const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | 
 const AdminDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus } = useTickets();
+  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt } = useTickets();
+  const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
+  const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
 
   const ticket = getTicket(id || '');
 
