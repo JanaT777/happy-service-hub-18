@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -73,12 +73,38 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     },
   ]);
 
+  const autoApproveItems = (items: ComplaintItem[]): ComplaintItem[] => {
+    const resolutionToAction: Record<string, SuggestedSolution> = {
+      resend: 'resend_order',
+      exchange: 'exchange',
+      refund: 'refund',
+    };
+
+    return items.map(item => {
+      const systemSuggestion = item.outOfStock ? 'refund' as SuggestedSolution : COMPLAINT_TYPE_SUGGESTED_SOLUTION[item.complaintReason as ComplaintType];
+      const customerAction = resolutionToAction[item.requestedResolution];
+      const hasMismatch = customerAction !== systemSuggestion;
+      const isExchange = systemSuggestion === 'exchange';
+      const isInStock = !item.outOfStock;
+
+      if (isExchange && !hasMismatch && isInStock) {
+        return { ...item, itemStatus: 'item_approved' as ComplaintItemStatus };
+      }
+      return item;
+    });
+  };
+
   const addTicket = useCallback((data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
     const now = new Date().toISOString();
+    const complaintItems = data.requestType === 'complaint' && data.complaintItems
+      ? autoApproveItems(data.complaintItems)
+      : data.complaintItems;
+
     setTickets(prev => [{
       ...data,
       id: `TK-${generateId()}`,
       status: 'new' as TicketStatus,
+      complaintItems,
       complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
       returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
       otherStatus: data.requestType === 'other' ? 'other_submitted' as OtherStatus : undefined,
