@@ -4,6 +4,7 @@ import {
   MOCK_ORDERS, MockOrder, MockOrderProduct,
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION,
   COMPLAINT_TYPE_PHOTO_REQUIRED, SuggestedSolution, IssueType,
+  RequestedResolution, REQUESTED_RESOLUTION_LABELS,
 } from '@/types/ticket';
 import { DecisionTreeResult } from '@/components/DecisionTree';
 import {
