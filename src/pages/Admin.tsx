@@ -12,7 +12,7 @@ import {
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Filter, X, FileText, Truck, RotateCcw, AlertTriangle, Clock } from 'lucide-react';
+import { Search, Filter, X, FileText, Truck, RotateCcw, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { sk } from 'date-fns/locale';
@@ -230,9 +230,11 @@ const Admin = () => {
                 <TableRow
                   key={ticket.id}
                   className={cn(
-                    'cursor-pointer transition-colors hover:bg-accent/50',
-                    deadline?.level === 'critical' && 'bg-destructive/10 hover:bg-destructive/15 border-l-4 border-l-destructive',
-                    deadline?.level === 'warning' && 'bg-warning/10 hover:bg-warning/15 border-l-4 border-l-warning'
+                    'cursor-pointer transition-colors',
+                    deadline?.level === 'critical' && 'bg-destructive/8 hover:bg-destructive/15 border-l-[5px] border-l-destructive',
+                    deadline?.level === 'warning' && 'bg-warning/8 hover:bg-warning/15 border-l-[5px] border-l-warning',
+                    deadline?.level === 'ok' && 'border-l-[5px] border-l-success/60 hover:bg-accent/50',
+                    !deadline && 'hover:bg-accent/50'
                   )}
                   onClick={() => navigate(`/admin/${ticket.id}`)}
                 >
@@ -308,16 +310,18 @@ const Admin = () => {
                       </span>
                       {deadline && (
                         <span className={cn(
-                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border',
+                          'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold border',
                           deadline.level === 'critical' && 'bg-destructive/15 text-destructive border-destructive/30',
                           deadline.level === 'warning' && 'bg-warning/15 text-warning border-warning/30',
-                          deadline.level === 'ok' && 'bg-muted text-muted-foreground border-border'
+                          deadline.level === 'ok' && 'bg-success/15 text-success border-success/30'
                         )}>
                           {deadline.level === 'critical' && <AlertTriangle className="h-3 w-3" />}
                           {deadline.level === 'warning' && <Clock className="h-3 w-3" />}
-                          {deadline.days}/{deadline.limit} dní
-                          {deadline.level === 'critical' && ' · Prekročené'}
+                          {deadline.level === 'ok' && <CheckCircle2 className="h-3 w-3" />}
+                          {deadline.days}/{deadline.limit}d
+                          {deadline.level === 'critical' && ' · Po termíne'}
                           {deadline.level === 'warning' && ' · Blíži sa'}
+                          {deadline.level === 'ok' && ' · OK'}
                         </span>
                       )}
                     </div>
