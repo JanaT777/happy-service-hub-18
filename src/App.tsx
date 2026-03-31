@@ -28,6 +28,7 @@ const App = () => (
             <Route path="/track" element={<TrackRequest />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/:id" element={<AdminDetail />} />
+            <Route path="/crm" element={<CRM />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

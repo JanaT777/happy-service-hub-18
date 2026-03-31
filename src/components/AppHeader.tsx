@@ -9,6 +9,7 @@ export const AppHeader = () => {
     { to: '/', label: 'Nová požiadavka', icon: PlusCircle },
     { to: '/track', label: 'Sledovať požiadavku', icon: SearchCheck },
     { to: '/admin', label: 'Prehľad', icon: LayoutDashboard },
+    { to: '/crm', label: 'CRM', icon: Briefcase },
   ];
 
   return (
