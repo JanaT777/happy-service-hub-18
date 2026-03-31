@@ -219,9 +219,8 @@ const Admin = () => {
             {filtered.map(ticket => {
               const workflowLabel = getWorkflowLabel(ticket);
               const workflowKey = getWorkflowStatusKey(ticket);
-              const WorkflowIcon = getWorkflowIcon(ticket.requestType);
-              const isComplaint = ticket.requestType === 'complaint';
-              const complaintType = isComplaint && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS
+              const typeConfig = TYPE_CONFIG[ticket.requestType];
+              const TypeIcon = typeConfig.icon;
                 ? ticket.issueType as ComplaintType : null;
 
               const deadline = getDeadlineInfo(ticket);
