@@ -7,7 +7,7 @@ import {
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
-  RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
+  RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -163,7 +163,30 @@ const AdminDetail = () => {
 
           <dl>
             <Field label="Typ požiadavky" value={REQUEST_TYPE_LABELS[ticket.requestType]} />
-            <Field label="Typ reklamácie" value={complaintType ? COMPLAINT_TYPE_LABELS[complaintType] : null} />
+
+            {/* Per-item complaint details */}
+            {ticket.complaintItems && ticket.complaintItems.length > 0 ? (
+              <div className="py-3 border-b">
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2">Reklamované položky</dt>
+                <dd className="space-y-3">
+                  {ticket.complaintItems.map((item, i) => (
+                    <div key={i} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{item.productName}</span>
+                        <span className="text-muted-foreground">({item.quantity}×)</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground pl-6 space-y-0.5">
+                        <p>Dôvod: <span className="text-foreground font-medium">{COMPLAINT_TYPE_LABELS[item.complaintReason]}</span></p>
+                        <p>Riešenie: <span className="text-foreground font-medium">{REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}</span></p>
+                      </div>
+                    </div>
+                  ))}
+                </dd>
+              </div>
+            ) : (
+              <Field label="Typ reklamácie" value={complaintType ? COMPLAINT_TYPE_LABELS[complaintType] : null} />
+            )}
 
             <div className="py-3 border-b">
               <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Stav</dt>
@@ -192,7 +215,7 @@ const AdminDetail = () => {
                 </dd>
               </div>
             ) : (
-              <Field label="Produkt" value={ticket.product} />
+              !ticket.complaintItems?.length && <Field label="Produkt" value={ticket.product} />
             )}
             <Field label="Objednávka" value={ticket.orderNumber} />
             <Field label="Závažnosť" value={ticket.severity ? SEVERITY_LABELS[ticket.severity] : null} />

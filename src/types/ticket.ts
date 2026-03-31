@@ -80,6 +80,13 @@ export interface ReturnItem {
   quantity: number;
 }
 
+export interface ComplaintItem {
+  productName: string;
+  quantity: number;
+  complaintReason: ComplaintType;
+  requestedResolution: RequestedResolution;
+}
+
 export interface Ticket {
   id: string;
   customerEmail: string;
@@ -95,6 +102,7 @@ export interface Ticket {
   iban?: string;
   withinReturnWindow?: boolean;
   returnItems?: ReturnItem[];
+  complaintItems?: ComplaintItem[];
   issueType?: IssueType;
   severity?: SeverityLevel;
   suggestedSolution?: SuggestedSolution;

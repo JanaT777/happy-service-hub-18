@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -21,14 +21,18 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: 'TK-A1B2C3',
       customerEmail: 'jana@example.com',
       orderNumber: 'ORD-10042',
-      product: 'Bezdrôtové slúchadlá',
-      description: 'Ľavé slúchadlo prestalo fungovať po 2 týždňoch používania.',
+      product: 'Bezdrôtové slúchadlá (1×), Obal na telefón (2×)',
+      description: 'Ľavé slúchadlo prestalo fungovať po 2 týždňoch používania. Obaly boli poškodené v preprave.',
       attachments: [],
       requestType: 'complaint',
       issueType: 'manufacturing_defect',
       severity: 'high',
       suggestedSolution: 'exchange',
       requestedResolution: 'refund',
+      complaintItems: [
+        { productName: 'Bezdrôtové slúchadlá', quantity: 1, complaintReason: 'manufacturing_defect', requestedResolution: 'refund' },
+        { productName: 'Obal na telefón', quantity: 2, complaintReason: 'damaged_in_transport', requestedResolution: 'exchange' },
+      ],
       complaintStatus: 'complaint_new',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
