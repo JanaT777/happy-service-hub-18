@@ -10,6 +10,7 @@ import {
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
   ComplaintItemStatus,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
+  getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
