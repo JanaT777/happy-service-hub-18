@@ -191,7 +191,7 @@ const AdminDetail = () => {
               <Field label="Typ požiadavky" value={REQUEST_TYPE_LABELS[ticket.requestType]} />
               {ticket.requestType === 'return' && (
                 <>
-                  <Field label="Typ reklamácie" value="Odstúpenie od zmluvy" />
+                  <Field label="Typ požiadavky" value="Odstúpenie od zmluvy" />
                   <Field label="Navrhované riešenie" value="Vrátenie finančných prostriedkov" />
                 </>
               )}
