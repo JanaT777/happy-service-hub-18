@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
 import { MOCK_ORDERS, MockOrder, MockOrderProduct, PAYMENT_METHOD_LABELS } from '@/types/ticket';
 import { DecisionTreeResult } from '@/components/DecisionTree';
+import { OrderSelector } from '@/components/OrderSelector';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
   User, Mail, CalendarDays, CreditCard, CheckCircle2,
