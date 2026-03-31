@@ -48,12 +48,10 @@ const RESOLUTION_TO_ACTION: Record<RequestedResolution, SuggestedSolution> = {
 };
 
 // Per-item action definitions
-const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | null; icon: typeof Send; variant: 'default' | 'destructive' | 'warning' }[] = [
+const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | null; icon: typeof Send; variant: 'default' | 'destructive' }[] = [
   { key: 'refund', label: 'Refundovať', solution: 'refund', icon: Banknote, variant: 'default' },
   { key: 'exchange', label: 'Výmena produktu', solution: 'exchange', icon: Replace, variant: 'default' },
-  { key: 'resend', label: 'Opätovné zaslanie', solution: 'resend_order', icon: Send, variant: 'default' },
   { key: 'reject', label: 'Zamietnuť', solution: null, icon: XCircle, variant: 'destructive' },
-  { key: 'info', label: 'Vyžiadať doplnenie', solution: null, icon: MessageSquare, variant: 'warning' },
 ];
 
 const AdminDetail = () => {
