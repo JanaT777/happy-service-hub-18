@@ -62,6 +62,27 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props
   // Overall wizard: Step 1 = type selection (done), Step 2 = this form, Step 3 = confirm/submitted
   const overallStep = step === 'confirm' || step === 'submitted' ? 3 : 2;
 
+  const isCRM = !!createdBy;
+
+  const selectOrder = (orderNum: string, orderData: MockOrder) => {
+    setOrder(orderData);
+    setFoundOrderNumber(orderNum);
+    setSelectedProducts(orderData.products.map(p => ({
+      name: p.name,
+      maxQty: p.quantity,
+      qty: 0,
+      complaintReason: null,
+      requestedResolution: null,
+      photoFile: null,
+      issueDescription: '',
+    })));
+    setStep('products');
+  };
+
+  const handleCRMSelect = (orderNum: string, orderData: MockOrder) => {
+    selectOrder(orderNum, orderData);
+  };
+
   const handleLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
     const trimmedEmail = email.trim().toLowerCase();
@@ -74,19 +95,8 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props
       setLookupError('Objednávka nenájdená. Skontrolujte údaje a skúste znova.');
       return;
     }
-    setOrder(found);
-    setFoundOrderNumber(trimmed);
+    selectOrder(trimmed, found);
     setLookupError('');
-    setSelectedProducts(found.products.map(p => ({
-      name: p.name,
-      maxQty: p.quantity,
-      qty: 0,
-      complaintReason: null,
-      requestedResolution: null,
-      photoFile: null,
-      issueDescription: '',
-    })));
-    setStep('products');
   };
 
   const updateProduct = (name: string, updates: Partial<SelectedProduct>) => {
