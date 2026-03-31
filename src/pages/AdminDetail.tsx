@@ -13,6 +13,7 @@ import {
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -305,9 +306,18 @@ const AdminDetail = () => {
                             <span className="inline-flex items-center rounded-full bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 text-[11px] font-semibold">
                               Zákazník: {REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}
                             </span>
-                            <span className="inline-flex items-center rounded-full bg-muted border border-border text-muted-foreground px-2.5 py-0.5 text-[11px] font-semibold">
-                              Systém: {SUGGESTED_SOLUTION_LABELS[systemSuggestion]}
-                            </span>
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex items-center rounded-full bg-muted border border-border text-muted-foreground px-2.5 py-0.5 text-[11px] font-semibold cursor-help">
+                                    Systém: {SUGGESTED_SOLUTION_LABELS[systemSuggestion]}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+                                  Navrhnuté automaticky podľa typu reklamácie
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </div>
                       )}
@@ -342,7 +352,16 @@ const AdminDetail = () => {
                                     <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">★ Odporúčané podľa zákazníka</span>
                                   )}
                                   {!isCustomerPick && isSuggested && action.variant === 'default' && (
-                                    <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Systém</span>
+                                    <TooltipProvider delayDuration={200}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground cursor-help">Systém</span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="text-xs max-w-[220px]">
+                                          Navrhnuté automaticky podľa typu reklamácie
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   )}
                                 </button>
                               );
