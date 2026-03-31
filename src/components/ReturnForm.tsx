@@ -26,8 +26,10 @@ type Step = 'lookup' | 'products' | 'confirm' | 'submitted';
 
 export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const { addTicket } = useTickets();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>('lookup');
+  const [ticketId, setTicketId] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
   const [email, setEmail] = useState('');
   const [lookupError, setLookupError] = useState('');
