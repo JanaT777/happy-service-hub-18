@@ -281,22 +281,34 @@ const AdminDetail = () => {
                       {/* Item details */}
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
-                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-0.5">Dôvod</span>
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-1">Dôvod</span>
                           <span className="font-medium">{COMPLAINT_TYPE_LABELS[item.complaintReason]}</span>
                         </div>
                         <div>
-                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-0.5">Požiadavka zákazníka</span>
-                          <span className="font-medium">{REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}</span>
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-1">Požiadavka zákazníka</span>
+                          <span className="inline-flex items-center rounded-full bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 text-xs font-semibold">
+                            {REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Mismatch warning */}
+                      {/* Mismatch warning with both badges */}
                       {customerPreferred !== systemSuggestion && (
-                        <div className="flex items-center gap-2 rounded-lg bg-warning/10 border border-warning/30 px-3 py-2">
-                          <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-                          <span className="text-xs font-medium text-warning">
-                            Zákazník požaduje iné riešenie ako systém navrhuje ({SUGGESTED_SOLUTION_LABELS[systemSuggestion]})
-                          </span>
+                        <div className="rounded-lg bg-warning/10 border border-warning/30 px-4 py-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+                            <span className="text-xs font-semibold text-warning">
+                              Zákazník požaduje iné riešenie ako systém navrhuje
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 ml-6">
+                            <span className="inline-flex items-center rounded-full bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 text-[11px] font-semibold">
+                              Zákazník: {REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}
+                            </span>
+                            <span className="inline-flex items-center rounded-full bg-muted border border-border text-muted-foreground px-2.5 py-0.5 text-[11px] font-semibold">
+                              Systém: {SUGGESTED_SOLUTION_LABELS[systemSuggestion]}
+                            </span>
+                          </div>
                         </div>
                       )}
 
@@ -327,7 +339,7 @@ const AdminDetail = () => {
                                   <Icon className="h-4 w-4 shrink-0" />
                                   <span className="flex-1">{action.label}</span>
                                   {isCustomerPick && action.variant === 'default' && (
-                                    <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">Odporúčané</span>
+                                    <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">★ Odporúčané podľa zákazníka</span>
                                   )}
                                   {!isCustomerPick && isSuggested && action.variant === 'default' && (
                                     <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Systém</span>
