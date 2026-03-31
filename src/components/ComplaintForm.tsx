@@ -144,7 +144,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       customerEmail: order.customerEmail,
       orderNumber: foundOrderNumber,
       product: activeProducts.map(p => `${p.name} (${p.qty}×)`).join(', '),
-      description,
+      description: activeProducts.map(p => `${p.name}: ${p.complaintReason ? COMPLAINT_TYPE_LABELS[p.complaintReason] : ''}`).join('; '),
       attachments: [],
       requestType: 'complaint',
       issueType: firstItem.complaintReason!,
