@@ -319,9 +319,7 @@ const AdminDetail = () => {
                                     'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all text-left w-full',
                                     action.variant === 'destructive'
                                       ? 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
-                                      : action.variant === 'warning'
-                                        ? 'border-warning/30 bg-warning/10 text-warning hover:bg-warning/20'
-                                        : isPrimary
+                                      : isPrimary
                                           ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
                                           : 'bg-card text-foreground hover:bg-accent'
                                   )}
