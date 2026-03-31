@@ -150,7 +150,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     const firstItem = activeProducts[0];
     const suggestedSolution = COMPLAINT_TYPE_SUGGESTED_SOLUTION[firstItem.complaintReason!];
 
-    addTicket({
+    const id = addTicket({
       customerEmail: order.customerEmail,
       orderNumber: foundOrderNumber,
       product: activeProducts.map(p => `${p.name} (${p.qty}×)`).join(', '),
@@ -164,9 +164,10 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       iban: iban.replace(/\s/g, '').toUpperCase(),
     });
 
+    setTicketId(id);
     toast.success('Reklamácia bola odoslaná!');
     setSubmitting(false);
-    onSubmit();
+    setStep('submitted');
   };
 
   const goBack = () => {
