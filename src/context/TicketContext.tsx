@@ -78,15 +78,16 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return items.map(item => ({ ...item, itemStatus: 'item_new' as ComplaintItemStatus }));
   };
 
-  const addTicket = useCallback((data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
+  const addTicket = useCallback((data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>): string => {
     const now = new Date().toISOString();
+    const ticketId = `TK-${generateId()}`;
     const complaintItems = data.requestType === 'complaint' && data.complaintItems
       ? processNewItems(data.complaintItems)
       : data.complaintItems;
 
     setTickets(prev => [{
       ...data,
-      id: `TK-${generateId()}`,
+      id: ticketId,
       status: 'new' as TicketStatus,
       complaintItems,
       complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
@@ -95,6 +96,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       createdAt: now,
       updatedAt: now,
     }, ...prev]);
+    return ticketId;
   }, []);
 
   const updateTicketStatus = useCallback((id: string, status: TicketStatus) => {
