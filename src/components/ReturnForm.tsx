@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
 import { MOCK_ORDERS, MockOrder, MockOrderProduct, PAYMENT_METHOD_LABELS } from '@/types/ticket';
 import { DecisionTreeResult } from '@/components/DecisionTree';
