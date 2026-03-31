@@ -8,7 +8,7 @@ import {
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
   COMPLAINT_ITEM_STATUS_LABELS,
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
-  ComplaintItemStatus,
+  ComplaintItemStatus, ITEM_STATUS_FLOW,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
 } from '@/types/ticket';
