@@ -248,6 +248,23 @@ const AdminDetail = () => {
                 !hasComplaintItems && <Field label="Produkt" value={ticket.product} />
               )}
               <Field label="Objednávka" value={ticket.orderNumber} />
+              {ticket.otherSubtype && (
+                <Field label="Podtyp požiadavky" value={OTHER_SUBTYPE_LABELS[ticket.otherSubtype]} />
+              )}
+              <div className="py-3 border-b">
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Priradené komu</dt>
+                <dd>
+                  <select
+                    value={ticket.assignedTo || ''}
+                    onChange={e => { updateAssignment(ticket.id, e.target.value as AssignedTeam); toast.success('Priradenie zmenené'); }}
+                    className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {Object.entries(ASSIGNED_TEAM_LABELS).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
+                  </select>
+                </dd>
+              </div>
               <Field label="Závažnosť" value={ticket.severity ? SEVERITY_LABELS[ticket.severity] : null} />
               <Field label="Popis" value={ticket.description} />
 
