@@ -95,6 +95,9 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     if (!complaintType) {
       newErrors.complaintType = 'Vyberte typ reklamácie.';
     }
+    if (!requestedResolution) {
+      newErrors.requestedResolution = 'Vyberte požadovaný spôsob vybavenia.';
+    }
     if (selectedProducts.length === 0) {
       toast.error('Vyberte aspoň jeden produkt.');
       return;
