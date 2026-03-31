@@ -75,6 +75,11 @@ export const COMPLAINT_TYPE_PHOTO_REQUIRED: Record<ComplaintType, boolean> = {
   wrong_quantity: false,
 };
 
+export interface ReturnItem {
+  name: string;
+  quantity: number;
+}
+
 export interface Ticket {
   id: string;
   customerEmail: string;
@@ -89,6 +94,7 @@ export interface Ticket {
   refundMethod?: RefundMethod;
   iban?: string;
   withinReturnWindow?: boolean;
+  returnItems?: ReturnItem[];
   issueType?: IssueType;
   severity?: SeverityLevel;
   suggestedSolution?: SuggestedSolution;

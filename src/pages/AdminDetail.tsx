@@ -178,7 +178,22 @@ const AdminDetail = () => {
             </div>
 
             <Field label="Zákazník" value={`${customerName} · ${ticket.customerEmail}`} />
-            <Field label="Produkt" value={ticket.product} />
+            {ticket.returnItems && ticket.returnItems.length > 0 ? (
+              <div className="py-3 border-b">
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Vrátené produkty</dt>
+                <dd className="space-y-1">
+                  {ticket.returnItems.map((item, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm">
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{item.name}</span>
+                      <span className="text-muted-foreground">({item.quantity}×)</span>
+                    </div>
+                  ))}
+                </dd>
+              </div>
+            ) : (
+              <Field label="Produkt" value={ticket.product} />
+            )}
             <Field label="Objednávka" value={ticket.orderNumber} />
             <Field label="Závažnosť" value={ticket.severity ? SEVERITY_LABELS[ticket.severity] : null} />
             <Field label="Popis" value={ticket.description} />
