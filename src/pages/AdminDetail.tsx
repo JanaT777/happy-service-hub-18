@@ -169,7 +169,6 @@ const AdminDetail = () => {
             <Field label="Produkt" value={ticket.product} />
             <Field label="Objednávka" value={ticket.orderNumber} />
             <Field label="Závažnosť" value={ticket.severity ? SEVERITY_LABELS[ticket.severity] : null} />
-            <Field label="Požadovaný spôsob vybavenia" value={ticket.requestedResolution ? REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution] : null} />
             <Field label="Popis" value={ticket.description} />
 
             {/* Attachments */}
