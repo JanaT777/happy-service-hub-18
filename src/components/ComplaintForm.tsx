@@ -270,6 +270,38 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
             {errors.complaintType && <p className="mt-1 text-xs text-destructive">{errors.complaintType}</p>}
           </div>
 
+          {/* Requested resolution */}
+          <div>
+            <label className="mb-2 block text-sm font-medium">
+              Požadovaný spôsob vybavenia reklamácie <span className="text-destructive">*</span>
+            </label>
+            <div className="space-y-2">
+              {(['resend', 'exchange', 'refund'] as RequestedResolution[]).map(res => (
+                <button
+                  key={res}
+                  type="button"
+                  onClick={() => {
+                    setRequestedResolution(res);
+                    setErrors(prev => { const { requestedResolution: _, ...rest } = prev; return rest; });
+                  }}
+                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left text-sm font-medium transition-all ${
+                    requestedResolution === res
+                      ? 'border-primary bg-primary/5 text-foreground'
+                      : 'border-input bg-card text-muted-foreground hover:border-primary/30'
+                  }`}
+                >
+                  <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                    requestedResolution === res ? 'border-primary' : 'border-muted-foreground'
+                  }`}>
+                    {requestedResolution === res && <div className="h-2 w-2 rounded-full bg-primary" />}
+                  </div>
+                  {REQUESTED_RESOLUTION_LABELS[res]}
+                </button>
+              ))}
+            </div>
+            {errors.requestedResolution && <p className="mt-1 text-xs text-destructive">{errors.requestedResolution}</p>}
+          </div>
+
           {/* Product selection */}
           <div>
             <p className="mb-3 text-sm font-medium">Vyberte produkty na reklamáciu:</p>
