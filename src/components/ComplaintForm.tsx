@@ -35,11 +35,12 @@ interface Props {
   treeResult: DecisionTreeResult;
   onBack: () => void;
   onSubmit: () => void;
+  createdBy?: string;
 }
 
 type Step = 'lookup' | 'products' | 'confirm' | 'submitted';
 
-export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
+export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) => {
   const { addTicket } = useTickets();
   const navigate = useNavigate();
 
