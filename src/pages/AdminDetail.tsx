@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import {
   ArrowLeft, Star, XCircle, MessageSquare, CheckCircle2,
-  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle,
+  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle, Info,
 } from 'lucide-react';
 
 const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
