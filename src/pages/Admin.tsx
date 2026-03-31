@@ -224,16 +224,15 @@ const Admin = () => {
               const complaintType = isComplaint && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS
                 ? ticket.issueType as ComplaintType : null;
 
-              const overDeadline = isOverDeadline(ticket);
-              const daysSince = getDaysSinceReceipt(ticket);
-              const deadlineLimit = getDeadlineLimit(ticket);
+              const deadline = getDeadlineInfo(ticket);
 
               return (
                 <TableRow
                   key={ticket.id}
                   className={cn(
                     'cursor-pointer transition-colors hover:bg-accent/50',
-                    overDeadline && 'bg-destructive/10 hover:bg-destructive/15 border-l-4 border-l-destructive'
+                    deadline?.level === 'critical' && 'bg-destructive/10 hover:bg-destructive/15 border-l-4 border-l-destructive',
+                    deadline?.level === 'warning' && 'bg-warning/10 hover:bg-warning/15 border-l-4 border-l-warning'
                   )}
                   onClick={() => navigate(`/admin/${ticket.id}`)}
                 >
