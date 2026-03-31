@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
+import {
   REQUEST_TYPE_LABELS, SUGGESTED_SOLUTION_LABELS,
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
@@ -15,18 +16,17 @@ import { useTickets } from '@/context/TicketContext';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import {
   ArrowLeft, Star, XCircle, MessageSquare, CheckCircle2,
   Send, Banknote, Package, RefreshCw, Replace, AlertTriangle, Info,
   Truck, Warehouse, ClipboardCheck, CalendarDays, Clock, UserCheck,
 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn as cnUtil } from '@/lib/utils';
 
 const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
   resend_order: Send,
