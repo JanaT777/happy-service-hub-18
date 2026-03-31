@@ -178,7 +178,18 @@ export interface Ticket {
   otherStatus?: OtherStatus;
   warehouseReceipt?: WarehouseReceiptAudit;
   createdBy?: string;
+  otherSubtype?: OtherSubtype;
 }
+
+export type OtherSubtype = 'interaktivita_prihlasenie' | 'storno_objednavky' | 'uprava_faktury' | 'uprava_objednavky' | 'nahradne_plnenie';
+
+export const OTHER_SUBTYPE_LABELS: Record<OtherSubtype, string> = {
+  interaktivita_prihlasenie: 'Interaktivita – prihlásenie',
+  storno_objednavky: 'Storno objednávky',
+  uprava_faktury: 'Úprava faktúry / Dobropis',
+  uprava_objednavky: 'Úprava objednávky',
+  nahradne_plnenie: 'Náhradné plnenie',
+};
 
 export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | null {
   if (!ticket.complaintItems || ticket.complaintItems.length === 0) return null;
