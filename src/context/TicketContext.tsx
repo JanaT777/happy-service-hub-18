@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -9,6 +9,7 @@ interface TicketContextType {
   updateReturnStatus: (id: string, returnStatus: ReturnStatus) => void;
   updateOtherStatus: (id: string, otherStatus: OtherStatus) => void;
   updateComplaintItemStatus: (ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus, actionLabel: string) => void;
+  setWarehouseReceipt: (id: string, receivedAt: string, agent: string) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
@@ -144,10 +145,26 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }));
   }, []);
 
+  const setWarehouseReceipt = useCallback((id: string, receivedAt: string, agent: string) => {
+    const now = new Date().toISOString();
+    setTickets(prev => prev.map(t => {
+      if (t.id !== id) return t;
+      const receipt: WarehouseReceiptAudit = { receivedAt, recordedBy: agent, recordedAt: now };
+      // Auto-advance complaint status to received/inspecting
+      let updates: Partial<Ticket> = { warehouseReceipt: receipt, updatedAt: now };
+      if (t.requestType === 'complaint') {
+        updates.complaintStatus = 'complaint_received';
+      } else if (t.requestType === 'return') {
+        updates.returnStatus = 'return_received';
+      }
+      return { ...t, ...updates };
+    }));
+  }, []);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, getTicket }}>
+    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, getTicket }}>
       {children}
     </TicketContext.Provider>
   );
