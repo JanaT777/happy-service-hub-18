@@ -100,9 +100,12 @@ const CRM = () => {
   // Show only tickets created by this CRM user
   const myTickets = useMemo(() => tickets.filter(t => t.createdBy === CRM_USER_EMAIL), [tickets]);
 
+  const myAssignedTickets = useMemo(() => tickets.filter(t => t.assignedTo === CRM_USER_TEAM), [tickets]);
+
   const filtered = useMemo(() => {
-    const list = myTickets.filter(t => {
-      if (typeFilter !== 'all' && t.requestType !== typeFilter) return false;
+    const base = typeFilter === 'my_assigned' ? myAssignedTickets : myTickets;
+    const list = base.filter(t => {
+      if (typeFilter !== 'all' && typeFilter !== 'my_assigned' && t.requestType !== typeFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         return t.id.toLowerCase().includes(q) || t.customerEmail.toLowerCase().includes(q) || t.orderNumber.toLowerCase().includes(q) || t.product.toLowerCase().includes(q) || getCustomerName(t).toLowerCase().includes(q);
