@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import Admin from "./pages/Admin.tsx";
 import AdminDetail from "./pages/AdminDetail.tsx";
 import TrackRequest from "./pages/TrackRequest.tsx";
+import CRM from "./pages/CRM.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 // HMR anchor v3
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/track" element={<TrackRequest />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/:id" element={<AdminDetail />} />
+            <Route path="/crm" element={<CRM />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
