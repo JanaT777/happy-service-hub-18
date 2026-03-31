@@ -250,6 +250,7 @@ const Admin = () => {
               <TableHead>Typ</TableHead>
               <TableHead>Typ / Dôvod</TableHead>
               <TableHead>Podtyp</TableHead>
+              <TableHead>Priradené</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead>Navrhované riešenie</TableHead>
               <TableHead>Požiadavka zákazníka</TableHead>
