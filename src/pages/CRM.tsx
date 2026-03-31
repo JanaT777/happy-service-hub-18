@@ -85,13 +85,14 @@ const getDeadlineInfo = (ticket: Ticket): { days: number; limit: number; warnAt:
 
 // Simulated current CRM user
 const CRM_USER_EMAIL = 'oz@firma.sk';
+const CRM_USER_TEAM = 'customer_care' as const;
 
 type CreateMode = null | 'select' | 'return' | 'complaint' | 'other';
 
 const CRM = () => {
   const navigate = useNavigate();
   const { tickets } = useTickets();
-  const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<RequestType | 'all' | 'my_assigned'>('my_assigned');
   const [search, setSearch] = useState('');
   const [createMode, setCreateMode] = useState<CreateMode>(null);
   const [treeResult, setTreeResult] = useState<DecisionTreeResult | null>(null);
@@ -99,9 +100,12 @@ const CRM = () => {
   // Show only tickets created by this CRM user
   const myTickets = useMemo(() => tickets.filter(t => t.createdBy === CRM_USER_EMAIL), [tickets]);
 
+  const myAssignedTickets = useMemo(() => tickets.filter(t => t.assignedTo === CRM_USER_TEAM), [tickets]);
+
   const filtered = useMemo(() => {
-    const list = myTickets.filter(t => {
-      if (typeFilter !== 'all' && t.requestType !== typeFilter) return false;
+    const base = typeFilter === 'my_assigned' ? myAssignedTickets : myTickets;
+    const list = base.filter(t => {
+      if (typeFilter !== 'all' && typeFilter !== 'my_assigned' && t.requestType !== typeFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         return t.id.toLowerCase().includes(q) || t.customerEmail.toLowerCase().includes(q) || t.orderNumber.toLowerCase().includes(q) || t.product.toLowerCase().includes(q) || getCustomerName(t).toLowerCase().includes(q);
@@ -125,7 +129,7 @@ const CRM = () => {
       if (levelDiff !== 0) return levelDiff;
       return db!.days - da!.days;
     });
-  }, [myTickets, typeFilter, search]);
+  }, [myTickets, myAssignedTickets, typeFilter, search]);
 
   const resetCreate = () => {
     setCreateMode(null);
@@ -201,22 +205,35 @@ const CRM = () => {
 
       {/* Quick type filters */}
       <div className="mb-4 flex items-center gap-1.5 flex-wrap">
-        {([['all', 'Všetky'], ['return', 'Vrátenie'], ['complaint', 'Reklamácie'], ['other', 'Interné']] as [('all' | RequestType), string][]).map(([key, label]) => {
+        {([
+          ['my_assigned', 'Moje pridelené'],
+          ['all', 'Všetky'],
+          ['return', 'Vrátenie'],
+          ['complaint', 'Reklamácie'],
+          ['other', 'Interné'],
+        ] as [('all' | 'my_assigned' | RequestType), string][]).map(([key, label]) => {
           const active = typeFilter === key;
-          const config = key !== 'all' ? TYPE_CONFIG[key] : null;
+          const config = key !== 'all' && key !== 'my_assigned' ? TYPE_CONFIG[key] : null;
           const Icon = config?.icon;
-          const count = key === 'all' ? myTickets.length : myTickets.filter(t => t.requestType === key).length;
+          const count = key === 'all'
+            ? myTickets.length
+            : key === 'my_assigned'
+              ? myAssignedTickets.length
+              : myTickets.filter(t => t.requestType === key).length;
           return (
             <button
               key={key}
-              onClick={() => setTypeFilter(active && key !== 'all' ? 'all' : key === 'all' ? 'all' : key)}
+              onClick={() => setTypeFilter(key)}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
                 active
-                  ? 'border-primary bg-primary/10 text-primary'
+                  ? key === 'my_assigned'
+                    ? 'border-primary bg-primary/15 text-primary ring-1 ring-primary/30'
+                    : 'border-primary bg-primary/10 text-primary'
                   : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
             >
+              {key === 'my_assigned' && <CheckCircle2 className="h-3 w-3" />}
               {Icon && <Icon className="h-3 w-3" />}
               {label}
               <span className={cn(
@@ -240,7 +257,7 @@ const CRM = () => {
 
       {/* Section label + results count */}
       <div className="mb-3 flex items-center gap-3">
-        <h2 className="font-heading text-lg font-semibold">Moje požiadavky</h2>
+        <h2 className="font-heading text-lg font-semibold">{typeFilter === 'my_assigned' ? 'Moje pridelené' : 'Moje požiadavky'}</h2>
         <span className="text-sm text-muted-foreground">
           {filtered.length} {filtered.length === 1 ? 'požiadavka' : filtered.length < 5 ? 'požiadavky' : 'požiadaviek'}
         </span>
