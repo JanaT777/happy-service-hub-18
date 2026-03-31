@@ -7,11 +7,12 @@ import {
   COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
-  COMPLAINT_ITEM_STATUS_LABELS,
+  COMPLAINT_ITEM_STATUS_LABELS, OTHER_SUBTYPE_LABELS,
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
   ComplaintItemStatus, ITEM_STATUS_FLOW,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
+  AssignedTeam, ASSIGNED_TEAM_LABELS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -67,7 +68,7 @@ const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | 
 const AdminDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt } = useTickets();
+  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment } = useTickets();
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
 
@@ -247,6 +248,23 @@ const AdminDetail = () => {
                 !hasComplaintItems && <Field label="Produkt" value={ticket.product} />
               )}
               <Field label="Objednávka" value={ticket.orderNumber} />
+              {ticket.otherSubtype && (
+                <Field label="Podtyp požiadavky" value={OTHER_SUBTYPE_LABELS[ticket.otherSubtype]} />
+              )}
+              <div className="py-3 border-b">
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Priradené komu</dt>
+                <dd>
+                  <select
+                    value={ticket.assignedTo || ''}
+                    onChange={e => { updateAssignment(ticket.id, e.target.value as AssignedTeam); toast.success('Priradenie zmenené'); }}
+                    className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    {Object.entries(ASSIGNED_TEAM_LABELS).map(([k, v]) => (
+                      <option key={k} value={k}>{v}</option>
+                    ))}
+                  </select>
+                </dd>
+              </div>
               <Field label="Závažnosť" value={ticket.severity ? SEVERITY_LABELS[ticket.severity] : null} />
               <Field label="Popis" value={ticket.description} />
 

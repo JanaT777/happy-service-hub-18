@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -10,6 +10,7 @@ interface TicketContextType {
   updateOtherStatus: (id: string, otherStatus: OtherStatus) => void;
   updateComplaintItemStatus: (ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus, actionLabel: string) => void;
   setWarehouseReceipt: (id: string, receivedAt: string, agent: string) => void;
+  updateAssignment: (id: string, team: AssignedTeam) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
@@ -36,6 +37,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         { productName: 'Obal na telefón', quantity: 2, complaintReason: 'damaged_in_transport', requestedResolution: 'exchange', itemStatus: 'item_new' },
       ],
       complaintStatus: 'complaint_new',
+      assignedTo: 'customer_care',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -55,6 +57,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       refundMethod: 'original_payment',
       withinReturnWindow: true,
       returnStatus: 'return_submitted',
+      assignedTo: 'sklad',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
@@ -68,6 +71,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       attachments: [],
       requestType: 'other',
       otherStatus: 'other_submitted',
+      assignedTo: 'customer_care',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 0.5).toISOString(),
@@ -86,6 +90,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ? processNewItems(data.complaintItems)
       : data.complaintItems;
 
+    const assignedTo = data.assignedTo || getAutoAssignment(data);
     setTickets(prev => [{
       ...data,
       id: ticketId,
@@ -94,6 +99,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
       returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
       otherStatus: data.requestType === 'other' ? 'other_submitted' as OtherStatus : undefined,
+      assignedTo,
       createdAt: now,
       updatedAt: now,
     }, ...prev]);
@@ -161,10 +167,16 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }));
   }, []);
 
+  const updateAssignment = useCallback((id: string, team: AssignedTeam) => {
+    setTickets(prev => prev.map(t =>
+      t.id === id ? { ...t, assignedTo: team, updatedAt: new Date().toISOString() } : t
+    ));
+  }, []);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, getTicket }}>
+    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, getTicket }}>
       {children}
     </TicketContext.Provider>
   );

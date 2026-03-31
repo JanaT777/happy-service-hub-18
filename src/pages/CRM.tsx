@@ -7,7 +7,7 @@ import {
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   RequestType, Ticket,
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION,
-  REQUESTED_RESOLUTION_LABELS, MOCK_ORDERS, OTHER_SUBTYPE_LABELS,
+  REQUESTED_RESOLUTION_LABELS, MOCK_ORDERS, OTHER_SUBTYPE_LABELS, ASSIGNED_TEAM_LABELS,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -255,6 +255,7 @@ const CRM = () => {
               <TableHead>Typ</TableHead>
               <TableHead>Typ / Dôvod</TableHead>
               <TableHead>Podtyp</TableHead>
+              <TableHead>Priradené</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead>Navrhované riešenie</TableHead>
               <TableHead>Požiadavka zákazníka</TableHead>
@@ -265,7 +266,7 @@ const CRM = () => {
           <TableBody>
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                   Žiadne požiadavky neboli nájdené.
                 </TableCell>
               </TableRow>
@@ -314,6 +315,18 @@ const CRM = () => {
                   <TableCell>
                     {ticket.otherSubtype ? (
                       <span className="text-xs font-medium">{OTHER_SUBTYPE_LABELS[ticket.otherSubtype]}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {ticket.assignedTo ? (
+                      <span className={cn(
+                        'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold',
+                        ticket.assignedTo === 'sklad' ? 'bg-warning/15 text-warning border-warning/30' : 'bg-info/15 text-info border-info/30'
+                      )}>
+                        {ASSIGNED_TEAM_LABELS[ticket.assignedTo]}
+                      </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}

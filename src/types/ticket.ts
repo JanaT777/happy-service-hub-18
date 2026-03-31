@@ -179,7 +179,15 @@ export interface Ticket {
   warehouseReceipt?: WarehouseReceiptAudit;
   createdBy?: string;
   otherSubtype?: OtherSubtype;
+  assignedTo?: AssignedTeam;
 }
+
+export type AssignedTeam = 'customer_care' | 'sklad';
+
+export const ASSIGNED_TEAM_LABELS: Record<AssignedTeam, string> = {
+  customer_care: 'Customer Care',
+  sklad: 'Sklad',
+};
 
 export type OtherSubtype = 'interaktivita_prihlasenie' | 'storno_objednavky' | 'uprava_faktury' | 'uprava_objednavky' | 'nahradne_plnenie';
 
@@ -190,6 +198,11 @@ export const OTHER_SUBTYPE_LABELS: Record<OtherSubtype, string> = {
   uprava_objednavky: 'Úprava objednávky',
   nahradne_plnenie: 'Náhradné plnenie',
 };
+
+export function getAutoAssignment(ticket: Pick<Ticket, 'requestType' | 'otherSubtype'>): AssignedTeam {
+  if (ticket.requestType === 'return') return 'sklad';
+  return 'customer_care';
+}
 
 export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | null {
   if (!ticket.complaintItems || ticket.complaintItems.length === 0) return null;
