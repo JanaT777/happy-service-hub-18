@@ -10,6 +10,7 @@ interface TicketContextType {
   updateOtherStatus: (id: string, otherStatus: OtherStatus) => void;
   updateComplaintItemStatus: (ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus, actionLabel: string) => void;
   setWarehouseReceipt: (id: string, receivedAt: string, agent: string) => void;
+  updateAssignment: (id: string, team: AssignedTeam) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
