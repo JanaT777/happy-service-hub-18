@@ -339,7 +339,7 @@ const AdminDetail = () => {
                                   <Icon className="h-4 w-4 shrink-0" />
                                   <span className="flex-1">{action.label}</span>
                                   {isCustomerPick && action.variant === 'default' && (
-                                    <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">Odporúčané</span>
+                                    <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">★ Odporúčané podľa zákazníka</span>
                                   )}
                                   {!isCustomerPick && isSuggested && action.variant === 'default' && (
                                     <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Systém</span>
