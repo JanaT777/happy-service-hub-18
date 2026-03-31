@@ -303,11 +303,23 @@ const Admin = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-end gap-0.5">
                       <span className="text-xs">{format(new Date(ticket.createdAt), 'd. MMM yyyy', { locale: sk })}</span>
                       <span className="text-[11px] text-muted-foreground">
                         {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: sk })}
                       </span>
+                      {daysSince !== null && (
+                        <span className={cn(
+                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                          overDeadline
+                            ? 'bg-destructive/15 text-destructive border border-destructive/30'
+                            : 'bg-muted text-muted-foreground'
+                        )}>
+                          {overDeadline && <AlertTriangle className="h-3 w-3" />}
+                          {daysSince}/{deadlineLimit} dní
+                        </span>
+                      )}
+                    </div>
                     </div>
                   </TableCell>
                 </TableRow>
