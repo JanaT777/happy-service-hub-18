@@ -346,7 +346,7 @@ const AdminDetail = () => {
                         </div>
                       )}
 
-                      {/* Agent instruction for resolved items */}
+                      {/* Agent instructions for resolved items */}
                       {item.itemStatus === 'item_approved' && (
                         <div className="flex items-start gap-2.5 rounded-lg bg-primary/10 border border-primary/30 px-4 py-3">
                           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
@@ -379,47 +379,72 @@ const AdminDetail = () => {
                       {!isFinal && (
                         <div className="border-t pt-3 space-y-2">
                           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Akcie</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {ITEM_ACTIONS.map(action => {
-                              const Icon = action.icon;
-                              const isCustomerPick = action.solution === customerPreferred;
-                              const isSuggested = action.solution === systemSuggestion;
-                              const isPrimary = customerPreferred ? isCustomerPick : isSuggested;
 
-                              return (
+                          {/* Warehouse flow transitions (non-decision statuses) */}
+                          {!isDecisionPoint && nextStatuses.length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {nextStatuses.map(ns => (
                                 <button
-                                  key={action.key}
-                                  onClick={() => handleItemAction(index, item, action.key)}
-                                  className={cn(
-                                    'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all text-left w-full',
-                                    action.variant === 'destructive'
-                                      ? 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
-                                      : isPrimary
-                                          ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
-                                          : 'bg-card text-foreground hover:bg-accent'
-                                  )}
+                                  key={ns}
+                                  onClick={() => handleItemStatusTransition(index, item, ns)}
+                                  className="flex items-center gap-2 rounded-lg border border-primary bg-primary text-primary-foreground px-3 py-2.5 text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm w-full"
                                 >
-                                  <Icon className="h-4 w-4 shrink-0" />
-                                  <span className="flex-1">{action.label}</span>
-                                  {isCustomerPick && action.variant === 'default' && (
-                                    <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">★ Odporúčané podľa zákazníka</span>
-                                  )}
-                                  {!isCustomerPick && isSuggested && action.variant === 'default' && (
-                                    <TooltipProvider delayDuration={200}>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground cursor-help">Systém</span>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top" className="text-xs max-w-[220px]">
-                                          Navrhnuté automaticky podľa typu reklamácie
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  )}
+                                  {ns === 'item_in_transit' && <Truck className="h-4 w-4 shrink-0" />}
+                                  {ns === 'item_received_warehouse' && <Warehouse className="h-4 w-4 shrink-0" />}
+                                  {ns === 'item_quality_check' && <ClipboardCheck className="h-4 w-4 shrink-0" />}
+                                  {ns === 'item_refunded' && <Banknote className="h-4 w-4 shrink-0" />}
+                                  {ns === 'item_completed' && <CheckCircle2 className="h-4 w-4 shrink-0" />}
+                                  {ns === 'item_approved' && <CheckCircle2 className="h-4 w-4 shrink-0" />}
+                                  <span className="flex-1 text-left">{COMPLAINT_ITEM_STATUS_LABELS[ns]}</span>
                                 </button>
-                              );
-                            })}
-                          </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Decision actions at quality_check */}
+                          {isDecisionPoint && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {ITEM_ACTIONS.map(action => {
+                                const Icon = action.icon;
+                                const isCustomerPick = action.solution === customerPreferred;
+                                const isSuggested = action.solution === systemSuggestion;
+                                const isPrimary = customerPreferred ? isCustomerPick : isSuggested;
+
+                                return (
+                                  <button
+                                    key={action.key}
+                                    onClick={() => handleItemAction(index, item, action.key)}
+                                    className={cn(
+                                      'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all text-left w-full',
+                                      action.variant === 'destructive'
+                                        ? 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
+                                        : isPrimary
+                                            ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
+                                            : 'bg-card text-foreground hover:bg-accent'
+                                    )}
+                                  >
+                                    <Icon className="h-4 w-4 shrink-0" />
+                                    <span className="flex-1">{action.label}</span>
+                                    {isCustomerPick && action.variant === 'default' && (
+                                      <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">★ Odporúčané</span>
+                                    )}
+                                    {!isCustomerPick && isSuggested && action.variant === 'default' && (
+                                      <TooltipProvider delayDuration={200}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground cursor-help">Systém</span>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="text-xs max-w-[220px]">
+                                            Navrhnuté automaticky podľa typu reklamácie
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
 
