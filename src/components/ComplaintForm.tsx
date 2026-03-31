@@ -50,7 +50,6 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
   const [iban, setIban] = useState('');
-  const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
