@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
 import {
   MOCK_ORDERS, MockOrder, MockOrderProduct,
@@ -9,7 +10,7 @@ import {
 import { DecisionTreeResult } from '@/components/DecisionTree';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
-  User, Mail, CalendarDays, Camera, PackageX,
+  User, Mail, CalendarDays, Camera, PackageX, CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -36,12 +37,14 @@ interface Props {
   onSubmit: () => void;
 }
 
-type Step = 'lookup' | 'products' | 'confirm';
+type Step = 'lookup' | 'products' | 'confirm' | 'submitted';
 
 export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const { addTicket } = useTickets();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>('lookup');
+  const [ticketId, setTicketId] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
   const [email, setEmail] = useState('');
   const [lookupError, setLookupError] = useState('');
@@ -54,8 +57,8 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Overall wizard: Step 1 = type selection (done), Step 2 = this form, Step 3 = confirm
-  const overallStep = step === 'confirm' ? 3 : 2;
+  // Overall wizard: Step 1 = type selection (done), Step 2 = this form, Step 3 = confirm/submitted
+  const overallStep = step === 'confirm' || step === 'submitted' ? 3 : 2;
 
   const handleLookup = () => {
     const trimmed = orderNumber.trim().toUpperCase();
@@ -147,7 +150,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
     const firstItem = activeProducts[0];
     const suggestedSolution = COMPLAINT_TYPE_SUGGESTED_SOLUTION[firstItem.complaintReason!];
 
-    addTicket({
+    const id = addTicket({
       customerEmail: order.customerEmail,
       orderNumber: foundOrderNumber,
       product: activeProducts.map(p => `${p.name} (${p.qty}×)`).join(', '),
@@ -161,9 +164,10 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       iban: iban.replace(/\s/g, '').toUpperCase(),
     });
 
+    setTicketId(id);
     toast.success('Reklamácia bola odoslaná!');
     setSubmitting(false);
-    onSubmit();
+    setStep('submitted');
   };
 
   const goBack = () => {
@@ -489,6 +493,63 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {submitting ? 'Odosielanie...' : 'Odoslať reklamáciu'}
           </button>
+        </div>
+      )}
+
+      {/* Step 3: Submitted confirmation */}
+      {step === 'submitted' && (
+        <div className="space-y-6 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-success/15">
+            <CheckCircle2 className="h-10 w-10 text-success" />
+          </div>
+          <div>
+            <h2 className="font-heading text-2xl font-bold">Vaša požiadavka bola prijatá</h2>
+            <p className="mt-2 text-muted-foreground">Prijali sme vašu reklamáciu a budeme vás informovať o jej stave.</p>
+          </div>
+
+          <div className="rounded-xl border bg-card p-5 text-left space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Číslo požiadavky</span>
+              <span className="font-heading text-lg font-bold text-primary">{ticketId}</span>
+            </div>
+            <div className="border-t pt-3 text-sm space-y-1">
+              <p><span className="text-muted-foreground">Typ:</span> Reklamácia</p>
+              <p><span className="text-muted-foreground">Objednávka:</span> {foundOrderNumber}</p>
+              <p><span className="text-muted-foreground">Produkty:</span> {activeProducts.map(p => `${p.name} (${p.qty}×)`).join(', ')}</p>
+              <p><span className="text-muted-foreground">Stav:</span> <span className="inline-flex items-center rounded-full bg-info/15 border border-info/30 px-2 py-0.5 text-xs font-semibold text-info">Prijaté</span></p>
+            </div>
+
+            <div className="border-t pt-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Priebeh spracovania</p>
+              <div className="flex items-center gap-2">
+                {['Prijaté', 'V procese', 'Vyriešené'].map((label, i) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${
+                      i === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    }`}>{i + 1}</div>
+                    <span className={`text-xs ${i === 0 ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>{label}</span>
+                    {i < 2 && <div className="h-0.5 w-4 bg-border" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              onClick={() => navigate('/track')}
+              className="flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-6 py-2.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <Search className="h-4 w-4" />
+              Sledovať požiadavku
+            </button>
+            <button
+              onClick={onBack}
+              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              Odoslať ďalšiu požiadavku
+            </button>
+          </div>
         </div>
       )}
     </div>
