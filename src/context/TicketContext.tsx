@@ -57,6 +57,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       refundMethod: 'original_payment',
       withinReturnWindow: true,
       returnStatus: 'return_submitted',
+      assignedTo: 'sklad',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
