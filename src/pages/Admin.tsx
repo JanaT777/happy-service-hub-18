@@ -187,7 +187,7 @@ const Admin = () => {
             <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead className="w-[120px]">ID</TableHead>
               <TableHead>Typ</TableHead>
-              <TableHead>Typ reklamácie</TableHead>
+              <TableHead>Typ / Dôvod</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead>Navrhované riešenie</TableHead>
               <TableHead>Požiadavka zákazníka</TableHead>
