@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -38,7 +38,11 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: 'TK-D4E5F6',
       customerEmail: 'marek@example.com',
       orderNumber: 'ORD-10038',
-      product: 'Bežecké topánky veľkosť 10',
+      product: 'Bežecké topánky veľkosť 10, Športové ponožky',
+      returnItems: [
+        { name: 'Bežecké topánky veľkosť 10', quantity: 1 },
+        { name: 'Športové ponožky', quantity: 2 },
+      ],
       description: 'Doručená nesprávna veľkosť. Objednal som veľkosť 10, dostal som veľkosť 8.',
       attachments: [],
       requestType: 'return',

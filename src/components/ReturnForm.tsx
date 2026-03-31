@@ -97,19 +97,18 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const handleSubmit = async () => {
     setSubmitting(true);
     await new Promise(r => setTimeout(r, 600));
-    for (const p of selectedProducts) {
-      addTicket({
-        customerEmail: order!.customerEmail,
-        orderNumber: foundOrderNumber,
-        product: `${p.name} (${p.qty}×)`,
-        description,
-        attachments: [],
-        requestType: 'return',
-        refundMethod: order!.paymentMethod === 'card' ? 'original_payment' : 'bank_transfer',
-        withinReturnWindow: withinWindow,
-        iban: iban.replace(/\s/g, '').toUpperCase(),
-      });
-    }
+    addTicket({
+      customerEmail: order!.customerEmail,
+      orderNumber: foundOrderNumber,
+      product: selectedProducts.map(p => `${p.name} (${p.qty}×)`).join(', '),
+      description,
+      attachments: [],
+      requestType: 'return',
+      refundMethod: order!.paymentMethod === 'card' ? 'original_payment' : 'bank_transfer',
+      withinReturnWindow: withinWindow,
+      returnItems: selectedProducts.map(p => ({ name: p.name, quantity: p.qty })),
+      iban: iban.replace(/\s/g, '').toUpperCase(),
+    });
     toast.success('Žiadosť o vrátenie bola odoslaná!');
     setSubmitting(false);
     onSubmit();
