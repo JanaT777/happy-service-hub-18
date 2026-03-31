@@ -320,7 +320,6 @@ const Admin = () => {
                         </span>
                       )}
                     </div>
-                    </div>
                   </TableCell>
                 </TableRow>
               );
