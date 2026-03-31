@@ -108,9 +108,6 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       }
     });
 
-    if (!description.trim() || description.trim().length < 10) {
-      newErrors.description = 'Popíšte problém aspoň 10 znakmi.';
-    }
 
     const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
     if (!trimmedIban) {
