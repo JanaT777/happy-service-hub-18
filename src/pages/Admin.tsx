@@ -7,6 +7,7 @@ import {
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   RequestType, Ticket,
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
+  REQUESTED_RESOLUTION_LABELS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -188,6 +189,7 @@ const Admin = () => {
               <TableHead>Typ reklamácie</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead>Navrhované riešenie</TableHead>
+              <TableHead>Požiadavka zákazníka</TableHead>
               <TableHead>Zákazník</TableHead>
               <TableHead className="text-right">Dátum</TableHead>
             </TableRow>
@@ -195,7 +197,7 @@ const Admin = () => {
           <TableBody>
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
                   Žiadne požiadavky neboli nájdené.
                 </TableCell>
               </TableRow>
@@ -245,6 +247,15 @@ const Admin = () => {
                       </span>
                     ) : ticket.suggestedSolution ? (
                       <span className="text-xs font-medium">{SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {ticket.requestedResolution ? (
+                      <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-medium text-accent-foreground">
+                        {REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution]}
+                      </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
