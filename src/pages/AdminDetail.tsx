@@ -35,10 +35,9 @@ const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
 
 const ITEM_STATUS_COLORS: Record<ComplaintItemStatus, string> = {
   item_new: 'bg-muted text-muted-foreground',
-  item_in_review: 'bg-warning/15 text-warning border-warning/30',
   item_approved: 'bg-primary/15 text-primary border-primary/30',
   item_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
-  item_completed: 'bg-green-500/15 text-green-700 border-green-500/30',
+  item_refunded: 'bg-green-500/15 text-green-700 border-green-500/30',
 };
 
 // Map RequestedResolution → SuggestedSolution for button matching
@@ -49,12 +48,10 @@ const RESOLUTION_TO_ACTION: Record<RequestedResolution, SuggestedSolution> = {
 };
 
 // Per-item action definitions
-const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | null; icon: typeof Send; variant: 'default' | 'destructive' | 'warning' }[] = [
+const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | null; icon: typeof Send; variant: 'default' | 'destructive' }[] = [
   { key: 'refund', label: 'Refundovať', solution: 'refund', icon: Banknote, variant: 'default' },
   { key: 'exchange', label: 'Výmena produktu', solution: 'exchange', icon: Replace, variant: 'default' },
-  { key: 'resend', label: 'Opätovné zaslanie', solution: 'resend_order', icon: Send, variant: 'default' },
   { key: 'reject', label: 'Zamietnuť', solution: null, icon: XCircle, variant: 'destructive' },
-  { key: 'info', label: 'Vyžiadať doplnenie', solution: null, icon: MessageSquare, variant: 'warning' },
 ];
 
 const AdminDetail = () => {
@@ -94,7 +91,7 @@ const AdminDetail = () => {
 
   // ---- Per-item actions ----
   const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
-    const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
+    const isFinal = item.itemStatus === 'item_refunded' || item.itemStatus === 'item_rejected' || item.itemStatus === 'item_approved';
     if (isFinal) {
       toast.error('Táto položka je už uzavretá.');
       return;
@@ -103,15 +100,13 @@ const AdminDetail = () => {
     let newStatus: ComplaintItemStatus;
     switch (actionKey) {
       case 'refund':
+        newStatus = 'item_refunded';
+        break;
       case 'exchange':
-      case 'resend':
         newStatus = 'item_approved';
         break;
       case 'reject':
         newStatus = 'item_rejected';
-        break;
-      case 'info':
-        newStatus = 'item_in_review';
         break;
       default:
         return;
@@ -263,7 +258,7 @@ const AdminDetail = () => {
                 const itemComplaintType = item.complaintReason as ComplaintType;
                 const systemSuggestion = COMPLAINT_TYPE_SUGGESTED_SOLUTION[itemComplaintType];
                 const customerPreferred = RESOLUTION_TO_ACTION[item.requestedResolution];
-                const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
+                const isFinal = item.itemStatus === 'item_refunded' || item.itemStatus === 'item_rejected' || item.itemStatus === 'item_approved';
 
                 return (
                   <div key={index} className="rounded-xl border bg-card overflow-hidden">
@@ -324,9 +319,7 @@ const AdminDetail = () => {
                                     'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all text-left w-full',
                                     action.variant === 'destructive'
                                       ? 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
-                                      : action.variant === 'warning'
-                                        ? 'border-warning/30 bg-warning/10 text-warning hover:bg-warning/20'
-                                        : isPrimary
+                                      : isPrimary
                                           ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
                                           : 'bg-card text-foreground hover:bg-accent'
                                   )}

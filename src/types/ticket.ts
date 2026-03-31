@@ -80,14 +80,13 @@ export interface ReturnItem {
   quantity: number;
 }
 
-export type ComplaintItemStatus = 'item_new' | 'item_in_review' | 'item_approved' | 'item_rejected' | 'item_completed';
+export type ComplaintItemStatus = 'item_new' | 'item_approved' | 'item_rejected' | 'item_refunded';
 
 export const COMPLAINT_ITEM_STATUS_LABELS: Record<ComplaintItemStatus, string> = {
   item_new: 'Nová',
-  item_in_review: 'V preskúmaní',
   item_approved: 'Schválená',
   item_rejected: 'Zamietnutá',
-  item_completed: 'Vybavená',
+  item_refunded: 'Refundovaná',
 };
 
 export interface ComplaintItem {
