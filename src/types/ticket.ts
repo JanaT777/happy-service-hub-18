@@ -32,6 +32,13 @@ export type IssueType = 'damaged_in_transport' | 'not_delivered' | 'wrong_title'
 export type SuggestedSolution = 'exchange' | 'replacement_with_pickup' | 'resend_order' | 'adjust_order' | 'internal_stock' | 'refund' | 'send_missing' | 'discount';
 export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type RefundMethod = 'bank_transfer' | 'original_payment';
+export type RequestedResolution = 'resend' | 'exchange' | 'refund';
+
+export const REQUESTED_RESOLUTION_LABELS: Record<RequestedResolution, string> = {
+  resend: 'Opätovné zaslanie',
+  exchange: 'Výmena produktu',
+  refund: 'Vrátenie finančných prostriedkov',
+};
 
 // Complaint type configuration for internal logic
 export type ComplaintType = 'damaged_in_transport' | 'not_delivered' | 'wrong_title' | 'manufacturing_defect' | 'wrong_quantity';
@@ -85,6 +92,7 @@ export interface Ticket {
   issueType?: IssueType;
   severity?: SeverityLevel;
   suggestedSolution?: SuggestedSolution;
+  requestedResolution?: RequestedResolution;
   complaintStatus?: ComplaintStatus;
   returnStatus?: ReturnStatus;
   otherStatus?: OtherStatus;

@@ -5,7 +5,7 @@ import {
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
-  SEVERITY_LABELS, REFUND_METHOD_LABELS,
+  SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
 } from '@/types/ticket';
@@ -169,6 +169,7 @@ const AdminDetail = () => {
             <Field label="Produkt" value={ticket.product} />
             <Field label="Objednávka" value={ticket.orderNumber} />
             <Field label="Závažnosť" value={ticket.severity ? SEVERITY_LABELS[ticket.severity] : null} />
+            <Field label="Požadovaný spôsob vybavenia" value={ticket.requestedResolution ? REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution] : null} />
             <Field label="Popis" value={ticket.description} />
 
             {/* Attachments */}
