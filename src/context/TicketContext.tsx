@@ -30,8 +30,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       suggestedSolution: 'exchange',
       requestedResolution: 'refund',
       complaintItems: [
-        { productName: 'Bezdrôtové slúchadlá', quantity: 1, complaintReason: 'manufacturing_defect', requestedResolution: 'refund' },
-        { productName: 'Obal na telefón', quantity: 2, complaintReason: 'damaged_in_transport', requestedResolution: 'exchange' },
+        { productName: 'Bezdrôtové slúchadlá', quantity: 1, complaintReason: 'manufacturing_defect', requestedResolution: 'refund', itemStatus: 'item_new' },
+        { productName: 'Obal na telefón', quantity: 2, complaintReason: 'damaged_in_transport', requestedResolution: 'exchange', itemStatus: 'item_new' },
       ],
       complaintStatus: 'complaint_new',
       status: 'new',

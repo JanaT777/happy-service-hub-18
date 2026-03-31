@@ -131,6 +131,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
       quantity: p.qty,
       complaintReason: p.complaintReason!,
       requestedResolution: p.requestedResolution!,
+      itemStatus: 'item_new' as const,
     }));
 
     // Use the first item's data for backward-compat top-level fields
