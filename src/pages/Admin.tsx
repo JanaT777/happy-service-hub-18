@@ -7,7 +7,7 @@ import {
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   RequestType, Ticket,
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
-  REQUESTED_RESOLUTION_LABELS,
+  REQUESTED_RESOLUTION_LABELS, OTHER_SUBTYPE_LABELS,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -249,6 +249,7 @@ const Admin = () => {
               <TableHead className="w-[120px]">ID</TableHead>
               <TableHead>Typ</TableHead>
               <TableHead>Typ / Dôvod</TableHead>
+              <TableHead>Podtyp</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead>Navrhované riešenie</TableHead>
               <TableHead>Požiadavka zákazníka</TableHead>
@@ -259,7 +260,7 @@ const Admin = () => {
           <TableBody>
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
                   Žiadne požiadavky neboli nájdené.
                 </TableCell>
               </TableRow>
@@ -302,6 +303,13 @@ const Admin = () => {
                       <span className="text-xs font-medium">{COMPLAINT_TYPE_LABELS[complaintType]}</span>
                     ) : ticket.requestType === 'return' ? (
                       <span className="text-xs font-medium">Odstúpenie od zmluvy</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {ticket.otherSubtype ? (
+                      <span className="text-xs font-medium">{OTHER_SUBTYPE_LABELS[ticket.otherSubtype]}</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
