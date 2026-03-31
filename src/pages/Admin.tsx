@@ -8,6 +8,7 @@ import {
   RequestType, Ticket,
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
   REQUESTED_RESOLUTION_LABELS,
+  getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
