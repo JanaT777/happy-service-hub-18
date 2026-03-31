@@ -91,7 +91,7 @@ const AdminDetail = () => {
 
   // ---- Per-item actions ----
   const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
-    const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
+    const isFinal = item.itemStatus === 'item_refunded' || item.itemStatus === 'item_rejected' || item.itemStatus === 'item_approved';
     if (isFinal) {
       toast.error('Táto položka je už uzavretá.');
       return;
@@ -100,15 +100,13 @@ const AdminDetail = () => {
     let newStatus: ComplaintItemStatus;
     switch (actionKey) {
       case 'refund':
+        newStatus = 'item_refunded';
+        break;
       case 'exchange':
-      case 'resend':
         newStatus = 'item_approved';
         break;
       case 'reject':
         newStatus = 'item_rejected';
-        break;
-      case 'info':
-        newStatus = 'item_in_review';
         break;
       default:
         return;
