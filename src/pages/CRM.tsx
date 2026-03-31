@@ -257,7 +257,7 @@ const CRM = () => {
 
       {/* Section label + results count */}
       <div className="mb-3 flex items-center gap-3">
-        <h2 className="font-heading text-lg font-semibold">Moje požiadavky</h2>
+        <h2 className="font-heading text-lg font-semibold">{typeFilter === 'my_assigned' ? 'Moje pridelené' : 'Moje požiadavky'}</h2>
         <span className="text-sm text-muted-foreground">
           {filtered.length} {filtered.length === 1 ? 'požiadavka' : filtered.length < 5 ? 'požiadavky' : 'požiadaviek'}
         </span>
