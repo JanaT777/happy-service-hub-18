@@ -28,6 +28,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       issueType: 'manufacturing_defect',
       severity: 'high',
       suggestedSolution: 'exchange',
+      requestedResolution: 'refund',
       complaintStatus: 'complaint_new',
       status: 'new',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
