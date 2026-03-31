@@ -189,6 +189,7 @@ const Admin = () => {
               <TableHead>Typ reklamácie</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead>Navrhované riešenie</TableHead>
+              <TableHead>Požiadavka zákazníka</TableHead>
               <TableHead>Zákazník</TableHead>
               <TableHead className="text-right">Dátum</TableHead>
             </TableRow>
