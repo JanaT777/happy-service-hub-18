@@ -37,7 +37,7 @@ interface Props {
   onSubmit: () => void;
 }
 
-type Step = 'lookup' | 'products' | 'confirm';
+type Step = 'lookup' | 'products' | 'confirm' | 'submitted';
 
 export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
   const { addTicket } = useTickets();
