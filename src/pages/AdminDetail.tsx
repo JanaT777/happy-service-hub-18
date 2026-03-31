@@ -7,7 +7,7 @@ import {
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
-  RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
+  RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
