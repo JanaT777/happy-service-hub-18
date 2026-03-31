@@ -102,6 +102,7 @@ export interface Ticket {
   iban?: string;
   withinReturnWindow?: boolean;
   returnItems?: ReturnItem[];
+  complaintItems?: ComplaintItem[];
   issueType?: IssueType;
   severity?: SeverityLevel;
   suggestedSolution?: SuggestedSolution;
