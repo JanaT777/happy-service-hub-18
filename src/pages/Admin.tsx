@@ -12,7 +12,8 @@ import {
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Filter, X, FileText, Truck, RotateCcw } from 'lucide-react';
+import { Search, Filter, X, FileText, Truck, RotateCcw, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
