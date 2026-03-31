@@ -116,15 +116,6 @@ export const DERIVED_TICKET_STATUS_COLORS: Record<DerivedTicketStatus, string> =
   rejected: 'bg-destructive/15 text-destructive border-destructive/30',
 };
 
-export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | null {
-  if (!ticket.complaintItems || ticket.complaintItems.length === 0) return null;
-  const statuses = ticket.complaintItems.map(i => i.itemStatus);
-  if (statuses.every(s => s === 'item_new')) return 'new';
-  if (statuses.every(s => s === 'item_rejected')) return 'rejected';
-  if (statuses.every(s => s === 'item_approved' || s === 'item_refunded')) return 'completed';
-  return 'processing';
-}
-
 export interface Ticket {
   id: string;
   customerEmail: string;
