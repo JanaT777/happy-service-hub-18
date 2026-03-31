@@ -242,10 +242,10 @@ const Admin = () => {
                   <TableCell className="font-heading font-bold text-sm">{ticket.id}</TableCell>
                   <TableCell>
                     <span className={cn(
-                      'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold',
+                      'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold',
                       typeConfig.bg, typeConfig.text, typeConfig.border
                     )}>
-                      <TypeIcon className="h-4 w-4" />
+                      <TypeIcon className="h-3 w-3" />
                       {REQUEST_TYPE_LABELS[ticket.requestType]}
                     </span>
                   </TableCell>
