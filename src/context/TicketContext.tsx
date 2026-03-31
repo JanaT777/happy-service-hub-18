@@ -137,12 +137,23 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     ));
   }, []);
 
-  const updateComplaintItemStatus = useCallback((ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus) => {
+  const updateComplaintItemStatus = useCallback((ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus, actionLabel: string) => {
     setTickets(prev => prev.map(t => {
       if (t.id !== ticketId || !t.complaintItems) return t;
-      const updatedItems = t.complaintItems.map((item, i) =>
-        i === itemIndex ? { ...item, itemStatus } : item
-      );
+      const updatedItems = t.complaintItems.map((item, i) => {
+        if (i !== itemIndex) return item;
+        const logEntry = {
+          action: actionLabel,
+          newStatus: itemStatus,
+          agent: 'Agent',
+          timestamp: new Date().toISOString(),
+        };
+        return {
+          ...item,
+          itemStatus,
+          actionHistory: [...(item.actionHistory || []), logEntry],
+        };
+      });
       return { ...t, complaintItems: updatedItems, updatedAt: new Date().toISOString() };
     }));
   }, []);

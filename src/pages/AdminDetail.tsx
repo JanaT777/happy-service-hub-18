@@ -409,6 +409,24 @@ const AdminDetail = () => {
                           </div>
                         </div>
                       )}
+
+                      {/* Action history */}
+                      {item.actionHistory && item.actionHistory.length > 0 && (
+                        <div className="border-t pt-3 space-y-1.5">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">História</p>
+                          {item.actionHistory.map((log, li) => (
+                            <div key={li} className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
+                              <span className="font-medium text-foreground">{log.agent}</span>
+                              <span>—</span>
+                              <span>{log.action}</span>
+                              <span className="ml-auto text-[10px]">
+                                {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true, locale: sk })}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

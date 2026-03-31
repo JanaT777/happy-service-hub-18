@@ -89,6 +89,13 @@ export const COMPLAINT_ITEM_STATUS_LABELS: Record<ComplaintItemStatus, string> =
   item_refunded: 'Refundovaná',
 };
 
+export interface ItemActionLog {
+  action: string;
+  newStatus: ComplaintItemStatus;
+  agent: string;
+  timestamp: string;
+}
+
 export interface ComplaintItem {
   productName: string;
   quantity: number;
@@ -96,6 +103,7 @@ export interface ComplaintItem {
   requestedResolution: RequestedResolution;
   itemStatus: ComplaintItemStatus;
   outOfStock?: boolean;
+  actionHistory?: ItemActionLog[];
 }
 
 export type DerivedTicketStatus = 'new' | 'processing' | 'waiting_customer' | 'completed' | 'rejected';
