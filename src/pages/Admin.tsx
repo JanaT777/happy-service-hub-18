@@ -252,6 +252,15 @@ const Admin = () => {
                     )}
                   </TableCell>
                   <TableCell>
+                    {ticket.requestedResolution ? (
+                      <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-medium text-accent-foreground">
+                        {REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution]}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{getCustomerName(ticket)}</span>
                       <span className="text-[11px] text-muted-foreground">{ticket.customerEmail}</span>
