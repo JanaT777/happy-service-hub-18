@@ -233,7 +233,17 @@ const Admin = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
-                      <StatusBadge status={ticket.status} />
+                      {(() => {
+                        const derived = getDerivedTicketStatus(ticket);
+                        if (derived) {
+                          return (
+                            <span className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${DERIVED_TICKET_STATUS_COLORS[derived]}`}>
+                              {DERIVED_TICKET_STATUS_LABELS[derived]}
+                            </span>
+                          );
+                        }
+                        return <StatusBadge status={ticket.status} />;
+                      })()}
                       {workflowKey && workflowLabel && (
                         <span className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${WORKFLOW_STATUS_COLORS[workflowKey] || 'bg-secondary text-secondary-foreground'}`}>
                           {workflowLabel}

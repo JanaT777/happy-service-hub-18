@@ -194,7 +194,17 @@ const AdminDetail = () => {
               <div className="py-3 border-b">
                 <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Stav</dt>
                 <dd className="flex flex-wrap items-center gap-2">
-                  <StatusBadge status={ticket.status} />
+                  {(() => {
+                    const derived = getDerivedTicketStatus(ticket);
+                    if (derived) {
+                      return (
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${DERIVED_TICKET_STATUS_COLORS[derived]}`}>
+                          {DERIVED_TICKET_STATUS_LABELS[derived]}
+                        </span>
+                      );
+                    }
+                    return <StatusBadge status={ticket.status} />;
+                  })()}
                   {workflowLabel && (
                     <span className="rounded-full border bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
                       {workflowLabel}
