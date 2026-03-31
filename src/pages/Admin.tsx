@@ -60,9 +60,9 @@ const getWorkflowStatusKey = (ticket: Ticket): string | undefined => {
 };
 
 const TYPE_CONFIG: Record<RequestType, { icon: typeof FileText; bg: string; text: string; border: string }> = {
-  complaint: { icon: AlertTriangle, bg: 'bg-warning/20', text: 'text-warning', border: 'border-warning/40' },
-  return: { icon: RotateCcw, bg: 'bg-info/20', text: 'text-info', border: 'border-info/40' },
-  other: { icon: Building2, bg: 'bg-primary/15', text: 'text-primary', border: 'border-primary/30' },
+  complaint: { icon: AlertTriangle, bg: 'bg-warning/8', text: 'text-warning/80', border: 'border-warning/25' },
+  return: { icon: RotateCcw, bg: 'bg-info/8', text: 'text-info/80', border: 'border-info/25' },
+  other: { icon: Building2, bg: 'bg-muted/60', text: 'text-muted-foreground', border: 'border-border' },
 };
 
 const getCustomerName = (ticket: Ticket): string => {
@@ -242,10 +242,10 @@ const Admin = () => {
                   <TableCell className="font-heading font-bold text-sm">{ticket.id}</TableCell>
                   <TableCell>
                     <span className={cn(
-                      'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold',
+                      'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold',
                       typeConfig.bg, typeConfig.text, typeConfig.border
                     )}>
-                      <TypeIcon className="h-4 w-4" />
+                      <TypeIcon className="h-3 w-3" />
                       {REQUEST_TYPE_LABELS[ticket.requestType]}
                     </span>
                   </TableCell>
