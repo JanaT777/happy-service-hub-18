@@ -87,6 +87,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ? processNewItems(data.complaintItems)
       : data.complaintItems;
 
+    const assignedTo = data.assignedTo || getAutoAssignment(data);
     setTickets(prev => [{
       ...data,
       id: ticketId,
@@ -95,6 +96,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
       returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
       otherStatus: data.requestType === 'other' ? 'other_submitted' as OtherStatus : undefined,
+      assignedTo,
       createdAt: now,
       updatedAt: now,
     }, ...prev]);
