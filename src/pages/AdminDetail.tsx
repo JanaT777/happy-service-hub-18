@@ -96,18 +96,19 @@ const AdminDetail = () => {
     return null;
   })();
 
-  // ---- Per-item actions ----
-  const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
-    const isFinal = item.itemStatus === 'item_refunded' || item.itemStatus === 'item_rejected' || item.itemStatus === 'item_approved';
-    if (isFinal) {
-      toast.error('Táto položka je už uzavretá.');
-      return;
-    }
+  // ---- Per-item status transition ----
+  const handleItemStatusTransition = (itemIndex: number, item: ComplaintItem, newStatus: ComplaintItemStatus) => {
+    const label = COMPLAINT_ITEM_STATUS_LABELS[newStatus];
+    updateComplaintItemStatus(ticket.id, itemIndex, newStatus, label);
+    toast.success(`${item.productName}: ${label}`);
+  };
 
+  // ---- Per-item decision actions (only available during quality_check) ----
+  const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
     let newStatus: ComplaintItemStatus;
     switch (actionKey) {
       case 'refund':
-        newStatus = 'item_refunded';
+        newStatus = 'item_approved';
         break;
       case 'exchange':
         newStatus = 'item_approved';
