@@ -10,7 +10,7 @@ import {
 import { DecisionTreeResult } from '@/components/DecisionTree';
 import {
   ArrowLeft, ArrowRight, Loader2, Search, Package,
-  User, Mail, CalendarDays, Camera, PackageX,
+  User, Mail, CalendarDays, Camera, PackageX, CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
