@@ -7,6 +7,7 @@ import {
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   RequestType, Ticket,
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
+  REQUESTED_RESOLUTION_LABELS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
