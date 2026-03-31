@@ -316,6 +316,18 @@ const Admin = () => {
                     )}
                   </TableCell>
                   <TableCell>
+                    {ticket.assignedTo ? (
+                      <span className={cn(
+                        'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold',
+                        ticket.assignedTo === 'sklad' ? 'bg-warning/15 text-warning border-warning/30' : 'bg-info/15 text-info border-info/30'
+                      )}>
+                        {ASSIGNED_TEAM_LABELS[ticket.assignedTo]}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-col gap-1">
                       {(() => {
                         const derived = getDerivedTicketStatus(ticket);
