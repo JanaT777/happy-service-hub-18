@@ -205,22 +205,35 @@ const CRM = () => {
 
       {/* Quick type filters */}
       <div className="mb-4 flex items-center gap-1.5 flex-wrap">
-        {([['all', 'Všetky'], ['return', 'Vrátenie'], ['complaint', 'Reklamácie'], ['other', 'Interné']] as [('all' | RequestType), string][]).map(([key, label]) => {
+        {([
+          ['my_assigned', 'Moje pridelené'],
+          ['all', 'Všetky'],
+          ['return', 'Vrátenie'],
+          ['complaint', 'Reklamácie'],
+          ['other', 'Interné'],
+        ] as [('all' | 'my_assigned' | RequestType), string][]).map(([key, label]) => {
           const active = typeFilter === key;
-          const config = key !== 'all' ? TYPE_CONFIG[key] : null;
+          const config = key !== 'all' && key !== 'my_assigned' ? TYPE_CONFIG[key] : null;
           const Icon = config?.icon;
-          const count = key === 'all' ? myTickets.length : myTickets.filter(t => t.requestType === key).length;
+          const count = key === 'all'
+            ? myTickets.length
+            : key === 'my_assigned'
+              ? myAssignedTickets.length
+              : myTickets.filter(t => t.requestType === key).length;
           return (
             <button
               key={key}
-              onClick={() => setTypeFilter(active && key !== 'all' ? 'all' : key === 'all' ? 'all' : key)}
+              onClick={() => setTypeFilter(key)}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
                 active
-                  ? 'border-primary bg-primary/10 text-primary'
+                  ? key === 'my_assigned'
+                    ? 'border-primary bg-primary/15 text-primary ring-1 ring-primary/30'
+                    : 'border-primary bg-primary/10 text-primary'
                   : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
             >
+              {key === 'my_assigned' && <CheckCircle2 className="h-3 w-3" />}
               {Icon && <Icon className="h-3 w-3" />}
               {label}
               <span className={cn(
