@@ -85,6 +85,7 @@ const getDeadlineInfo = (ticket: Ticket): { days: number; limit: number; warnAt:
 
 // Simulated current CRM user
 const CRM_USER_EMAIL = 'oz@firma.sk';
+const CRM_USER_TEAM = 'customer_care' as const;
 
 type CreateMode = null | 'select' | 'return' | 'complaint' | 'other';
 
