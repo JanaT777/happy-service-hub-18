@@ -114,7 +114,7 @@ const AdminDetail = () => {
         return;
     }
 
-    updateComplaintItemStatus(ticket.id, itemIndex, newStatus);
+    updateComplaintItemStatus(ticket.id, itemIndex, newStatus, actionLabel);
 
     const actionLabel = ITEM_ACTIONS.find(a => a.key === actionKey)?.label ?? actionKey;
     toast.success(`${item.productName}: ${actionLabel}`);
