@@ -150,6 +150,7 @@ export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | nu
   return 'processing';
 }
 
+export const STATUS_LABELS: Record<TicketStatus, string> = {
   new: 'Nový',
   in_review: 'V preskúmaní',
   needs_info: 'Čaká na doplnenie',
