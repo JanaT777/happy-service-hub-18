@@ -14,8 +14,8 @@ const statusStyles: Record<TicketStatus, string> = {
 export const StatusBadge = ({ status }: { status: TicketStatus }) => (
   <span className={cn(
     'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold',
-    statusStyles[status]
+    statusStyles[status] || 'bg-muted text-muted-foreground border-border'
   )}>
-    {STATUS_LABELS[status]}
+    {STATUS_LABELS[status] || 'Neznámy stav'}
   </span>
 );

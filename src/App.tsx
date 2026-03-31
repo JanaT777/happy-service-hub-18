@@ -11,7 +11,7 @@ import AdminDetail from "./pages/AdminDetail.tsx";
 import TrackRequest from "./pages/TrackRequest.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
-// HMR refresh anchor
+// HMR anchor v3
 const queryClient = new QueryClient();
 
 const App = () => (

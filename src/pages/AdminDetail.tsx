@@ -296,9 +296,9 @@ const AdminDetail = () => {
                       </div>
                       <span className={cn(
                         'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold',
-                        ITEM_STATUS_COLORS[item.itemStatus]
+                        ITEM_STATUS_COLORS[item.itemStatus] || 'bg-muted text-muted-foreground'
                       )}>
-                        {COMPLAINT_ITEM_STATUS_LABELS[item.itemStatus]}
+                        {COMPLAINT_ITEM_STATUS_LABELS[item.itemStatus] || 'Neznámy stav'}
                       </span>
                     </div>
 
