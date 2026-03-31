@@ -6,7 +6,7 @@ import {
   COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
-  ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution,
+  ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import {
   ArrowLeft, Star, XCircle, MessageSquare, CheckCircle2,
-  Send, Banknote, Package, RefreshCw, Replace,
+  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle,
 } from 'lucide-react';
 
 const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
@@ -71,6 +71,18 @@ const AdminDetail = () => {
     : ticket.suggestedSolution
       ? SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]
       : null;
+
+  // Map requestedResolution to SuggestedSolution for button matching
+  const RESOLUTION_TO_ACTION: Record<RequestedResolution, SuggestedSolution> = {
+    resend: 'resend_order',
+    exchange: 'exchange',
+    refund: 'refund',
+  };
+  const customerPreferredAction = ticket.requestedResolution
+    ? RESOLUTION_TO_ACTION[ticket.requestedResolution]
+    : null;
+  const systemSuggestion = complaintType ? COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType] : null;
+  const mismatch = customerPreferredAction && systemSuggestion && customerPreferredAction !== systemSuggestion;
 
   // ---- Actions ----
   const handleComplaintAction = (action: SuggestedSolution) => {
@@ -204,11 +216,17 @@ const AdminDetail = () => {
 
           {/* Customer requested resolution */}
           {ticket.requestedResolution && (
-            <div className="rounded-xl border-2 border-accent/50 bg-accent/10 p-5">
+            <div className="rounded-xl border-2 border-accent/50 bg-accent/10 p-5 space-y-2">
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Požiadavka zákazníka</p>
               <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
                 {REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution]}
               </span>
+              {mismatch && (
+                <div className="flex items-center gap-2 rounded-lg bg-warning/10 border border-warning/30 px-3 py-2 mt-2">
+                  <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+                  <span className="text-xs font-medium text-warning">Zákazník požaduje iné riešenie</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -231,18 +249,21 @@ const AdminDetail = () => {
                 <div className="grid gap-2">
                   {COMPLAINT_TYPE_ALLOWED_ACTIONS[complaintType].map(action => {
                     const Icon = ACTION_ICONS[action] || CheckCircle2;
+                    const isCustomerPick = action === customerPreferredAction;
                     const isSuggested = action === COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType];
+                    const isPrimary = customerPreferredAction ? isCustomerPick : isSuggested;
                     return (
                       <button key={action} onClick={() => handleComplaintAction(action)}
                         className={cn(
                           'flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold transition-all text-left w-full',
-                          isSuggested
+                          isPrimary
                             ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
                             : 'bg-card text-foreground hover:bg-accent'
                         )}>
                         <Icon className="h-4 w-4 shrink-0" />
                         <span className="flex-1">{SUGGESTED_SOLUTION_LABELS[action]}</span>
-                        {isSuggested && <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">Odporúčané</span>}
+                        {isCustomerPick && <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">Odporúčané</span>}
+                        {!isCustomerPick && isSuggested && <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Systém</span>}
                       </button>
                     );
                   })}
