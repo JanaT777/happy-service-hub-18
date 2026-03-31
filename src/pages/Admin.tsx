@@ -59,10 +59,10 @@ const getWorkflowStatusKey = (ticket: Ticket): string | undefined => {
   return undefined;
 };
 
-const getWorkflowIcon = (type: RequestType) => {
-  if (type === 'complaint') return FileText;
-  if (type === 'return') return RotateCcw;
-  return Truck;
+const TYPE_CONFIG: Record<RequestType, { icon: typeof FileText; bg: string; text: string; border: string }> = {
+  complaint: { icon: AlertTriangle, bg: 'bg-warning/20', text: 'text-warning', border: 'border-warning/40' },
+  return: { icon: RotateCcw, bg: 'bg-info/20', text: 'text-info', border: 'border-info/40' },
+  other: { icon: Building2, bg: 'bg-primary/15', text: 'text-primary', border: 'border-primary/30' },
 };
 
 const getCustomerName = (ticket: Ticket): string => {
