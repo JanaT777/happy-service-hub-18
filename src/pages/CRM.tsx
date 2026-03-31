@@ -312,6 +312,13 @@ const CRM = () => {
                     )}
                   </TableCell>
                   <TableCell>
+                    {ticket.otherSubtype ? (
+                      <span className="text-xs font-medium">{OTHER_SUBTYPE_LABELS[ticket.otherSubtype]}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-col gap-1">
                       {(() => {
                         const derived = getDerivedTicketStatus(ticket);
