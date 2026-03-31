@@ -424,9 +424,6 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
             <div className="border-t pt-3 text-sm">
               <span className="text-muted-foreground">IBAN:</span> {iban}
             </div>
-            <div className="border-t pt-3 text-sm">
-              <span className="text-muted-foreground">Popis:</span> {description}
-            </div>
           </div>
 
           <button
