@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import Admin from "./pages/Admin.tsx";
 import AdminDetail from "./pages/AdminDetail.tsx";
 import TrackRequest from "./pages/TrackRequest.tsx";
+import CRM from "./pages/CRM.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 // HMR anchor v3
