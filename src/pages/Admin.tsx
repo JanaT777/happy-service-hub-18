@@ -138,6 +138,35 @@ const Admin = () => {
         <p className="text-muted-foreground">Zoznam všetkých požiadaviek zákazníkov</p>
       </div>
 
+      {/* Quick type filters */}
+      <div className="mb-4 flex items-center gap-1.5 flex-wrap">
+        {([['all', 'Všetky'], ['return', 'Vrátenie'], ['complaint', 'Reklamácie'], ['other', 'Interné (OZ)']] as [('all' | RequestType), string][]).map(([key, label]) => {
+          const active = typeFilter === key;
+          const config = key !== 'all' ? TYPE_CONFIG[key] : null;
+          const Icon = config?.icon;
+          const count = key === 'all' ? tickets.length : tickets.filter(t => t.requestType === key).length;
+          return (
+            <button
+              key={key}
+              onClick={() => setTypeFilter(active && key !== 'all' ? 'all' : key === 'all' ? 'all' : key)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors',
+                active
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
+            >
+              {Icon && <Icon className="h-3 w-3" />}
+              {label}
+              <span className={cn(
+                'rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
+                active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+              )}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Search + filter toggle */}
       <div className="mb-4 flex gap-2">
         <div className="relative flex-1">
