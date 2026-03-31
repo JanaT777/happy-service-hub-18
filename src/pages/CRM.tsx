@@ -129,7 +129,7 @@ const CRM = () => {
       if (levelDiff !== 0) return levelDiff;
       return db!.days - da!.days;
     });
-  }, [myTickets, typeFilter, search]);
+  }, [myTickets, myAssignedTickets, typeFilter, search]);
 
   const resetCreate = () => {
     setCreateMode(null);
