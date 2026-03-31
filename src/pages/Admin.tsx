@@ -92,7 +92,7 @@ const Admin = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const filtered = useMemo(() => {
-    return tickets.filter(t => {
+    const list = tickets.filter(t => {
       if (statusFilter !== 'all' && t.status !== statusFilter) return false;
       if (typeFilter !== 'all' && t.requestType !== typeFilter) return false;
       if (complaintTypeFilter !== 'all') {
@@ -104,6 +104,21 @@ const Admin = () => {
         return t.id.toLowerCase().includes(q) || t.customerEmail.toLowerCase().includes(q) || t.orderNumber.toLowerCase().includes(q) || t.product.toLowerCase().includes(q) || getCustomerName(t).toLowerCase().includes(q);
       }
       return true;
+    });
+
+    const levelOrder = { critical: 0, warning: 1, ok: 2 };
+    return list.sort((a, b) => {
+      const da = getDeadlineInfo(a);
+      const db = getDeadlineInfo(b);
+      // Tickets with receipt data come first
+      if (da && !db) return -1;
+      if (!da && db) return 1;
+      if (!da && !db) return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      // Sort by urgency level
+      const levelDiff = levelOrder[da!.level] - levelOrder[db!.level];
+      if (levelDiff !== 0) return levelDiff;
+      // Within same level, oldest first (highest days)
+      return db!.days - da!.days;
     });
   }, [tickets, statusFilter, typeFilter, complaintTypeFilter, search]);
 
