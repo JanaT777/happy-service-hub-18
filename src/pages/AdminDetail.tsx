@@ -189,6 +189,12 @@ const AdminDetail = () => {
             <h2 className="font-heading text-base font-semibold mb-4">Detail požiadavky</h2>
             <dl>
               <Field label="Typ požiadavky" value={REQUEST_TYPE_LABELS[ticket.requestType]} />
+              {ticket.requestType === 'return' && (
+                <>
+                  <Field label="Typ reklamácie" value="Odstúpenie od zmluvy" />
+                  <Field label="Navrhované riešenie" value="Vrátenie finančných prostriedkov" />
+                </>
+              )}
 
               <div className="py-3 border-b">
                 <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Stav</dt>

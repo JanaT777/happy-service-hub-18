@@ -227,6 +227,8 @@ const Admin = () => {
                   <TableCell>
                     {complaintType ? (
                       <span className="text-xs font-medium">{COMPLAINT_TYPE_LABELS[complaintType]}</span>
+                    ) : ticket.requestType === 'return' ? (
+                      <span className="text-xs font-medium">Odstúpenie od zmluvy</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
@@ -256,6 +258,8 @@ const Admin = () => {
                       <span className="text-xs font-medium">
                         {SUGGESTED_SOLUTION_LABELS[COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType]]}
                       </span>
+                    ) : ticket.requestType === 'return' ? (
+                      <span className="text-xs font-medium">Vrátenie finančných prostriedkov</span>
                     ) : ticket.suggestedSolution ? (
                       <span className="text-xs font-medium">{SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</span>
                     ) : (
