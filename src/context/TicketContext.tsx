@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -8,6 +8,7 @@ interface TicketContextType {
   updateComplaintStatus: (id: string, complaintStatus: ComplaintStatus) => void;
   updateReturnStatus: (id: string, returnStatus: ReturnStatus) => void;
   updateOtherStatus: (id: string, otherStatus: OtherStatus) => void;
+  updateComplaintItemStatus: (ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
@@ -30,8 +31,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       suggestedSolution: 'exchange',
       requestedResolution: 'refund',
       complaintItems: [
-        { productName: 'Bezdrôtové slúchadlá', quantity: 1, complaintReason: 'manufacturing_defect', requestedResolution: 'refund' },
-        { productName: 'Obal na telefón', quantity: 2, complaintReason: 'damaged_in_transport', requestedResolution: 'exchange' },
+        { productName: 'Bezdrôtové slúchadlá', quantity: 1, complaintReason: 'manufacturing_defect', requestedResolution: 'refund', itemStatus: 'item_new' },
+        { productName: 'Obal na telefón', quantity: 2, complaintReason: 'damaged_in_transport', requestedResolution: 'exchange', itemStatus: 'item_new' },
       ],
       complaintStatus: 'complaint_new',
       status: 'new',
@@ -110,10 +111,20 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     ));
   }, []);
 
+  const updateComplaintItemStatus = useCallback((ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus) => {
+    setTickets(prev => prev.map(t => {
+      if (t.id !== ticketId || !t.complaintItems) return t;
+      const updatedItems = t.complaintItems.map((item, i) =>
+        i === itemIndex ? { ...item, itemStatus } : item
+      );
+      return { ...t, complaintItems: updatedItems, updatedAt: new Date().toISOString() };
+    }));
+  }, []);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, getTicket }}>
+    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, getTicket }}>
       {children}
     </TicketContext.Provider>
   );

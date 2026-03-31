@@ -6,7 +6,9 @@ import {
   COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_ALLOWED_ACTIONS,
   COMPLAINT_TYPE_SUGGESTED_SOLUTION, MOCK_ORDERS,
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
+  COMPLAINT_ITEM_STATUS_LABELS,
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
+  ComplaintItemStatus,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -31,10 +33,34 @@ const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
   discount: Star,
 };
 
+const ITEM_STATUS_COLORS: Record<ComplaintItemStatus, string> = {
+  item_new: 'bg-muted text-muted-foreground',
+  item_in_review: 'bg-warning/15 text-warning border-warning/30',
+  item_approved: 'bg-primary/15 text-primary border-primary/30',
+  item_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
+  item_completed: 'bg-green-500/15 text-green-700 border-green-500/30',
+};
+
+// Map RequestedResolution → SuggestedSolution for button matching
+const RESOLUTION_TO_ACTION: Record<RequestedResolution, SuggestedSolution> = {
+  resend: 'resend_order',
+  exchange: 'exchange',
+  refund: 'refund',
+};
+
+// Per-item action definitions
+const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | null; icon: typeof Send; variant: 'default' | 'destructive' | 'warning' }[] = [
+  { key: 'refund', label: 'Refundovať', solution: 'refund', icon: Banknote, variant: 'default' },
+  { key: 'exchange', label: 'Výmena produktu', solution: 'exchange', icon: Replace, variant: 'default' },
+  { key: 'resend', label: 'Opätovné zaslanie', solution: 'resend_order', icon: Send, variant: 'default' },
+  { key: 'reject', label: 'Zamietnuť', solution: null, icon: XCircle, variant: 'destructive' },
+  { key: 'info', label: 'Vyžiadať doplnenie', solution: null, icon: MessageSquare, variant: 'warning' },
+];
+
 const AdminDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus } = useTickets();
+  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus } = useTickets();
 
   const ticket = getTicket(id || '');
 
@@ -66,37 +92,38 @@ const AdminDetail = () => {
     return null;
   })();
 
-  const suggestedLabel = complaintType
-    ? SUGGESTED_SOLUTION_LABELS[COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType]]
-    : ticket.suggestedSolution
-      ? SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]
-      : null;
-
-  // Map requestedResolution to SuggestedSolution for button matching
-  const RESOLUTION_TO_ACTION: Record<RequestedResolution, SuggestedSolution> = {
-    resend: 'resend_order',
-    exchange: 'exchange',
-    refund: 'refund',
-  };
-  const customerPreferredAction = ticket.requestedResolution
-    ? RESOLUTION_TO_ACTION[ticket.requestedResolution]
-    : null;
-  const systemSuggestion = complaintType ? COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType] : null;
-  const mismatch = customerPreferredAction && systemSuggestion && customerPreferredAction !== systemSuggestion;
-
-  // ---- Actions ----
-  const handleComplaintAction = (action: SuggestedSolution) => {
-    if (action === 'refund') {
-      updateComplaintStatus(ticket.id, 'complaint_refund_processing');
-      updateTicketStatus(ticket.id, 'refund_processing');
-      toast.success('Refundácia zahájená');
-    } else {
-      updateComplaintStatus(ticket.id, 'complaint_approved');
-      updateTicketStatus(ticket.id, 'approved');
-      toast.success(`Schválené: ${SUGGESTED_SOLUTION_LABELS[action]}`);
+  // ---- Per-item actions ----
+  const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
+    const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
+    if (isFinal) {
+      toast.error('Táto položka je už uzavretá.');
+      return;
     }
+
+    let newStatus: ComplaintItemStatus;
+    switch (actionKey) {
+      case 'refund':
+      case 'exchange':
+      case 'resend':
+        newStatus = 'item_approved';
+        break;
+      case 'reject':
+        newStatus = 'item_rejected';
+        break;
+      case 'info':
+        newStatus = 'item_in_review';
+        break;
+      default:
+        return;
+    }
+
+    updateComplaintItemStatus(ticket.id, itemIndex, newStatus);
+
+    const actionLabel = ITEM_ACTIONS.find(a => a.key === actionKey)?.label ?? actionKey;
+    toast.success(`${item.productName}: ${actionLabel}`);
   };
 
+  // ---- Non-complaint actions (return, other) ----
   const handleReject = () => {
     if (isComplaint) updateComplaintStatus(ticket.id, 'complaint_rejected');
     if (ticket.requestType === 'return' && ticket.returnStatus) updateReturnStatus(ticket.id, 'return_rejected');
@@ -139,6 +166,8 @@ const AdminDetail = () => {
     </div>
   );
 
+  const hasComplaintItems = ticket.complaintItems && ticket.complaintItems.length > 0;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       {/* Back + title */}
@@ -158,155 +187,181 @@ const AdminDetail = () => {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[7fr_3fr]">
 
         {/* ──── LEFT: Details ──── */}
-        <div className="rounded-xl border bg-card p-6">
-          <h2 className="font-heading text-base font-semibold mb-4">Detail požiadavky</h2>
+        <div className="space-y-6">
+          {/* Basic info card */}
+          <div className="rounded-xl border bg-card p-6">
+            <h2 className="font-heading text-base font-semibold mb-4">Detail požiadavky</h2>
+            <dl>
+              <Field label="Typ požiadavky" value={REQUEST_TYPE_LABELS[ticket.requestType]} />
 
-          <dl>
-            <Field label="Typ požiadavky" value={REQUEST_TYPE_LABELS[ticket.requestType]} />
-
-            {/* Per-item complaint details */}
-            {ticket.complaintItems && ticket.complaintItems.length > 0 ? (
               <div className="py-3 border-b">
-                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2">Reklamované položky</dt>
-                <dd className="space-y-3">
-                  {ticket.complaintItems.map((item, i) => (
-                    <div key={i} className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                      <div className="flex items-center gap-2 text-sm">
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Stav</dt>
+                <dd className="flex flex-wrap items-center gap-2">
+                  <StatusBadge status={ticket.status} />
+                  {workflowLabel && (
+                    <span className="rounded-full border bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                      {workflowLabel}
+                    </span>
+                  )}
+                </dd>
+              </div>
+
+              <Field label="Zákazník" value={`${customerName} · ${ticket.customerEmail}`} />
+              {ticket.returnItems && ticket.returnItems.length > 0 ? (
+                <div className="py-3 border-b">
+                  <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Vrátené produkty</dt>
+                  <dd className="space-y-1">
+                    {ticket.returnItems.map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
                         <Package className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{item.productName}</span>
+                        <span className="font-medium">{item.name}</span>
                         <span className="text-muted-foreground">({item.quantity}×)</span>
                       </div>
-                      <div className="text-xs text-muted-foreground pl-6 space-y-0.5">
-                        <p>Dôvod: <span className="text-foreground font-medium">{COMPLAINT_TYPE_LABELS[item.complaintReason]}</span></p>
-                        <p>Riešenie: <span className="text-foreground font-medium">{REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}</span></p>
-                      </div>
-                    </div>
-                  ))}
-                </dd>
-              </div>
-            ) : (
-              <Field label="Typ reklamácie" value={complaintType ? COMPLAINT_TYPE_LABELS[complaintType] : null} />
-            )}
-
-            <div className="py-3 border-b">
-              <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Stav</dt>
-              <dd className="flex flex-wrap items-center gap-2">
-                <StatusBadge status={ticket.status} />
-                {workflowLabel && (
-                  <span className="rounded-full border bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
-                    {workflowLabel}
-                  </span>
-                )}
-              </dd>
-            </div>
-
-            <Field label="Zákazník" value={`${customerName} · ${ticket.customerEmail}`} />
-            {ticket.returnItems && ticket.returnItems.length > 0 ? (
-              <div className="py-3 border-b">
-                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Vrátené produkty</dt>
-                <dd className="space-y-1">
-                  {ticket.returnItems.map((item, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm">
-                      <Package className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{item.name}</span>
-                      <span className="text-muted-foreground">({item.quantity}×)</span>
-                    </div>
-                  ))}
-                </dd>
-              </div>
-            ) : (
-              !ticket.complaintItems?.length && <Field label="Produkt" value={ticket.product} />
-            )}
-            <Field label="Objednávka" value={ticket.orderNumber} />
-            <Field label="Závažnosť" value={ticket.severity ? SEVERITY_LABELS[ticket.severity] : null} />
-            <Field label="Popis" value={ticket.description} />
-
-            {/* Attachments */}
-            <div className="py-3 border-b">
-              <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Prílohy</dt>
-              <dd>
-                {ticket.attachments?.length ? (
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {ticket.attachments.map((src, i) => (
-                      <img key={i} src={src} alt="" className="h-20 w-20 rounded-lg border object-cover" />
                     ))}
-                  </div>
-                ) : (
-                  <span className="text-sm text-muted-foreground">Žiadne prílohy</span>
-                )}
-              </dd>
-            </div>
-
-            <Field label="Spôsob vrátenia" value={ticket.refundMethod ? REFUND_METHOD_LABELS[ticket.refundMethod] : null} />
-
-            {/* IBAN highlighted */}
-            <div className={cn('py-3 rounded-lg', ticket.iban && 'bg-warning/10 border border-warning/40 px-3 mt-1')}>
-              <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">IBAN</dt>
-              <dd className={cn('text-sm', ticket.iban ? 'font-mono font-bold tracking-wider' : 'text-muted-foreground')}>
-                {ticket.iban || '—'}
-              </dd>
-            </div>
-          </dl>
-        </div>
-
-        {/* ──── RIGHT: Actions ──── */}
-        <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
-
-          {/* Customer requested resolution */}
-          {ticket.requestedResolution && (
-            <div className="rounded-xl border-2 border-accent/50 bg-accent/10 p-5 space-y-2">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Požiadavka zákazníka</p>
-              <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-sm font-semibold text-accent-foreground">
-                {REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution]}
-              </span>
-              {mismatch && (
-                <div className="flex items-center gap-2 rounded-lg bg-warning/10 border border-warning/30 px-3 py-2 mt-2">
-                  <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-                  <span className="text-xs font-medium text-warning">Zákazník požaduje iné riešenie</span>
+                  </dd>
                 </div>
+              ) : (
+                !hasComplaintItems && <Field label="Produkt" value={ticket.product} />
               )}
+              <Field label="Objednávka" value={ticket.orderNumber} />
+              <Field label="Závažnosť" value={ticket.severity ? SEVERITY_LABELS[ticket.severity] : null} />
+              <Field label="Popis" value={ticket.description} />
+
+              {/* Attachments */}
+              <div className="py-3 border-b">
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Prílohy</dt>
+                <dd>
+                  {ticket.attachments?.length ? (
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {ticket.attachments.map((src, i) => (
+                        <img key={i} src={src} alt="" className="h-20 w-20 rounded-lg border object-cover" />
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Žiadne prílohy</span>
+                  )}
+                </dd>
+              </div>
+
+              <Field label="Spôsob vrátenia" value={ticket.refundMethod ? REFUND_METHOD_LABELS[ticket.refundMethod] : null} />
+
+              {/* IBAN highlighted */}
+              <div className={cn('py-3 rounded-lg', ticket.iban && 'bg-warning/10 border border-warning/40 px-3 mt-1')}>
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">IBAN</dt>
+                <dd className={cn('text-sm', ticket.iban ? 'font-mono font-bold tracking-wider' : 'text-muted-foreground')}>
+                  {ticket.iban || '—'}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* Per-item complaint cards with actions */}
+          {hasComplaintItems && (
+            <div className="space-y-4">
+              <h2 className="font-heading text-base font-semibold">Reklamované položky</h2>
+              {ticket.complaintItems!.map((item, index) => {
+                const itemComplaintType = item.complaintReason as ComplaintType;
+                const systemSuggestion = COMPLAINT_TYPE_SUGGESTED_SOLUTION[itemComplaintType];
+                const customerPreferred = RESOLUTION_TO_ACTION[item.requestedResolution];
+                const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
+
+                return (
+                  <div key={index} className="rounded-xl border bg-card overflow-hidden">
+                    {/* Item header */}
+                    <div className="flex items-center justify-between gap-3 p-4 border-b bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm font-semibold">{item.productName}</span>
+                        <span className="text-xs text-muted-foreground">({item.quantity}×)</span>
+                      </div>
+                      <span className={cn(
+                        'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold',
+                        ITEM_STATUS_COLORS[item.itemStatus]
+                      )}>
+                        {COMPLAINT_ITEM_STATUS_LABELS[item.itemStatus]}
+                      </span>
+                    </div>
+
+                    <div className="p-4 space-y-4">
+                      {/* Item details */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-0.5">Dôvod</span>
+                          <span className="font-medium">{COMPLAINT_TYPE_LABELS[item.complaintReason]}</span>
+                        </div>
+                        <div>
+                          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground block mb-0.5">Požiadavka zákazníka</span>
+                          <span className="font-medium">{REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}</span>
+                        </div>
+                      </div>
+
+                      {/* Mismatch warning */}
+                      {customerPreferred !== systemSuggestion && (
+                        <div className="flex items-center gap-2 rounded-lg bg-warning/10 border border-warning/30 px-3 py-2">
+                          <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
+                          <span className="text-xs font-medium text-warning">
+                            Zákazník požaduje iné riešenie ako systém navrhuje ({SUGGESTED_SOLUTION_LABELS[systemSuggestion]})
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Per-item action buttons */}
+                      {!isFinal && (
+                        <div className="border-t pt-3 space-y-2">
+                          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Akcie</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {ITEM_ACTIONS.map(action => {
+                              const Icon = action.icon;
+                              const isCustomerPick = action.solution === customerPreferred;
+                              const isSuggested = action.solution === systemSuggestion;
+                              const isPrimary = customerPreferred ? isCustomerPick : isSuggested;
+
+                              return (
+                                <button
+                                  key={action.key}
+                                  onClick={() => handleItemAction(index, item, action.key)}
+                                  className={cn(
+                                    'flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all text-left w-full',
+                                    action.variant === 'destructive'
+                                      ? 'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20'
+                                      : action.variant === 'warning'
+                                        ? 'border-warning/30 bg-warning/10 text-warning hover:bg-warning/20'
+                                        : isPrimary
+                                          ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
+                                          : 'bg-card text-foreground hover:bg-accent'
+                                  )}
+                                >
+                                  <Icon className="h-4 w-4 shrink-0" />
+                                  <span className="flex-1">{action.label}</span>
+                                  {isCustomerPick && action.variant === 'default' && (
+                                    <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">Odporúčané</span>
+                                  )}
+                                  {!isCustomerPick && isSuggested && action.variant === 'default' && (
+                                    <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Systém</span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
+        </div>
 
-          {/* Suggested solution card */}
-          <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-5">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Navrhované riešenie</p>
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 text-primary fill-primary" />
-                <span className="text-lg font-bold text-primary">{suggestedLabel ?? 'Nie je priradené'}</span>
+        {/* ──── RIGHT: Sidebar ──── */}
+        <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
+
+          {/* Non-complaint actions (return, other) */}
+          {!hasComplaintItems && (
+            <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-5">
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Akcie</p>
               </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="space-y-2">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Akcie</p>
-
-              {/* Complaint-specific actions */}
-              {complaintType && (
-                <div className="grid gap-2">
-                  {COMPLAINT_TYPE_ALLOWED_ACTIONS[complaintType].map(action => {
-                    const Icon = ACTION_ICONS[action] || CheckCircle2;
-                    const isCustomerPick = action === customerPreferredAction;
-                    const isSuggested = action === COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType];
-                    const isPrimary = customerPreferredAction ? isCustomerPick : isSuggested;
-                    return (
-                      <button key={action} onClick={() => handleComplaintAction(action)}
-                        className={cn(
-                          'flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold transition-all text-left w-full',
-                          isPrimary
-                            ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm'
-                            : 'bg-card text-foreground hover:bg-accent'
-                        )}>
-                        <Icon className="h-4 w-4 shrink-0" />
-                        <span className="flex-1">{SUGGESTED_SOLUTION_LABELS[action]}</span>
-                        {isCustomerPick && <span className="text-[10px] rounded-full bg-primary-foreground/20 px-2 py-0.5">Odporúčané</span>}
-                        {!isCustomerPick && isSuggested && <span className="text-[10px] rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Systém</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
 
               {/* Return-specific actions */}
               {ticket.requestType === 'return' && returnNextStatuses.length > 0 && (
@@ -331,22 +386,22 @@ const AdminDetail = () => {
                   ))}
                 </div>
               )}
-            </div>
 
-            {/* Always-visible: Reject + Request info */}
-            <div className="border-t border-primary/20 pt-4 space-y-2">
-              <button onClick={handleReject}
-                className="flex w-full items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive hover:bg-destructive/20 transition-all">
-                <XCircle className="h-4 w-4 shrink-0" />
-                Zamietnuť požiadavku
-              </button>
-              <button onClick={handleRequestInfo}
-                className="flex w-full items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-semibold text-warning hover:bg-warning/20 transition-all">
-                <MessageSquare className="h-4 w-4 shrink-0" />
-                Vyžiadať doplnenie
-              </button>
+              {/* Reject + Request info */}
+              <div className="border-t border-primary/20 pt-4 space-y-2">
+                <button onClick={handleReject}
+                  className="flex w-full items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive hover:bg-destructive/20 transition-all">
+                  <XCircle className="h-4 w-4 shrink-0" />
+                  Zamietnuť požiadavku
+                </button>
+                <button onClick={handleRequestInfo}
+                  className="flex w-full items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-semibold text-warning hover:bg-warning/20 transition-all">
+                  <MessageSquare className="h-4 w-4 shrink-0" />
+                  Vyžiadať doplnenie
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Timestamps */}
           <div className="rounded-xl border bg-card p-4 text-sm space-y-1 text-muted-foreground">
