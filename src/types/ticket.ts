@@ -52,11 +52,11 @@ export const COMPLAINT_TYPE_LABELS: Record<ComplaintType, string> = {
 };
 
 export const COMPLAINT_TYPE_SUGGESTED_SOLUTION: Record<ComplaintType, SuggestedSolution> = {
-  damaged_in_transport: 'replacement_with_pickup',
-  not_delivered: 'resend_order',
+  damaged_in_transport: 'exchange',
+  not_delivered: 'exchange',
   wrong_title: 'exchange',
   manufacturing_defect: 'exchange',
-  wrong_quantity: 'adjust_order',
+  wrong_quantity: 'exchange',
 };
 
 export const COMPLAINT_TYPE_ALLOWED_ACTIONS: Record<ComplaintType, SuggestedSolution[]> = {
