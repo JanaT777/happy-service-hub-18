@@ -48,6 +48,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit }: Props) => {
 
   const [complaintType, setComplaintType] = useState<ComplaintType | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
+  const [requestedResolution, setRequestedResolution] = useState<RequestedResolution | null>(null);
   const [iban, setIban] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
