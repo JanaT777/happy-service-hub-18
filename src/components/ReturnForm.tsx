@@ -20,11 +20,12 @@ interface Props {
   treeResult: DecisionTreeResult;
   onBack: () => void;
   onSubmit: () => void;
+  createdBy?: string;
 }
 
 type Step = 'lookup' | 'products' | 'confirm' | 'submitted';
 
-export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
+export const ReturnForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) => {
   const { addTicket } = useTickets();
   const navigate = useNavigate();
 
@@ -117,6 +118,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit }: Props) => {
       withinReturnWindow: withinWindow,
       returnItems: selectedProducts.map(p => ({ name: p.name, quantity: p.qty })),
       iban: iban.replace(/\s/g, '').toUpperCase(),
+      ...(createdBy ? { createdBy } : {}),
     });
     setTicketId(id);
     toast.success('Žiadosť o vrátenie bola odoslaná!');

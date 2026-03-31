@@ -96,8 +96,8 @@ const CRM = () => {
   const [createMode, setCreateMode] = useState<CreateMode>(null);
   const [treeResult, setTreeResult] = useState<DecisionTreeResult | null>(null);
 
-  // In a real app, filter by logged-in user. For demo, show all tickets.
-  const myTickets = tickets;
+  // Show only tickets created by this CRM user
+  const myTickets = useMemo(() => tickets.filter(t => t.createdBy === CRM_USER_EMAIL), [tickets]);
 
   const filtered = useMemo(() => {
     const list = myTickets.filter(t => {
@@ -132,15 +132,15 @@ const CRM = () => {
     setTreeResult(null);
   };
 
-  // Creation flows
-  if (createMode === 'return' || (createMode === 'select' && treeResult?.requestType === 'return')) {
-    return <ReturnForm treeResult={treeResult} onBack={resetCreate} onSubmit={resetCreate} />;
+  // Creation flows – pass createdBy so tickets are attributed to CRM user
+  if (createMode === 'return') {
+    return <ReturnForm treeResult={treeResult} onBack={resetCreate} onSubmit={resetCreate} createdBy={CRM_USER_EMAIL} />;
   }
-  if (createMode === 'complaint' || (createMode === 'select' && treeResult?.requestType === 'complaint')) {
-    return <ComplaintForm treeResult={treeResult} onBack={resetCreate} onSubmit={resetCreate} />;
+  if (createMode === 'complaint') {
+    return <ComplaintForm treeResult={treeResult} onBack={resetCreate} onSubmit={resetCreate} createdBy={CRM_USER_EMAIL} />;
   }
   if (createMode === 'other') {
-    return <OtherRequestForm onBack={resetCreate} onSubmit={resetCreate} />;
+    return <OtherRequestForm onBack={resetCreate} onSubmit={resetCreate} createdBy={CRM_USER_EMAIL} />;
   }
 
   return (
@@ -238,9 +238,12 @@ const CRM = () => {
         </div>
       </div>
 
-      {/* Results count */}
-      <div className="mb-3 text-sm text-muted-foreground">
-        {filtered.length} {filtered.length === 1 ? 'požiadavka' : filtered.length < 5 ? 'požiadavky' : 'požiadaviek'}
+      {/* Section label + results count */}
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="font-heading text-lg font-semibold">Moje požiadavky</h2>
+        <span className="text-sm text-muted-foreground">
+          {filtered.length} {filtered.length === 1 ? 'požiadavka' : filtered.length < 5 ? 'požiadavky' : 'požiadaviek'}
+        </span>
       </div>
 
       {/* Table */}

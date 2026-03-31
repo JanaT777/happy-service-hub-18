@@ -14,9 +14,10 @@ const otherSchema = z.object({
 interface Props {
   onBack: () => void;
   onSubmit: () => void;
+  createdBy?: string;
 }
 
-export const OtherRequestForm = ({ onBack, onSubmit }: Props) => {
+export const OtherRequestForm = ({ onBack, onSubmit, createdBy }: Props) => {
   const { addTicket } = useTickets();
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ customerEmail: '', orderNumber: '', product: '', description: '' });
@@ -54,6 +55,7 @@ export const OtherRequestForm = ({ onBack, onSubmit }: Props) => {
       description: result.data.description,
       attachments,
       requestType: 'other',
+      ...(createdBy ? { createdBy } : {}),
     });
     toast.success('Požiadavka bola odoslaná!');
     setSubmitting(false);

@@ -177,6 +177,7 @@ export interface Ticket {
   returnStatus?: ReturnStatus;
   otherStatus?: OtherStatus;
   warehouseReceipt?: WarehouseReceiptAudit;
+  createdBy?: string;
 }
 
 export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | null {
