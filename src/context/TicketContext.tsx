@@ -164,10 +164,16 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }));
   }, []);
 
+  const updateAssignment = useCallback((id: string, team: AssignedTeam) => {
+    setTickets(prev => prev.map(t =>
+      t.id === id ? { ...t, assignedTo: team, updatedAt: new Date().toISOString() } : t
+    ));
+  }, []);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, getTicket }}>
+    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, getTicket }}>
       {children}
     </TicketContext.Provider>
   );
