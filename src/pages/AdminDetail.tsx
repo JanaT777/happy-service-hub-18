@@ -73,9 +73,14 @@ const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | 
 const AdminDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment } = useTickets();
+  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided } = useTickets();
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
+
+  // Info request dialog state
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
+  const [infoNote, setInfoNote] = useState('');
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -178,9 +183,21 @@ const AdminDetail = () => {
   };
 
   const handleRequestInfo = () => {
-    if (isComplaint) updateComplaintStatus(ticket.id, 'complaint_waiting_customer');
-    updateTicketStatus(ticket.id, 'needs_info');
+    setInfoMessage('');
+    setInfoNote('');
+    setInfoDialogOpen(true);
+  };
+
+  const confirmRequestInfo = () => {
+    if (!infoMessage.trim()) return;
+    requestInfo(ticket!.id, infoMessage.trim(), infoNote.trim() || undefined);
+    setInfoDialogOpen(false);
     toast.success('Vyžiadané doplnenie od zákazníka');
+  };
+
+  const handleMarkInfoProvided = () => {
+    markInfoProvided(ticket!.id);
+    toast.success('Označené ako doplnené – tiket pokračuje v spracovaní');
   };
 
   const handleReturnNext = (ns: ReturnStatus) => {
