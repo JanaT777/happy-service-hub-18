@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog } from '@/types/ticket';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TicketContextType {
   tickets: Ticket[];
