@@ -752,10 +752,12 @@ const AdminDetail = () => {
             </Button>
             <Button
               variant="destructive"
-              disabled={!rejectReason.trim()}
+              disabled={!rejectReason.trim() || rejectButtonLocked}
               onClick={confirmReject}
+              className="relative"
             >
-              Áno, som si istý – Zamietnuť
+              {rejectButtonLocked ? 'Počkajte...' : 'Áno, som si istý – Zamietnuť'}
+            </Button>
             </Button>
           </DialogFooter>
         </DialogContent>
