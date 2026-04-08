@@ -77,6 +77,35 @@ const AdminDetail = () => {
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
 
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectNote, setRejectNote] = useState('');
+  const [pendingReject, setPendingReject] = useState<{ type: 'item'; itemIndex: number; item: ComplaintItem } | { type: 'ticket' } | null>(null);
+
+  const openRejectDialog = (target: typeof pendingReject) => {
+    setPendingReject(target);
+    setRejectReason('');
+    setRejectNote('');
+    setRejectDialogOpen(true);
+  };
+
+  const confirmReject = () => {
+    if (!pendingReject || !rejectReason.trim()) return;
+    if (pendingReject.type === 'item') {
+      const actionLabel = `Zamietnuť – ${rejectReason.trim()}`;
+      updateComplaintItemStatus(ticket!.id, pendingReject.itemIndex, 'item_rejected', actionLabel);
+      toast.success(`${pendingReject.item.productName}: Zamietnuté`);
+    } else {
+      if (isComplaint) updateComplaintStatus(ticket!.id, 'complaint_rejected');
+      if (ticket!.requestType === 'return' && ticket!.returnStatus) updateReturnStatus(ticket!.id, 'return_rejected');
+      if (ticket!.requestType === 'other' && ticket!.otherStatus) updateOtherStatus(ticket!.id, 'other_rejected');
+      updateTicketStatus(ticket!.id, 'rejected');
+      toast.success('Požiadavka zamietnutá');
+    }
+    setRejectDialogOpen(false);
+    setPendingReject(null);
+  };
+
   const ticket = getTicket(id || '');
 
   if (!ticket) {
