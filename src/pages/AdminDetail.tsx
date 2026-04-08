@@ -377,7 +377,9 @@ const AdminDetail = () => {
                 const customerPreferred = RESOLUTION_TO_ACTION[item.requestedResolution];
                 const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
                 const nextStatuses = ITEM_STATUS_FLOW[item.itemStatus] || [];
-                const isDecisionPoint = item.itemStatus === 'item_quality_check';
+                const isWarehouseInspection = item.itemStatus === 'item_quality_check';
+                const isDecisionPoint = item.itemStatus === 'item_checked';
+                const statusOwner = ITEM_STATUS_OWNER[item.itemStatus];
 
                 return (
                   <div key={index} className="rounded-xl border bg-card overflow-hidden">
