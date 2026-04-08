@@ -9,7 +9,7 @@ import {
   SEVERITY_LABELS, REFUND_METHOD_LABELS, REQUESTED_RESOLUTION_LABELS,
   COMPLAINT_ITEM_STATUS_LABELS, OTHER_SUBTYPE_LABELS,
   ComplaintType, ReturnStatus, OtherStatus, SuggestedSolution, RequestedResolution,
-  ComplaintItemStatus, ITEM_STATUS_FLOW,
+  ComplaintItemStatus, ITEM_STATUS_FLOW, ITEM_STATUS_OWNER,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
   AssignedTeam, ASSIGNED_TEAM_LABELS,
@@ -50,6 +50,7 @@ const ITEM_STATUS_COLORS: Record<ComplaintItemStatus, string> = {
   item_in_transit: 'bg-info/15 text-info border-info/30',
   item_received_warehouse: 'bg-primary/15 text-primary border-primary/30',
   item_quality_check: 'bg-warning/15 text-warning border-warning/30',
+  item_checked: 'bg-accent text-accent-foreground border-border',
   item_approved: 'bg-primary/15 text-primary border-primary/30',
   item_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
   item_refunded: 'bg-green-500/15 text-green-700 border-green-500/30',
@@ -148,10 +149,26 @@ const AdminDetail = () => {
   const handleItemStatusTransition = (itemIndex: number, item: ComplaintItem, newStatus: ComplaintItemStatus) => {
     const label = COMPLAINT_ITEM_STATUS_LABELS[newStatus];
     updateComplaintItemStatus(ticket.id, itemIndex, newStatus, label);
+    // Auto-reassign based on new status owner
+    const newOwner = ITEM_STATUS_OWNER[newStatus];
+    if (newOwner && ticket.assignedTo !== newOwner) {
+      updateAssignment(ticket.id, newOwner);
+    }
     toast.success(`${item.productName}: ${label}`);
   };
 
-  // ---- Per-item decision actions (only available during quality_check) ----
+  // Warehouse inspection result actions
+  const handleWarehouseInspection = (itemIndex: number, item: ComplaintItem, result: 'ok' | 'nok') => {
+    const actionLabel = result === 'ok' ? 'Kontrola OK' : 'Kontrola NOK';
+    updateComplaintItemStatus(ticket.id, itemIndex, 'item_checked', actionLabel);
+    // Auto-reassign to Customer Care
+    if (ticket.assignedTo !== 'customer_care') {
+      updateAssignment(ticket.id, 'customer_care');
+    }
+    toast.success(`${item.productName}: ${actionLabel} – pridelené Customer Care`);
+  };
+
+  // ---- Per-item decision actions (only available during item_checked) ----
   const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
     if (actionKey === 'reject') {
       openRejectDialog({ type: 'item', itemIndex, item });
@@ -360,7 +377,9 @@ const AdminDetail = () => {
                 const customerPreferred = RESOLUTION_TO_ACTION[item.requestedResolution];
                 const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
                 const nextStatuses = ITEM_STATUS_FLOW[item.itemStatus] || [];
-                const isDecisionPoint = item.itemStatus === 'item_quality_check';
+                const isWarehouseInspection = item.itemStatus === 'item_quality_check';
+                const isDecisionPoint = item.itemStatus === 'item_checked';
+                const statusOwner = ITEM_STATUS_OWNER[item.itemStatus];
 
                 return (
                   <div key={index} className="rounded-xl border bg-card overflow-hidden">
@@ -371,12 +390,20 @@ const AdminDetail = () => {
                         <span className="text-sm font-semibold">{item.productName}</span>
                         <span className="text-xs text-muted-foreground">({item.quantity}×)</span>
                       </div>
-                      <span className={cn(
-                        'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold',
-                        ITEM_STATUS_COLORS[item.itemStatus] || 'bg-muted text-muted-foreground'
-                      )}>
-                        {COMPLAINT_ITEM_STATUS_LABELS[item.itemStatus] || 'Neznámy stav'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold',
+                          ITEM_STATUS_COLORS[item.itemStatus] || 'bg-muted text-muted-foreground'
+                        )}>
+                          {COMPLAINT_ITEM_STATUS_LABELS[item.itemStatus] || 'Neznámy stav'}
+                        </span>
+                        <span className={cn(
+                          'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                          statusOwner === 'sklad' ? 'bg-warning/15 text-warning border border-warning/30' : 'bg-info/15 text-info border border-info/30'
+                        )}>
+                          {statusOwner === 'sklad' ? 'Sklad' : 'Customer Care'}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="p-4 space-y-4">
@@ -424,6 +451,26 @@ const AdminDetail = () => {
                       )}
 
                       {/* Agent instructions for resolved items */}
+                      {/* Inspection result banner at item_checked */}
+                      {item.itemStatus === 'item_checked' && (() => {
+                        const lastAction = item.actionHistory?.[item.actionHistory.length - 1];
+                        const isNok = lastAction?.action === 'Kontrola NOK';
+                        return (
+                          <div className={cn('flex items-start gap-2.5 rounded-lg px-4 py-3',
+                            isNok ? 'bg-destructive/10 border border-destructive/30' : 'bg-primary/10 border border-primary/30'
+                          )}>
+                            <ClipboardCheck className={cn('h-4 w-4 shrink-0 mt-0.5', isNok ? 'text-destructive' : 'text-primary')} />
+                            <div>
+                              <p className={cn('text-xs font-semibold', isNok ? 'text-destructive' : 'text-primary')}>
+                                Výsledok kontroly: {isNok ? 'NOK – nezodpovedá' : 'OK – v poriadku'}
+                              </p>
+                              <p className={cn('text-xs', isNok ? 'text-destructive/80' : 'text-primary/80')}>
+                                Rozhodnutie je na Customer Care
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {item.itemStatus === 'item_approved' && (
                         <div className="flex items-start gap-2.5 rounded-lg bg-primary/10 border border-primary/30 px-4 py-3">
                           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
@@ -457,8 +504,8 @@ const AdminDetail = () => {
                         <div className="border-t pt-3 space-y-2">
                           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Akcie</p>
 
-                          {/* Warehouse flow transitions (non-decision statuses) */}
-                          {!isDecisionPoint && nextStatuses.length > 0 && (
+                          {/* Warehouse flow transitions (non-decision, non-inspection statuses) */}
+                          {!isDecisionPoint && !isWarehouseInspection && nextStatuses.length > 0 && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {nextStatuses.map(ns => (
                                 <button
@@ -469,6 +516,7 @@ const AdminDetail = () => {
                                   {ns === 'item_in_transit' && <Truck className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_received_warehouse' && <Warehouse className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_quality_check' && <ClipboardCheck className="h-4 w-4 shrink-0" />}
+                                  {ns === 'item_checked' && <ClipboardCheck className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_refunded' && <Banknote className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_completed' && <CheckCircle2 className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_approved' && <CheckCircle2 className="h-4 w-4 shrink-0" />}
@@ -478,7 +526,27 @@ const AdminDetail = () => {
                             </div>
                           )}
 
-                          {/* Decision actions at quality_check */}
+                          {/* Warehouse inspection actions (Kontrola OK / NOK) */}
+                          {isWarehouseInspection && (
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={() => handleWarehouseInspection(index, item, 'ok')}
+                                className="flex items-center gap-2 rounded-lg border border-primary bg-primary text-primary-foreground px-3 py-2.5 text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm w-full"
+                              >
+                                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                <span className="flex-1 text-left">Kontrola OK</span>
+                              </button>
+                              <button
+                                onClick={() => handleWarehouseInspection(index, item, 'nok')}
+                                className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 text-destructive px-3 py-2.5 text-sm font-semibold transition-all hover:bg-destructive/20 w-full"
+                              >
+                                <XCircle className="h-4 w-4 shrink-0" />
+                                <span className="flex-1 text-left">Kontrola NOK</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Decision actions at item_checked (CC decides) */}
                           {isDecisionPoint && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {ITEM_ACTIONS.map(action => {
