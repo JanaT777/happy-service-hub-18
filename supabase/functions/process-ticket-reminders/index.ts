@@ -6,11 +6,19 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const getReminder1Message = (ticketCode: string) =>
-  `Dobrý deň,\n\nchceli by sme Vás jemne upozorniť, že k Vašej požiadavke ${ticketCode} stále evidujeme nedoplnené informácie. Možno ste našu predchádzajúcu správu prehliadli – vôbec nič sa nedeje, stačí nám odpovedať.\n\nAby sme mohli Vašu požiadavku posunúť ďalej, prosíme Vás o doplnenie požadovaných údajov. Stačí odpovedať na túto správu alebo sa prihlásiť do systému.\n\nAk si nie ste istí, čo presne potrebujeme, pokojne sa nám ozvite – radi Vám poradíme.\n\nĎakujeme a prajeme pekný deň!\nTím zákazníckej podpory`;
+const getReminder1Message = (ticketCode: string, missingInfo?: string) => {
+  const infoLine = missingInfo
+    ? `\n\nKonkrétne od Vás potrebujeme: ${missingInfo}\n`
+    : '';
+  return `Dobrý deň,\n\nchceli by sme Vás jemne upozorniť, že k Vašej požiadavke ${ticketCode} stále evidujeme nedoplnené informácie. Možno ste našu predchádzajúcu správu prehliadli – vôbec nič sa nedeje.${infoLine}\n\n👉 Doplniť informácie k požiadavke\n\nStačí odpovedať na túto správu alebo sa prihlásiť do systému a doplniť požadované údaje. Ak si nie ste istí, čo presne potrebujeme, pokojne sa nám ozvite – radi Vám poradíme.\n\nĎakujeme a prajeme pekný deň!\nTím zákazníckej podpory`;
+};
 
-const getReminder2Message = (ticketCode: string) =>
-  `Dobrý deň,\n\noznámujeme sa Vám opätovne ohľadom Vašej požiadavky ${ticketCode}. Bohužiaľ, bez doplnenia požadovaných informácií nemôžeme vo vybavovaní pokračovať.\n\nAk nedostaneme Vašu odpoveď v najbližších dňoch, budeme nútení Vašu požiadavku dočasne pozastaviť. Samozrejme, kedykoľvek ju budete môcť obnoviť.\n\nProsíme, doplňte chýbajúce údaje čo najskôr – chceme Vašu záležitosť vyriešiť a nechceme, aby zostala bez povšimnutia.\n\nV prípade akýchkoľvek otázok sme tu pre Vás.\n\nS pozdravom,\nTím zákazníckej podpory`;
+const getReminder2Message = (ticketCode: string, missingInfo?: string) => {
+  const infoLine = missingInfo
+    ? `\n\nČo od Vás potrebujeme: ${missingInfo}\n`
+    : '';
+  return `Dobrý deň,\n\nozývame sa Vám opätovne ohľadom Vašej požiadavky ${ticketCode}. Bez doplnenia chýbajúcich informácií nebudeme vedieť pokračovať v doriešení Vášho podnetu.${infoLine}\n\n👉 Doplniť informácie k požiadavke\n\nAk v najbližších dňoch nedostaneme Vašu odpoveď, Vašu požiadavku dočasne pozastavíme – samozrejme, kedykoľvek ju budete môcť obnoviť.\n\nSme tu pre Vás, ak máte akékoľvek otázky.\n\nS pozdravom,\nTím zákazníckej podpory`;
+};
 
 const HOURS_48 = 48 * 60 * 60 * 1000;
 const HOURS_96 = 96 * 60 * 60 * 1000;
@@ -72,7 +80,7 @@ Deno.serve(async (req) => {
           ticket_id: ticket.id,
           ticket_code: ticket.ticket_code,
           reminder_number: reminderNumber,
-          message: getReminder2Message(ticket.ticket_code),
+          message: getReminder2Message(ticket.ticket_code, ticket.needs_info_message),
         });
 
         // Update ticket
@@ -99,7 +107,7 @@ Deno.serve(async (req) => {
           ticket_id: ticket.id,
           ticket_code: ticket.ticket_code,
           reminder_number: reminderNumber,
-          message: getReminder1Message(ticket.ticket_code),
+          message: getReminder1Message(ticket.ticket_code, ticket.needs_info_message),
         });
 
         // Update ticket
