@@ -18,7 +18,7 @@ import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 
-const ALL_STATUSES: TicketStatus[] = ['new', 'in_review', 'needs_info', 'approved', 'rejected', 'refund_processing', 'completed'];
+const ALL_STATUSES: TicketStatus[] = ['new', 'in_review', 'needs_info', 'suspended', 'approved', 'rejected', 'refund_processing', 'completed'];
 const ALL_REQUEST_TYPES: RequestType[] = ['return', 'complaint', 'other'];
 const ALL_COMPLAINT_TYPES: ComplaintType[] = ['damaged_in_transport', 'not_delivered', 'wrong_title', 'manufacturing_defect', 'wrong_quantity'];
 

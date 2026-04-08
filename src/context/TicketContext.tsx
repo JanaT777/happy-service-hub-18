@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest } from '@/types/ticket';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -177,7 +177,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const requestInfo = useCallback((id: string, message: string, internalNote?: string) => {
     const now = new Date().toISOString();
-    const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent' };
+    const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent', remindersSent: 0, reminders: [] };
     setTickets(prev => prev.map(t => {
       if (t.id !== id) return t;
       const updates: Partial<Ticket> = {
@@ -205,6 +205,79 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
       return { ...t, ...updates };
     }));
+  }, []);
+
+  // ---- Automatic reminder lifecycle ----
+  // For demo: 48h = 48*3600*1000, 96h = 96*3600*1000, 7 days = 7*24*3600*1000
+  const REMINDER_1_MS = 48 * 60 * 60 * 1000;
+  const REMINDER_2_MS = 96 * 60 * 60 * 1000;
+  const SUSPEND_MS = 7 * 24 * 60 * 60 * 1000;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTickets(prev => {
+        let changed = false;
+        const updated = prev.map(t => {
+          if (t.status !== 'needs_info') return t;
+          const reqs = t.infoRequests;
+          if (!reqs || reqs.length === 0) return t;
+          const lastReq = reqs[reqs.length - 1];
+          if (lastReq.resolvedAt) return t; // already resolved
+
+          const elapsed = Date.now() - new Date(lastReq.requestedAt).getTime();
+          const remindersSent = lastReq.remindersSent || 0;
+
+          // Suspend after 7 days
+          if (elapsed >= SUSPEND_MS) {
+            changed = true;
+            return {
+              ...t,
+              status: 'suspended' as TicketStatus,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+
+          // Send reminder 2 after 96h
+          if (remindersSent < 2 && elapsed >= REMINDER_2_MS) {
+            changed = true;
+            const now = new Date().toISOString();
+            const reminder: ReminderLog = {
+              sentAt: now,
+              reminderNumber: 2,
+              message: 'Stále čakáme na doplnenie informácií k vašej požiadavke. Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.',
+            };
+            const updatedReq = { ...lastReq, remindersSent: 2, lastReminderAt: now, reminders: [...(lastReq.reminders || []), reminder] };
+            return {
+              ...t,
+              infoRequests: [...reqs.slice(0, -1), updatedReq],
+              updatedAt: now,
+            };
+          }
+
+          // Send reminder 1 after 48h
+          if (remindersSent < 1 && elapsed >= REMINDER_1_MS) {
+            changed = true;
+            const now = new Date().toISOString();
+            const reminder: ReminderLog = {
+              sentAt: now,
+              reminderNumber: 1,
+              message: 'Stále čakáme na doplnenie informácií k vašej požiadavke. Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.',
+            };
+            const updatedReq = { ...lastReq, remindersSent: 1, lastReminderAt: now, reminders: [...(lastReq.reminders || []), reminder] };
+            return {
+              ...t,
+              infoRequests: [...reqs.slice(0, -1), updatedReq],
+              updatedAt: now,
+            };
+          }
+
+          return t;
+        });
+        return changed ? updated : prev;
+      });
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);

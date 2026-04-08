@@ -271,7 +271,7 @@ const TrackRequest = () => {
                       {/* Current status highlight */}
                       <div className={cn(
                         'rounded-lg border p-4',
-                        ticket.status === 'needs_info'
+                        ticket.status === 'needs_info' || ticket.status === 'suspended'
                           ? 'bg-warning/10 border-warning/30'
                           : 'bg-primary/5 border-primary/20'
                       )}>
@@ -281,15 +281,17 @@ const TrackRequest = () => {
                         </div>
                         <p className={cn(
                           'text-lg font-bold',
-                          ticket.status === 'needs_info' ? 'text-warning' : 'text-primary'
+                          (ticket.status === 'needs_info' || ticket.status === 'suspended') ? 'text-warning' : 'text-primary'
                         )}>
-                          {ticket.requestType === 'complaint' && ticket.complaintStatus
-                            ? COMPLAINT_STATUS_LABELS[ticket.complaintStatus]
-                            : ticket.requestType === 'return' && ticket.returnStatus
-                              ? RETURN_STATUS_LABELS[ticket.returnStatus]
-                              : ticket.requestType === 'other' && ticket.otherStatus
-                                ? OTHER_STATUS_LABELS[ticket.otherStatus]
-                                : 'Nový'}
+                          {ticket.status === 'suspended'
+                            ? 'Pozastavené – čaká sa na doplnenie'
+                            : ticket.requestType === 'complaint' && ticket.complaintStatus
+                              ? COMPLAINT_STATUS_LABELS[ticket.complaintStatus]
+                              : ticket.requestType === 'return' && ticket.returnStatus
+                                ? RETURN_STATUS_LABELS[ticket.returnStatus]
+                                : ticket.requestType === 'other' && ticket.otherStatus
+                                  ? OTHER_STATUS_LABELS[ticket.otherStatus]
+                                  : 'Nový'}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           Aktualizované {formatDistanceToNow(new Date(ticket.updatedAt), { addSuffix: true, locale: sk })}
@@ -297,14 +299,20 @@ const TrackRequest = () => {
                       </div>
 
                       {/* Info request alert for customer */}
-                      {ticket.status === 'needs_info' && ticket.infoRequests && ticket.infoRequests.length > 0 && (
+                      {(ticket.status === 'needs_info' || ticket.status === 'suspended') && ticket.infoRequests && ticket.infoRequests.length > 0 && (
                         <div className="rounded-lg border-2 border-warning/40 bg-warning/10 p-4 space-y-3">
                           <div className="flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
-                            <p className="text-sm font-semibold text-warning">Čakáme na doplnenie informácií</p>
+                            <p className="text-sm font-semibold text-warning">
+                              {ticket.status === 'suspended'
+                                ? 'Vaša požiadavka bola pozastavená'
+                                : 'Čakáme na doplnenie informácií'}
+                            </p>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.
+                            {ticket.status === 'suspended'
+                              ? 'Vaša požiadavka bola pozastavená z dôvodu chýbajúcich informácií. Prosíme, kontaktujte nás čo najskôr.'
+                              : 'Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.'}
                           </p>
                           <div className="rounded-lg border border-warning/20 bg-card p-3">
                             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Požadované informácie</p>

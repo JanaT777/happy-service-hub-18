@@ -9,6 +9,7 @@ const statusStyles: Record<TicketStatus, string> = {
   rejected: 'bg-destructive/15 text-destructive border-destructive/30',
   refund_processing: 'bg-primary/15 text-primary border-primary/30',
   completed: 'bg-muted text-muted-foreground border-border',
+  suspended: 'bg-warning/20 text-warning border-warning/40',
 };
 
 export const StatusBadge = ({ status }: { status: TicketStatus }) => (
