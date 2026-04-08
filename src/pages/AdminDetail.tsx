@@ -149,10 +149,26 @@ const AdminDetail = () => {
   const handleItemStatusTransition = (itemIndex: number, item: ComplaintItem, newStatus: ComplaintItemStatus) => {
     const label = COMPLAINT_ITEM_STATUS_LABELS[newStatus];
     updateComplaintItemStatus(ticket.id, itemIndex, newStatus, label);
+    // Auto-reassign based on new status owner
+    const newOwner = ITEM_STATUS_OWNER[newStatus];
+    if (newOwner && ticket.assignedTo !== newOwner) {
+      updateAssignment(ticket.id, newOwner);
+    }
     toast.success(`${item.productName}: ${label}`);
   };
 
-  // ---- Per-item decision actions (only available during quality_check) ----
+  // Warehouse inspection result actions
+  const handleWarehouseInspection = (itemIndex: number, item: ComplaintItem, result: 'ok' | 'nok') => {
+    const actionLabel = result === 'ok' ? 'Kontrola OK' : 'Kontrola NOK';
+    updateComplaintItemStatus(ticket.id, itemIndex, 'item_checked', actionLabel);
+    // Auto-reassign to Customer Care
+    if (ticket.assignedTo !== 'customer_care') {
+      updateAssignment(ticket.id, 'customer_care');
+    }
+    toast.success(`${item.productName}: ${actionLabel} – pridelené Customer Care`);
+  };
+
+  // ---- Per-item decision actions (only available during item_checked) ----
   const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
     if (actionKey === 'reject') {
       openRejectDialog({ type: 'item', itemIndex, item });
