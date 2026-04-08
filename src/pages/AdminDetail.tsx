@@ -152,6 +152,13 @@ const AdminDetail = () => {
 
   // ---- Per-item status transition ----
   const handleItemStatusTransition = (itemIndex: number, item: ComplaintItem, newStatus: ComplaintItemStatus) => {
+    // Intercept "Vrátené na sklad" to require warehouse receipt date
+    if (newStatus === 'item_received_warehouse') {
+      setPendingWarehouseItem({ itemIndex, item });
+      setWarehouseReceiptDate(undefined);
+      setWarehouseReceiptDialogOpen(true);
+      return;
+    }
     const label = COMPLAINT_ITEM_STATUS_LABELS[newStatus];
     updateComplaintItemStatus(ticket.id, itemIndex, newStatus, label);
     // Auto-reassign based on new status owner
@@ -160,6 +167,24 @@ const AdminDetail = () => {
       updateAssignment(ticket.id, newOwner);
     }
     toast.success(`${item.productName}: ${label}`);
+  };
+
+  const confirmWarehouseReceipt = () => {
+    if (!pendingWarehouseItem || !warehouseReceiptDate) return;
+    const { itemIndex, item } = pendingWarehouseItem;
+    const dateStr = warehouseReceiptDate.toISOString();
+    // Store receipt date on ticket
+    setWarehouseReceipt(ticket.id, dateStr, 'Agent');
+    // Transition item status
+    const label = COMPLAINT_ITEM_STATUS_LABELS['item_received_warehouse'];
+    updateComplaintItemStatus(ticket.id, itemIndex, 'item_received_warehouse', label);
+    const newOwner = ITEM_STATUS_OWNER['item_received_warehouse'];
+    if (newOwner && ticket.assignedTo !== newOwner) {
+      updateAssignment(ticket.id, newOwner);
+    }
+    toast.success(`${item.productName}: ${label}`);
+    setWarehouseReceiptDialogOpen(false);
+    setPendingWarehouseItem(null);
   };
 
   // Warehouse inspection result actions
