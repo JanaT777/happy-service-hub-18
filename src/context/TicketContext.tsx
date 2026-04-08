@@ -290,34 +290,46 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const requestInfo = useCallback((id: string, message: string, internalNote?: string) => {
     const now = new Date().toISOString();
     const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent', remindersSent: 0, reminders: [] };
-    setTickets(prev => prev.map(t => {
-      if (t.id !== id) return t;
-      const updates: Partial<Ticket> = {
-        infoRequests: [...(t.infoRequests || []), entry],
-        status: 'needs_info' as TicketStatus,
-        updatedAt: now,
-      };
-      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
-      return { ...t, ...updates };
-    }));
-  }, []);
+    setTickets(prev => {
+      const updated = prev.map(t => {
+        if (t.id !== id) return t;
+        const updates: Partial<Ticket> = {
+          infoRequests: [...(t.infoRequests || []), entry],
+          status: 'needs_info' as TicketStatus,
+          updatedAt: now,
+        };
+        if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
+        const updatedTicket = { ...t, ...updates };
+        // Sync to DB for cron-based reminders
+        syncTicketToDb(updatedTicket);
+        return updatedTicket;
+      });
+      return updated;
+    });
+  }, [syncTicketToDb]);
 
   const markInfoProvided = useCallback((id: string) => {
     const now = new Date().toISOString();
-    setTickets(prev => prev.map(t => {
-      if (t.id !== id) return t;
-      const updatedRequests = (t.infoRequests || []).map((r, i, arr) =>
-        i === arr.length - 1 && !r.resolvedAt ? { ...r, resolvedAt: now } : r
-      );
-      const updates: Partial<Ticket> = {
-        infoRequests: updatedRequests,
-        status: 'in_review' as TicketStatus,
-        updatedAt: now,
-      };
-      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
-      return { ...t, ...updates };
-    }));
-  }, []);
+    setTickets(prev => {
+      const updated = prev.map(t => {
+        if (t.id !== id) return t;
+        const updatedRequests = (t.infoRequests || []).map((r, i, arr) =>
+          i === arr.length - 1 && !r.resolvedAt ? { ...r, resolvedAt: now } : r
+        );
+        const updates: Partial<Ticket> = {
+          infoRequests: updatedRequests,
+          status: 'in_review' as TicketStatus,
+          updatedAt: now,
+        };
+        if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
+        const updatedTicket = { ...t, ...updates };
+        // Sync status change to DB (clears needs_info_since)
+        syncTicketToDb(updatedTicket);
+        return updatedTicket;
+      });
+      return updated;
+    });
+  }, [syncTicketToDb]);
 
   // ---- Automatic reminder lifecycle ----
   // For demo: 48h = 48*3600*1000, 96h = 96*3600*1000, 7 days = 7*24*3600*1000
