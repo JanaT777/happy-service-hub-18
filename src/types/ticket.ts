@@ -1,6 +1,6 @@
 export type RequestType = 'return' | 'complaint' | 'other';
 
-export type TicketStatus = 'new' | 'in_review' | 'needs_info' | 'approved' | 'rejected' | 'refund_processing' | 'completed';
+export type TicketStatus = 'new' | 'in_review' | 'needs_info' | 'approved' | 'rejected' | 'refund_processing' | 'completed' | 'suspended';
 
 export type ComplaintStatus =
   | 'complaint_new'
@@ -153,12 +153,21 @@ export interface WarehouseReceiptAudit {
   recordedAt: string;
 }
 
+export interface ReminderLog {
+  sentAt: string;
+  reminderNumber: number;
+  message: string;
+}
+
 export interface InfoRequest {
   message: string;
   internalNote?: string;
   requestedAt: string;
   requestedBy: string;
   resolvedAt?: string;
+  remindersSent: number;
+  lastReminderAt?: string;
+  reminders?: ReminderLog[];
 }
 
 export interface Ticket {
