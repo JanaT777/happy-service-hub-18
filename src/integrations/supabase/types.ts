@@ -51,49 +51,106 @@ export type Database = {
       }
       tickets: {
         Row: {
+          assigned_to: string | null
+          attachments: Json | null
+          complaint_items: Json | null
+          complaint_status: string | null
           created_at: string
+          created_by: string | null
           customer_email: string
           description: string | null
+          iban: string | null
           id: string
+          info_requests: Json | null
+          issue_type: string | null
           last_reminder_at: string | null
           needs_info_message: string | null
           needs_info_since: string | null
           order_number: string | null
+          other_status: string | null
+          other_subtype: string | null
+          product: string | null
+          refund_method: string | null
           reminders_sent: number
           request_type: string
+          requested_resolution: string | null
+          return_items: Json | null
+          return_status: string | null
+          severity: string | null
           status: string
+          suggested_solution: string | null
           ticket_code: string
           updated_at: string
+          warehouse_receipt: Json | null
+          within_return_window: boolean | null
         }
         Insert: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          complaint_items?: Json | null
+          complaint_status?: string | null
           created_at?: string
+          created_by?: string | null
           customer_email: string
           description?: string | null
+          iban?: string | null
           id?: string
+          info_requests?: Json | null
+          issue_type?: string | null
           last_reminder_at?: string | null
           needs_info_message?: string | null
           needs_info_since?: string | null
           order_number?: string | null
+          other_status?: string | null
+          other_subtype?: string | null
+          product?: string | null
+          refund_method?: string | null
           reminders_sent?: number
           request_type?: string
+          requested_resolution?: string | null
+          return_items?: Json | null
+          return_status?: string | null
+          severity?: string | null
           status?: string
+          suggested_solution?: string | null
           ticket_code: string
           updated_at?: string
+          warehouse_receipt?: Json | null
+          within_return_window?: boolean | null
         }
         Update: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          complaint_items?: Json | null
+          complaint_status?: string | null
           created_at?: string
+          created_by?: string | null
           customer_email?: string
           description?: string | null
+          iban?: string | null
           id?: string
+          info_requests?: Json | null
+          issue_type?: string | null
           last_reminder_at?: string | null
           needs_info_message?: string | null
           needs_info_since?: string | null
           order_number?: string | null
+          other_status?: string | null
+          other_subtype?: string | null
+          product?: string | null
+          refund_method?: string | null
           reminders_sent?: number
           request_type?: string
+          requested_resolution?: string | null
+          return_items?: Json | null
+          return_status?: string | null
+          severity?: string | null
           status?: string
+          suggested_solution?: string | null
           ticket_code?: string
           updated_at?: string
+          warehouse_receipt?: Json | null
+          within_return_window?: boolean | null
         }
         Relationships: []
       }

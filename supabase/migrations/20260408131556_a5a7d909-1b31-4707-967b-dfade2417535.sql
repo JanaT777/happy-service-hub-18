@@ -1,0 +1,21 @@
+
+ALTER TABLE public.tickets
+  ADD COLUMN IF NOT EXISTS product text,
+  ADD COLUMN IF NOT EXISTS attachments jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS issue_type text,
+  ADD COLUMN IF NOT EXISTS severity text,
+  ADD COLUMN IF NOT EXISTS suggested_solution text,
+  ADD COLUMN IF NOT EXISTS requested_resolution text,
+  ADD COLUMN IF NOT EXISTS complaint_items jsonb,
+  ADD COLUMN IF NOT EXISTS complaint_status text,
+  ADD COLUMN IF NOT EXISTS return_items jsonb,
+  ADD COLUMN IF NOT EXISTS return_status text,
+  ADD COLUMN IF NOT EXISTS refund_method text,
+  ADD COLUMN IF NOT EXISTS iban text,
+  ADD COLUMN IF NOT EXISTS within_return_window boolean,
+  ADD COLUMN IF NOT EXISTS other_status text,
+  ADD COLUMN IF NOT EXISTS other_subtype text,
+  ADD COLUMN IF NOT EXISTS assigned_to text DEFAULT 'customer_care',
+  ADD COLUMN IF NOT EXISTS warehouse_receipt jsonb,
+  ADD COLUMN IF NOT EXISTS info_requests jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS created_by text;
