@@ -175,10 +175,42 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     ));
   }, []);
 
+  const requestInfo = useCallback((id: string, message: string, internalNote?: string) => {
+    const now = new Date().toISOString();
+    const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent' };
+    setTickets(prev => prev.map(t => {
+      if (t.id !== id) return t;
+      const updates: Partial<Ticket> = {
+        infoRequests: [...(t.infoRequests || []), entry],
+        status: 'needs_info' as TicketStatus,
+        updatedAt: now,
+      };
+      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
+      return { ...t, ...updates };
+    }));
+  }, []);
+
+  const markInfoProvided = useCallback((id: string) => {
+    const now = new Date().toISOString();
+    setTickets(prev => prev.map(t => {
+      if (t.id !== id) return t;
+      const updatedRequests = (t.infoRequests || []).map((r, i, arr) =>
+        i === arr.length - 1 && !r.resolvedAt ? { ...r, resolvedAt: now } : r
+      );
+      const updates: Partial<Ticket> = {
+        infoRequests: updatedRequests,
+        status: 'in_review' as TicketStatus,
+        updatedAt: now,
+      };
+      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
+      return { ...t, ...updates };
+    }));
+  }, []);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, getTicket }}>
+    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, getTicket }}>
       {children}
     </TicketContext.Provider>
   );
