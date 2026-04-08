@@ -758,7 +758,6 @@ const AdminDetail = () => {
             >
               {rejectButtonLocked ? 'Počkajte...' : 'Áno, som si istý – Zamietnuť'}
             </Button>
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
