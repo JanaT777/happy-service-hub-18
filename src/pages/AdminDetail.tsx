@@ -248,6 +248,13 @@ const AdminDetail = () => {
   };
 
   const handleReturnNext = (ns: ReturnStatus) => {
+    // Intercept "return_received" to require warehouse receipt date
+    if (ns === 'return_received') {
+      setPendingReturnReceived(true);
+      setWarehouseReceiptDate(undefined);
+      setWarehouseReceiptDialogOpen(true);
+      return;
+    }
     updateReturnStatus(ticket.id, ns);
     if (ns === 'return_refund_processing') updateTicketStatus(ticket.id, 'refund_processing');
     if (ns === 'return_completed') updateTicketStatus(ticket.id, 'completed');
