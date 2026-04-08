@@ -103,10 +103,11 @@ export const OtherRequestForm = ({ onBack, onSubmit, createdBy }: Props) => {
       requestType: 'other',
       otherSubtype: subtype || undefined,
       ...(createdBy ? { createdBy } : {}),
+    }).then(() => {
+      toast.success('Požiadavka bola odoslaná!');
+      setSubmitting(false);
+      onSubmit();
     });
-    toast.success('Požiadavka bola odoslaná!');
-    setSubmitting(false);
-    onSubmit();
   };
 
   const inputClass = (field: string) =>
