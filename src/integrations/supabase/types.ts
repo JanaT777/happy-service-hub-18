@@ -14,7 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ticket_reminder_log: {
+        Row: {
+          id: string
+          message: string
+          reminder_number: number
+          sent_at: string
+          ticket_code: string
+          ticket_id: string
+        }
+        Insert: {
+          id?: string
+          message: string
+          reminder_number: number
+          sent_at?: string
+          ticket_code: string
+          ticket_id: string
+        }
+        Update: {
+          id?: string
+          message?: string
+          reminder_number?: number
+          sent_at?: string
+          ticket_code?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_reminder_log_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          created_at: string
+          customer_email: string
+          description: string | null
+          id: string
+          last_reminder_at: string | null
+          needs_info_message: string | null
+          needs_info_since: string | null
+          order_number: string | null
+          reminders_sent: number
+          request_type: string
+          status: string
+          ticket_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          description?: string | null
+          id?: string
+          last_reminder_at?: string | null
+          needs_info_message?: string | null
+          needs_info_since?: string | null
+          order_number?: string | null
+          reminders_sent?: number
+          request_type?: string
+          status?: string
+          ticket_code: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          description?: string | null
+          id?: string
+          last_reminder_at?: string | null
+          needs_info_message?: string | null
+          needs_info_since?: string | null
+          order_number?: string | null
+          reminders_sent?: number
+          request_type?: string
+          status?: string
+          ticket_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

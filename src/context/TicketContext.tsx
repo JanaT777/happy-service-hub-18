@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog } from '@/types/ticket';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -85,6 +86,114 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return items.map(item => ({ ...item, itemStatus: 'item_new' as ComplaintItemStatus }));
   };
 
+  // Sync ticket to DB (upsert for reminder tracking)
+  const syncTicketToDb = useCallback(async (ticket: Ticket) => {
+    try {
+      await supabase.from('tickets').upsert({
+        ticket_code: ticket.id,
+        customer_email: ticket.customerEmail,
+        order_number: ticket.orderNumber,
+        status: ticket.status,
+        request_type: ticket.requestType,
+        description: ticket.description,
+        needs_info_since: ticket.status === 'needs_info' && ticket.infoRequests?.length
+          ? ticket.infoRequests[ticket.infoRequests.length - 1].requestedAt
+          : null,
+        needs_info_message: ticket.status === 'needs_info' && ticket.infoRequests?.length
+          ? ticket.infoRequests[ticket.infoRequests.length - 1].message
+          : null,
+        reminders_sent: ticket.status === 'needs_info' && ticket.infoRequests?.length
+          ? (ticket.infoRequests[ticket.infoRequests.length - 1].remindersSent || 0)
+          : 0,
+        updated_at: ticket.updatedAt,
+      }, { onConflict: 'ticket_code' } as any);
+    } catch (e) {
+      console.error('Failed to sync ticket to DB:', e);
+    }
+  }, []);
+
+  // Fetch reminder logs from DB for a ticket
+  const fetchDbReminders = useCallback(async (ticketCode: string): Promise<ReminderLog[]> => {
+    try {
+      const { data } = await supabase
+        .from('ticket_reminder_log')
+        .select('*')
+        .eq('ticket_code', ticketCode)
+        .order('sent_at', { ascending: true });
+      return (data || []).map((r: any) => ({
+        sentAt: r.sent_at,
+        reminderNumber: r.reminder_number,
+        message: r.message,
+      }));
+    } catch {
+      return [];
+    }
+  }, []);
+
+  // Poll DB for reminder updates every 30s
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      setTickets(prev => {
+        // Check each needs_info ticket for DB updates
+        prev.forEach(async (t) => {
+          if (t.status !== 'needs_info' && t.status !== 'suspended') return;
+          try {
+            const { data: dbTicket } = await supabase
+              .from('tickets')
+              .select('*')
+              .eq('ticket_code', t.id)
+              .single();
+            if (!dbTicket) return;
+
+            const dbReminders = await fetchDbReminders(t.id);
+            
+            // Update local state if DB has newer data
+            if (dbTicket.status === 'suspended' && t.status !== 'suspended') {
+              setTickets(p => p.map(ticket => {
+                if (ticket.id !== t.id) return ticket;
+                const lastReq = ticket.infoRequests?.[ticket.infoRequests.length - 1];
+                if (!lastReq) return { ...ticket, status: 'suspended' as TicketStatus, updatedAt: dbTicket.updated_at };
+                const updatedReq = {
+                  ...lastReq,
+                  remindersSent: dbTicket.reminders_sent,
+                  lastReminderAt: dbTicket.last_reminder_at,
+                  reminders: dbReminders,
+                };
+                return {
+                  ...ticket,
+                  status: 'suspended' as TicketStatus,
+                  infoRequests: [...(ticket.infoRequests?.slice(0, -1) || []), updatedReq],
+                  updatedAt: dbTicket.updated_at,
+                };
+              }));
+            } else if (dbTicket.reminders_sent > (t.infoRequests?.[t.infoRequests.length - 1]?.remindersSent || 0)) {
+              setTickets(p => p.map(ticket => {
+                if (ticket.id !== t.id) return ticket;
+                const lastReq = ticket.infoRequests?.[ticket.infoRequests.length - 1];
+                if (!lastReq) return ticket;
+                const updatedReq = {
+                  ...lastReq,
+                  remindersSent: dbTicket.reminders_sent,
+                  lastReminderAt: dbTicket.last_reminder_at,
+                  reminders: dbReminders,
+                };
+                return {
+                  ...ticket,
+                  infoRequests: [...(ticket.infoRequests?.slice(0, -1) || []), updatedReq],
+                  updatedAt: dbTicket.updated_at,
+                };
+              }));
+            }
+          } catch (e) {
+            console.error('Poll error:', e);
+          }
+        });
+        return prev;
+      });
+    }, 30000);
+    return () => clearInterval(pollInterval);
+  }, [fetchDbReminders]);
+
   const addTicket = useCallback((data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>): string => {
     const now = new Date().toISOString();
     const ticketId = `TK-${generateId()}`;
@@ -93,7 +202,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       : data.complaintItems;
 
     const assignedTo = data.assignedTo || getAutoAssignment(data);
-    setTickets(prev => [{
+    const newTicket: Ticket = {
       ...data,
       id: ticketId,
       status: 'new' as TicketStatus,
@@ -104,9 +213,12 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       assignedTo,
       createdAt: now,
       updatedAt: now,
-    }, ...prev]);
+    };
+    setTickets(prev => [newTicket, ...prev]);
+    // Sync to DB
+    syncTicketToDb(newTicket);
     return ticketId;
-  }, []);
+  }, [syncTicketToDb]);
 
   const updateTicketStatus = useCallback((id: string, status: TicketStatus) => {
     setTickets(prev => prev.map(t =>
@@ -178,107 +290,49 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const requestInfo = useCallback((id: string, message: string, internalNote?: string) => {
     const now = new Date().toISOString();
     const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent', remindersSent: 0, reminders: [] };
-    setTickets(prev => prev.map(t => {
-      if (t.id !== id) return t;
-      const updates: Partial<Ticket> = {
-        infoRequests: [...(t.infoRequests || []), entry],
-        status: 'needs_info' as TicketStatus,
-        updatedAt: now,
-      };
-      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
-      return { ...t, ...updates };
-    }));
-  }, []);
+    setTickets(prev => {
+      const updated = prev.map(t => {
+        if (t.id !== id) return t;
+        const updates: Partial<Ticket> = {
+          infoRequests: [...(t.infoRequests || []), entry],
+          status: 'needs_info' as TicketStatus,
+          updatedAt: now,
+        };
+        if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
+        const updatedTicket = { ...t, ...updates };
+        // Sync to DB for cron-based reminders
+        syncTicketToDb(updatedTicket);
+        return updatedTicket;
+      });
+      return updated;
+    });
+  }, [syncTicketToDb]);
 
   const markInfoProvided = useCallback((id: string) => {
     const now = new Date().toISOString();
-    setTickets(prev => prev.map(t => {
-      if (t.id !== id) return t;
-      const updatedRequests = (t.infoRequests || []).map((r, i, arr) =>
-        i === arr.length - 1 && !r.resolvedAt ? { ...r, resolvedAt: now } : r
-      );
-      const updates: Partial<Ticket> = {
-        infoRequests: updatedRequests,
-        status: 'in_review' as TicketStatus,
-        updatedAt: now,
-      };
-      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
-      return { ...t, ...updates };
-    }));
-  }, []);
-
-  // ---- Automatic reminder lifecycle ----
-  // For demo: 48h = 48*3600*1000, 96h = 96*3600*1000, 7 days = 7*24*3600*1000
-  const REMINDER_1_MS = 48 * 60 * 60 * 1000;
-  const REMINDER_2_MS = 96 * 60 * 60 * 1000;
-  const SUSPEND_MS = 7 * 24 * 60 * 60 * 1000;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTickets(prev => {
-        let changed = false;
-        const updated = prev.map(t => {
-          if (t.status !== 'needs_info') return t;
-          const reqs = t.infoRequests;
-          if (!reqs || reqs.length === 0) return t;
-          const lastReq = reqs[reqs.length - 1];
-          if (lastReq.resolvedAt) return t; // already resolved
-
-          const elapsed = Date.now() - new Date(lastReq.requestedAt).getTime();
-          const remindersSent = lastReq.remindersSent || 0;
-
-          // Suspend after 7 days
-          if (elapsed >= SUSPEND_MS) {
-            changed = true;
-            return {
-              ...t,
-              status: 'suspended' as TicketStatus,
-              updatedAt: new Date().toISOString(),
-            };
-          }
-
-          // Send reminder 2 after 96h
-          if (remindersSent < 2 && elapsed >= REMINDER_2_MS) {
-            changed = true;
-            const now = new Date().toISOString();
-            const reminder: ReminderLog = {
-              sentAt: now,
-              reminderNumber: 2,
-              message: 'Stále čakáme na doplnenie informácií k vašej požiadavke. Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.',
-            };
-            const updatedReq = { ...lastReq, remindersSent: 2, lastReminderAt: now, reminders: [...(lastReq.reminders || []), reminder] };
-            return {
-              ...t,
-              infoRequests: [...reqs.slice(0, -1), updatedReq],
-              updatedAt: now,
-            };
-          }
-
-          // Send reminder 1 after 48h
-          if (remindersSent < 1 && elapsed >= REMINDER_1_MS) {
-            changed = true;
-            const now = new Date().toISOString();
-            const reminder: ReminderLog = {
-              sentAt: now,
-              reminderNumber: 1,
-              message: 'Stále čakáme na doplnenie informácií k vašej požiadavke. Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.',
-            };
-            const updatedReq = { ...lastReq, remindersSent: 1, lastReminderAt: now, reminders: [...(lastReq.reminders || []), reminder] };
-            return {
-              ...t,
-              infoRequests: [...reqs.slice(0, -1), updatedReq],
-              updatedAt: now,
-            };
-          }
-
-          return t;
-        });
-        return changed ? updated : prev;
+    setTickets(prev => {
+      const updated = prev.map(t => {
+        if (t.id !== id) return t;
+        const updatedRequests = (t.infoRequests || []).map((r, i, arr) =>
+          i === arr.length - 1 && !r.resolvedAt ? { ...r, resolvedAt: now } : r
+        );
+        const updates: Partial<Ticket> = {
+          infoRequests: updatedRequests,
+          status: 'in_review' as TicketStatus,
+          updatedAt: now,
+        };
+        if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
+        const updatedTicket = { ...t, ...updates };
+        // Sync status change to DB (clears needs_info_since)
+        syncTicketToDb(updatedTicket);
+        return updatedTicket;
       });
-    }, 60000); // Check every minute
+      return updated;
+    });
+  }, [syncTicketToDb]);
 
-    return () => clearInterval(interval);
-  }, []);
+  // Reminders are now handled by the server-side cron job (process-ticket-reminders).
+  // The polling useEffect above syncs DB reminder state back to the frontend.
 
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
