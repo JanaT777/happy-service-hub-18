@@ -708,6 +708,55 @@ const AdminDetail = () => {
           </div>
         </div>
       </div>
+      {/* Reject confirmation dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Zamietnuť reklamáciu</DialogTitle>
+            <DialogDescription className="text-sm">
+              Naozaj chceš zamietnuť túto reklamáciu? Tento krok je nezvratný a okamžite sa zobrazí zákazníkovi.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="reject-reason" className="text-sm font-medium">
+                Dôvod zamietnutia <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="reject-reason"
+                placeholder="Zadajte dôvod zamietnutia..."
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reject-note" className="text-sm font-medium text-muted-foreground">
+                Interná poznámka <span className="text-muted-foreground text-xs">(nepovinné)</span>
+              </Label>
+              <Textarea
+                id="reject-note"
+                placeholder="Interná poznámka pre tím..."
+                value={rejectNote}
+                onChange={e => setRejectNote(e.target.value)}
+                className="min-h-[60px]"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              Zrušiť
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!rejectReason.trim()}
+              onClick={confirmReject}
+            >
+              Áno, som si istý – Zamietnuť
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
