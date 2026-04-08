@@ -1027,6 +1027,80 @@ const AdminDetail = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Warehouse receipt date modal */}
+      <Dialog open={warehouseReceiptDialogOpen} onOpenChange={setWarehouseReceiptDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Warehouse className="h-5 w-5 text-primary" />
+              Vrátené na sklad
+            </DialogTitle>
+            <DialogDescription>
+              Zadajte dátum, kedy bola zásielka fyzicky prijatá na sklad. Tento údaj je povinný a bude použitý na výpočet zákonných lehôt.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                Dátum prijatia zásielky <span className="text-destructive">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !warehouseReceiptDate && 'text-muted-foreground'
+                    )}
+                  >
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {warehouseReceiptDate
+                      ? format(warehouseReceiptDate, 'd. MMMM yyyy', { locale: sk })
+                      : 'Vyberte dátum prijatia'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={warehouseReceiptDate}
+                    onSelect={setWarehouseReceiptDate}
+                    disabled={(date) => date > new Date()}
+                    initialFocus
+                    className={cn('p-3 pointer-events-auto')}
+                  />
+                </PopoverContent>
+              </Popover>
+              {!warehouseReceiptDate && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  Dátum je povinný pre pokračovanie
+                </p>
+              )}
+            </div>
+            {pendingWarehouseItem && (
+              <div className="rounded-lg bg-muted/50 border p-3 text-sm">
+                <span className="text-muted-foreground">Položka:</span>{' '}
+                <span className="font-semibold">{pendingWarehouseItem.item.productName}</span>
+                <span className="text-muted-foreground"> ({pendingWarehouseItem.item.quantity}×)</span>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => { setWarehouseReceiptDialogOpen(false); setPendingWarehouseItem(null); }}>
+              Zrušiť
+            </Button>
+            <Button
+              disabled={!warehouseReceiptDate}
+              onClick={confirmWarehouseReceipt}
+            >
+              <Warehouse className="h-4 w-4 mr-1" />
+              Potvrdiť prijatie
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
