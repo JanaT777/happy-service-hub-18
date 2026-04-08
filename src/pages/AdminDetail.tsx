@@ -553,26 +553,80 @@ const AdminDetail = () => {
         {/* ──── RIGHT: Sidebar ──── */}
         <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
 
-          {/* Waiting for info banner */}
-          {ticket.status === 'needs_info' && ticket.infoRequests && ticket.infoRequests.length > 0 && (
-            <div className="rounded-xl border-2 border-warning/40 bg-warning/10 p-5 space-y-4">
+          {/* Suspended banner */}
+          {ticket.status === 'suspended' && (
+            <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-5 space-y-4">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-warning" />
-                <p className="text-sm font-semibold text-warning">Čaká sa na doplnenie od zákazníka</p>
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <p className="text-sm font-semibold text-destructive">Pozastavené – čaká sa na zákazníka</p>
               </div>
-              <div className="rounded-lg border border-warning/20 bg-card p-3 space-y-1">
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Požadované informácie</p>
-                <p className="text-sm">{ticket.infoRequests[ticket.infoRequests.length - 1].message}</p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Zákazník nereagoval viac ako 7 dní. Tiket bol automaticky pozastavený.
+              </p>
               <button
                 onClick={handleMarkInfoProvided}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-primary/90"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                Označiť ako doplnené
+                Obnoviť – Označiť ako doplnené
               </button>
             </div>
           )}
+
+          {/* Waiting for info banner */}
+          {ticket.status === 'needs_info' && ticket.infoRequests && ticket.infoRequests.length > 0 && (() => {
+            const lastReq = ticket.infoRequests[ticket.infoRequests.length - 1];
+            const reminders = lastReq.reminders || [];
+            return (
+              <div className="rounded-xl border-2 border-warning/40 bg-warning/10 p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-warning" />
+                  <p className="text-sm font-semibold text-warning">Čaká sa na doplnenie od zákazníka</p>
+                </div>
+                <div className="rounded-lg border border-warning/20 bg-card p-3 space-y-1">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Požadované informácie</p>
+                  <p className="text-sm">{lastReq.message}</p>
+                </div>
+
+                {/* Reminder count + elapsed time */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>Čaká sa od: {formatDistanceToNow(new Date(lastReq.requestedAt), { addSuffix: true, locale: sk })}</span>
+                  {lastReq.remindersSent > 0 && (
+                    <span className="rounded-full bg-warning/20 border border-warning/30 px-2 py-0.5 text-[10px] font-semibold text-warning">
+                      {lastReq.remindersSent}/2 pripomienky odoslané
+                    </span>
+                  )}
+                </div>
+
+                {/* Reminder history */}
+                {reminders.length > 0 && (
+                  <div className="border-t border-warning/20 pt-3 space-y-1.5">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Odoslané pripomienky</p>
+                    {reminders.map((r, ri) => (
+                      <div key={ri} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="h-1.5 w-1.5 rounded-full bg-warning shrink-0" />
+                        <span className="font-medium text-foreground">Pripomienka č. {r.reminderNumber}</span>
+                        <span>—</span>
+                        <span>Odoslaná pripomienka zákazníkovi</span>
+                        <span className="ml-auto text-[10px]">
+                          {formatDistanceToNow(new Date(r.sentAt), { addSuffix: true, locale: sk })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleMarkInfoProvided}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-primary/90"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Označiť ako doplnené
+                </button>
+              </div>
+            );
+          })()}
 
           {/* Non-complaint actions (return, other) */}
           {!hasComplaintItems && (
