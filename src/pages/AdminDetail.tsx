@@ -14,6 +14,11 @@ import {
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
   AssignedTeam, ASSIGNED_TEAM_LABELS,
 } from '@/types/ticket';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -72,6 +77,35 @@ const AdminDetail = () => {
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
 
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectNote, setRejectNote] = useState('');
+  const [pendingReject, setPendingReject] = useState<{ type: 'item'; itemIndex: number; item: ComplaintItem } | { type: 'ticket' } | null>(null);
+
+  const openRejectDialog = (target: typeof pendingReject) => {
+    setPendingReject(target);
+    setRejectReason('');
+    setRejectNote('');
+    setRejectDialogOpen(true);
+  };
+
+  const confirmReject = () => {
+    if (!pendingReject || !rejectReason.trim()) return;
+    if (pendingReject.type === 'item') {
+      const actionLabel = `Zamietnuť – ${rejectReason.trim()}`;
+      updateComplaintItemStatus(ticket!.id, pendingReject.itemIndex, 'item_rejected', actionLabel);
+      toast.success(`${pendingReject.item.productName}: Zamietnuté`);
+    } else {
+      if (isComplaint) updateComplaintStatus(ticket!.id, 'complaint_rejected');
+      if (ticket!.requestType === 'return' && ticket!.returnStatus) updateReturnStatus(ticket!.id, 'return_rejected');
+      if (ticket!.requestType === 'other' && ticket!.otherStatus) updateOtherStatus(ticket!.id, 'other_rejected');
+      updateTicketStatus(ticket!.id, 'rejected');
+      toast.success('Požiadavka zamietnutá');
+    }
+    setRejectDialogOpen(false);
+    setPendingReject(null);
+  };
+
   const ticket = getTicket(id || '');
 
   if (!ticket) {
@@ -111,6 +145,10 @@ const AdminDetail = () => {
 
   // ---- Per-item decision actions (only available during quality_check) ----
   const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
+    if (actionKey === 'reject') {
+      openRejectDialog({ type: 'item', itemIndex, item });
+      return;
+    }
     let newStatus: ComplaintItemStatus;
     switch (actionKey) {
       case 'refund':
@@ -133,11 +171,7 @@ const AdminDetail = () => {
 
   // ---- Non-complaint actions (return, other) ----
   const handleReject = () => {
-    if (isComplaint) updateComplaintStatus(ticket.id, 'complaint_rejected');
-    if (ticket.requestType === 'return' && ticket.returnStatus) updateReturnStatus(ticket.id, 'return_rejected');
-    if (ticket.requestType === 'other' && ticket.otherStatus) updateOtherStatus(ticket.id, 'other_rejected');
-    updateTicketStatus(ticket.id, 'rejected');
-    toast.success('Požiadavka zamietnutá');
+    openRejectDialog({ type: 'ticket' });
   };
 
   const handleRequestInfo = () => {
@@ -674,6 +708,55 @@ const AdminDetail = () => {
           </div>
         </div>
       </div>
+      {/* Reject confirmation dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Zamietnuť reklamáciu</DialogTitle>
+            <DialogDescription className="text-sm">
+              Naozaj chceš zamietnuť túto reklamáciu? Tento krok je nezvratný a okamžite sa zobrazí zákazníkovi.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="reject-reason" className="text-sm font-medium">
+                Dôvod zamietnutia <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="reject-reason"
+                placeholder="Zadajte dôvod zamietnutia..."
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="reject-note" className="text-sm font-medium text-muted-foreground">
+                Interná poznámka <span className="text-muted-foreground text-xs">(nepovinné)</span>
+              </Label>
+              <Textarea
+                id="reject-note"
+                placeholder="Interná poznámka pre tím..."
+                value={rejectNote}
+                onChange={e => setRejectNote(e.target.value)}
+                className="min-h-[60px]"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              Zrušiť
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!rejectReason.trim()}
+              onClick={confirmReject}
+            >
+              Áno, som si istý – Zamietnuť
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
