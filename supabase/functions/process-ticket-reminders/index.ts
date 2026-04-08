@@ -6,8 +6,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const REMINDER_MESSAGE =
-  "Stále čakáme na doplnenie informácií k vašej požiadavke. Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.";
+const REMINDER_1_MESSAGE =
+  "Dobrý deň,\n\nradi by sme Vás priateľsky upozornili, že na spracovanie Vašej požiadavky ešte potrebujeme doplniť niektoré informácie. Bez nich, žiaľ, nemôžeme pokračovať.\n\nProsíme, odpovedzte na túto správu alebo sa prihláste do systému a doplňte požadované údaje.\n\nĎakujeme za spoluprácu a prajeme pekný deň!\nVáš tím zákazníckej podpory";
+
+const REMINDER_2_MESSAGE =
+  "Dobrý deň,\n\nopäť sa ozývame, pretože stále čakáme na doplnenie informácií k Vašej požiadavke. Chceme ju vybaviť čo najskôr, no bez Vašej odpovede to, žiaľ, nie je možné.\n\nAk potrebujete pomoc alebo máte otázky, neváhajte nás kontaktovať – radi Vám pomôžeme.\n\nĎakujeme za Váš čas!\nVáš tím zákazníckej podpory";
 
 const HOURS_48 = 48 * 60 * 60 * 1000;
 const HOURS_96 = 96 * 60 * 60 * 1000;
