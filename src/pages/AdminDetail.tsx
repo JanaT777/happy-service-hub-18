@@ -451,6 +451,26 @@ const AdminDetail = () => {
                       )}
 
                       {/* Agent instructions for resolved items */}
+                      {/* Inspection result banner at item_checked */}
+                      {item.itemStatus === 'item_checked' && (() => {
+                        const lastAction = item.actionHistory?.[item.actionHistory.length - 1];
+                        const isNok = lastAction?.action === 'Kontrola NOK';
+                        return (
+                          <div className={cn('flex items-start gap-2.5 rounded-lg px-4 py-3',
+                            isNok ? 'bg-destructive/10 border border-destructive/30' : 'bg-primary/10 border border-primary/30'
+                          )}>
+                            <ClipboardCheck className={cn('h-4 w-4 shrink-0 mt-0.5', isNok ? 'text-destructive' : 'text-primary')} />
+                            <div>
+                              <p className={cn('text-xs font-semibold', isNok ? 'text-destructive' : 'text-primary')}>
+                                Výsledok kontroly: {isNok ? 'NOK – nezodpovedá' : 'OK – v poriadku'}
+                              </p>
+                              <p className={cn('text-xs', isNok ? 'text-destructive/80' : 'text-primary/80')}>
+                                Rozhodnutie je na Customer Care
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {item.itemStatus === 'item_approved' && (
                         <div className="flex items-start gap-2.5 rounded-lg bg-primary/10 border border-primary/30 px-4 py-3">
                           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
