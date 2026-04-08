@@ -82,6 +82,7 @@ const AdminDetail = () => {
   const [warehouseReceiptDialogOpen, setWarehouseReceiptDialogOpen] = useState(false);
   const [warehouseReceiptDate, setWarehouseReceiptDate] = useState<Date | undefined>(undefined);
   const [pendingWarehouseItem, setPendingWarehouseItem] = useState<{ itemIndex: number; item: ComplaintItem } | null>(null);
+  const [pendingReturnReceived, setPendingReturnReceived] = useState(false);
 
   // Info request dialog state
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
