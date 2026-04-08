@@ -484,8 +484,8 @@ const AdminDetail = () => {
                         <div className="border-t pt-3 space-y-2">
                           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Akcie</p>
 
-                          {/* Warehouse flow transitions (non-decision statuses) */}
-                          {!isDecisionPoint && nextStatuses.length > 0 && (
+                          {/* Warehouse flow transitions (non-decision, non-inspection statuses) */}
+                          {!isDecisionPoint && !isWarehouseInspection && nextStatuses.length > 0 && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {nextStatuses.map(ns => (
                                 <button
@@ -496,6 +496,7 @@ const AdminDetail = () => {
                                   {ns === 'item_in_transit' && <Truck className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_received_warehouse' && <Warehouse className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_quality_check' && <ClipboardCheck className="h-4 w-4 shrink-0" />}
+                                  {ns === 'item_checked' && <ClipboardCheck className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_refunded' && <Banknote className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_completed' && <CheckCircle2 className="h-4 w-4 shrink-0" />}
                                   {ns === 'item_approved' && <CheckCircle2 className="h-4 w-4 shrink-0" />}
@@ -505,7 +506,27 @@ const AdminDetail = () => {
                             </div>
                           )}
 
-                          {/* Decision actions at quality_check */}
+                          {/* Warehouse inspection actions (Kontrola OK / NOK) */}
+                          {isWarehouseInspection && (
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={() => handleWarehouseInspection(index, item, 'ok')}
+                                className="flex items-center gap-2 rounded-lg border border-primary bg-primary text-primary-foreground px-3 py-2.5 text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm w-full"
+                              >
+                                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                <span className="flex-1 text-left">Kontrola OK</span>
+                              </button>
+                              <button
+                                onClick={() => handleWarehouseInspection(index, item, 'nok')}
+                                className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 text-destructive px-3 py-2.5 text-sm font-semibold transition-all hover:bg-destructive/20 w-full"
+                              >
+                                <XCircle className="h-4 w-4 shrink-0" />
+                                <span className="flex-1 text-left">Kontrola NOK</span>
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Decision actions at item_checked (CC decides) */}
                           {isDecisionPoint && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {ITEM_ACTIONS.map(action => {
