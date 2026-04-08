@@ -297,6 +297,26 @@ const AdminDetail = () => {
 
         {/* ──── LEFT: Details ──── */}
         <div className="space-y-6">
+          {/* Warehouse receipt date - prominent display */}
+          {ticket.warehouseReceipt && (
+            <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-5">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-primary/15 p-2.5">
+                  <CalendarDays className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Dátum prijatia zásielky na sklad</p>
+                  <p className="text-lg font-bold text-primary">
+                    {format(new Date(ticket.warehouseReceipt.receivedAt), 'd. MMMM yyyy', { locale: sk })}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Zaznamenal: {ticket.warehouseReceipt.recordedBy} · {format(new Date(ticket.warehouseReceipt.recordedAt), 'd. MMM yyyy, HH:mm', { locale: sk })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Basic info card */}
           <div className="rounded-xl border bg-card p-6">
             <h2 className="font-heading text-base font-semibold mb-4">Detail požiadavky</h2>
