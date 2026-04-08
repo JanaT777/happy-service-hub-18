@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog } from '@/types/ticket';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TicketContextType {
   tickets: Ticket[];
-  addTicket: (ticket: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => string;
+  loading: boolean;
+  addTicket: (ticket: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateTicketStatus: (id: string, status: TicketStatus) => void;
   updateComplaintStatus: (id: string, complaintStatus: ComplaintStatus) => void;
   updateReturnStatus: (id: string, returnStatus: ReturnStatus) => void;
@@ -21,8 +22,333 @@ const TicketContext = createContext<TicketContextType | undefined>(undefined);
 
 const generateId = () => Math.random().toString(36).substring(2, 10).toUpperCase();
 
+// ── DB ↔ Ticket mapping ──
+
+function dbRowToTicket(row: any): Ticket {
+  return {
+    id: row.ticket_code,
+    customerEmail: row.customer_email,
+    orderNumber: row.order_number || '',
+    product: row.product || '',
+    description: row.description || '',
+    attachments: row.attachments || [],
+    requestType: row.request_type,
+    status: row.status as TicketStatus,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    issueType: row.issue_type || undefined,
+    severity: row.severity || undefined,
+    suggestedSolution: row.suggested_solution || undefined,
+    requestedResolution: row.requested_resolution || undefined,
+    complaintItems: row.complaint_items || undefined,
+    complaintStatus: row.complaint_status || undefined,
+    returnItems: row.return_items || undefined,
+    returnStatus: row.return_status || undefined,
+    refundMethod: row.refund_method || undefined,
+    iban: row.iban || undefined,
+    withinReturnWindow: row.within_return_window ?? undefined,
+    otherStatus: row.other_status || undefined,
+    otherSubtype: row.other_subtype || undefined,
+    assignedTo: row.assigned_to || undefined,
+    warehouseReceipt: row.warehouse_receipt || undefined,
+    infoRequests: row.info_requests || undefined,
+    createdBy: row.created_by || undefined,
+  };
+}
+
+function ticketToDbRow(t: Ticket) {
+  return {
+    ticket_code: t.id,
+    customer_email: t.customerEmail,
+    order_number: t.orderNumber || null,
+    product: t.product || null,
+    description: t.description || null,
+    attachments: t.attachments || [],
+    request_type: t.requestType,
+    status: t.status,
+    issue_type: t.issueType || null,
+    severity: t.severity || null,
+    suggested_solution: t.suggestedSolution || null,
+    requested_resolution: t.requestedResolution || null,
+    complaint_items: t.complaintItems || null,
+    complaint_status: t.complaintStatus || null,
+    return_items: t.returnItems || null,
+    return_status: t.returnStatus || null,
+    refund_method: t.refundMethod || null,
+    iban: t.iban || null,
+    within_return_window: t.withinReturnWindow ?? null,
+    other_status: t.otherStatus || null,
+    other_subtype: t.otherSubtype || null,
+    assigned_to: t.assignedTo || 'customer_care',
+    warehouse_receipt: t.warehouseReceipt || null,
+    info_requests: t.infoRequests || [],
+    created_by: t.createdBy || null,
+    needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
+      ? t.infoRequests[t.infoRequests.length - 1].requestedAt
+      : null,
+    needs_info_message: t.status === 'needs_info' && t.infoRequests?.length
+      ? t.infoRequests[t.infoRequests.length - 1].message
+      : null,
+    reminders_sent: t.status === 'needs_info' && t.infoRequests?.length
+      ? (t.infoRequests[t.infoRequests.length - 1].remindersSent || 0)
+      : 0,
+    updated_at: t.updatedAt,
+  };
+}
+
+// ── Helper: update local + DB ──
+
+function useDbSync() {
+  const syncToDb = useCallback(async (ticket: Ticket) => {
+    try {
+      await supabase.from('tickets').upsert(
+        ticketToDbRow(ticket) as any,
+        { onConflict: 'ticket_code' } as any
+      );
+    } catch (e) {
+      console.error('Failed to sync ticket to DB:', e);
+    }
+  }, []);
+  return syncToDb;
+}
+
 export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tickets, setTickets] = useState<Ticket[]>([
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const syncToDb = useDbSync();
+
+  // ── Load tickets from DB on mount ──
+  useEffect(() => {
+    const loadTickets = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('tickets')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setTickets(data.map(dbRowToTicket));
+        } else {
+          // Seed demo data if DB is empty
+          const seeds = getSeedTickets();
+          setTickets(seeds);
+          // Persist seeds to DB
+          for (const t of seeds) {
+            await supabase.from('tickets').upsert(
+              ticketToDbRow(t) as any,
+              { onConflict: 'ticket_code' } as any
+            );
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load tickets:', e);
+        setTickets(getSeedTickets());
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadTickets();
+  }, []);
+
+  // ── Poll DB for reminder updates every 30s ──
+  useEffect(() => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const { data: dbTickets } = await supabase
+          .from('tickets')
+          .select('*')
+          .in('status', ['needs_info', 'suspended']);
+        if (!dbTickets) return;
+
+        for (const dbRow of dbTickets) {
+          const dbReminders = await fetchDbReminders(dbRow.ticket_code);
+          setTickets(prev => prev.map(t => {
+            if (t.id !== dbRow.ticket_code) return t;
+            const lastReq = t.infoRequests?.[t.infoRequests.length - 1];
+            if (!lastReq) {
+              if (dbRow.status === 'suspended' && t.status !== 'suspended') {
+                return { ...t, status: 'suspended' as TicketStatus, updatedAt: dbRow.updated_at };
+              }
+              return t;
+            }
+            const needsUpdate =
+              dbRow.status === 'suspended' && t.status !== 'suspended' ||
+              dbRow.reminders_sent > (lastReq.remindersSent || 0);
+            if (!needsUpdate) return t;
+            const updatedReq = {
+              ...lastReq,
+              remindersSent: dbRow.reminders_sent,
+              lastReminderAt: dbRow.last_reminder_at,
+              reminders: dbReminders,
+            };
+            return {
+              ...t,
+              status: dbRow.status as TicketStatus,
+              infoRequests: [...(t.infoRequests?.slice(0, -1) || []), updatedReq],
+              updatedAt: dbRow.updated_at,
+            };
+          }));
+        }
+      } catch (e) {
+        console.error('Poll error:', e);
+      }
+    }, 30000);
+    return () => clearInterval(pollInterval);
+  }, []);
+
+  // ── Helper to update local state + sync to DB ──
+  const updateAndSync = useCallback((id: string, updater: (t: Ticket) => Ticket) => {
+    setTickets(prev => {
+      const updated = prev.map(t => t.id === id ? updater(t) : t);
+      const ticket = updated.find(t => t.id === id);
+      if (ticket) syncToDb(ticket);
+      return updated;
+    });
+  }, [syncToDb]);
+
+  const addTicket = useCallback(async (data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+    const now = new Date().toISOString();
+    const ticketId = `TK-${generateId()}`;
+    const complaintItems = data.requestType === 'complaint' && data.complaintItems
+      ? data.complaintItems.map(item => ({ ...item, itemStatus: 'item_new' as ComplaintItemStatus }))
+      : data.complaintItems;
+
+    const assignedTo = data.assignedTo || getAutoAssignment(data);
+    const newTicket: Ticket = {
+      ...data,
+      id: ticketId,
+      status: 'new' as TicketStatus,
+      complaintItems,
+      complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
+      returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
+      otherStatus: data.requestType === 'other' ? 'other_submitted' as OtherStatus : undefined,
+      assignedTo,
+      createdAt: now,
+      updatedAt: now,
+    };
+    setTickets(prev => [newTicket, ...prev]);
+    await syncToDb(newTicket);
+    return ticketId;
+  }, [syncToDb]);
+
+  const updateTicketStatus = useCallback((id: string, status: TicketStatus) => {
+    updateAndSync(id, t => ({ ...t, status, updatedAt: new Date().toISOString() }));
+  }, [updateAndSync]);
+
+  const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
+    updateAndSync(id, t => ({ ...t, complaintStatus, updatedAt: new Date().toISOString() }));
+  }, [updateAndSync]);
+
+  const updateReturnStatus = useCallback((id: string, returnStatus: ReturnStatus) => {
+    updateAndSync(id, t => ({ ...t, returnStatus, updatedAt: new Date().toISOString() }));
+  }, [updateAndSync]);
+
+  const updateOtherStatus = useCallback((id: string, otherStatus: OtherStatus) => {
+    updateAndSync(id, t => ({ ...t, otherStatus, updatedAt: new Date().toISOString() }));
+  }, [updateAndSync]);
+
+  const updateComplaintItemStatus = useCallback((ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus, actionLabel: string) => {
+    updateAndSync(ticketId, t => {
+      if (!t.complaintItems) return t;
+      const updatedItems = t.complaintItems.map((item, i) => {
+        if (i !== itemIndex) return item;
+        const logEntry = {
+          action: actionLabel,
+          newStatus: itemStatus,
+          agent: 'Agent',
+          timestamp: new Date().toISOString(),
+        };
+        return {
+          ...item,
+          itemStatus,
+          actionHistory: [...(item.actionHistory || []), logEntry],
+        };
+      });
+      return { ...t, complaintItems: updatedItems, updatedAt: new Date().toISOString() };
+    });
+  }, [updateAndSync]);
+
+  const setWarehouseReceipt = useCallback((id: string, receivedAt: string, agent: string) => {
+    const now = new Date().toISOString();
+    updateAndSync(id, t => {
+      const receipt: WarehouseReceiptAudit = { receivedAt, recordedBy: agent, recordedAt: now };
+      let updates: Partial<Ticket> = { warehouseReceipt: receipt, updatedAt: now };
+      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_received';
+      else if (t.requestType === 'return') updates.returnStatus = 'return_received';
+      return { ...t, ...updates };
+    });
+  }, [updateAndSync]);
+
+  const updateAssignment = useCallback((id: string, team: AssignedTeam) => {
+    updateAndSync(id, t => ({ ...t, assignedTo: team, updatedAt: new Date().toISOString() }));
+  }, [updateAndSync]);
+
+  const requestInfo = useCallback((id: string, message: string, internalNote?: string) => {
+    const now = new Date().toISOString();
+    const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent', remindersSent: 0, reminders: [] };
+    updateAndSync(id, t => {
+      const updates: Partial<Ticket> = {
+        infoRequests: [...(t.infoRequests || []), entry],
+        status: 'needs_info' as TicketStatus,
+        updatedAt: now,
+      };
+      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
+      return { ...t, ...updates };
+    });
+  }, [updateAndSync]);
+
+  const markInfoProvided = useCallback((id: string) => {
+    const now = new Date().toISOString();
+    updateAndSync(id, t => {
+      const updatedRequests = (t.infoRequests || []).map((r, i, arr) =>
+        i === arr.length - 1 && !r.resolvedAt ? { ...r, resolvedAt: now } : r
+      );
+      const updates: Partial<Ticket> = {
+        infoRequests: updatedRequests,
+        status: 'in_review' as TicketStatus,
+        updatedAt: now,
+      };
+      if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
+      return { ...t, ...updates };
+    });
+  }, [updateAndSync]);
+
+  const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
+
+  return (
+    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, getTicket }}>
+      {children}
+    </TicketContext.Provider>
+  );
+};
+
+export const useTickets = () => {
+  const ctx = useContext(TicketContext);
+  if (!ctx) throw new Error('useTickets must be used within TicketProvider');
+  return ctx;
+};
+
+// ── Helpers ──
+
+async function fetchDbReminders(ticketCode: string): Promise<ReminderLog[]> {
+  try {
+    const { data } = await supabase
+      .from('ticket_reminder_log')
+      .select('*')
+      .eq('ticket_code', ticketCode)
+      .order('sent_at', { ascending: true });
+    return (data || []).map((r: any) => ({
+      sentAt: r.sent_at,
+      reminderNumber: r.reminder_number,
+      message: r.message,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function getSeedTickets(): Ticket[] {
+  return [
     {
       id: 'TK-A1B2C3',
       customerEmail: 'jana@example.com',
@@ -79,272 +405,5 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 0.5).toISOString(),
     },
-  ]);
-
-  // Items always start as item_new — warehouse workflow handles progression
-  const processNewItems = (items: ComplaintItem[]): ComplaintItem[] => {
-    return items.map(item => ({ ...item, itemStatus: 'item_new' as ComplaintItemStatus }));
-  };
-
-  // Sync ticket to DB (upsert for reminder tracking)
-  const syncTicketToDb = useCallback(async (ticket: Ticket) => {
-    try {
-      await supabase.from('tickets').upsert({
-        ticket_code: ticket.id,
-        customer_email: ticket.customerEmail,
-        order_number: ticket.orderNumber,
-        status: ticket.status,
-        request_type: ticket.requestType,
-        description: ticket.description,
-        needs_info_since: ticket.status === 'needs_info' && ticket.infoRequests?.length
-          ? ticket.infoRequests[ticket.infoRequests.length - 1].requestedAt
-          : null,
-        needs_info_message: ticket.status === 'needs_info' && ticket.infoRequests?.length
-          ? ticket.infoRequests[ticket.infoRequests.length - 1].message
-          : null,
-        reminders_sent: ticket.status === 'needs_info' && ticket.infoRequests?.length
-          ? (ticket.infoRequests[ticket.infoRequests.length - 1].remindersSent || 0)
-          : 0,
-        updated_at: ticket.updatedAt,
-      }, { onConflict: 'ticket_code' } as any);
-    } catch (e) {
-      console.error('Failed to sync ticket to DB:', e);
-    }
-  }, []);
-
-  // Fetch reminder logs from DB for a ticket
-  const fetchDbReminders = useCallback(async (ticketCode: string): Promise<ReminderLog[]> => {
-    try {
-      const { data } = await supabase
-        .from('ticket_reminder_log')
-        .select('*')
-        .eq('ticket_code', ticketCode)
-        .order('sent_at', { ascending: true });
-      return (data || []).map((r: any) => ({
-        sentAt: r.sent_at,
-        reminderNumber: r.reminder_number,
-        message: r.message,
-      }));
-    } catch {
-      return [];
-    }
-  }, []);
-
-  // Poll DB for reminder updates every 30s
-  useEffect(() => {
-    const pollInterval = setInterval(async () => {
-      setTickets(prev => {
-        // Check each needs_info ticket for DB updates
-        prev.forEach(async (t) => {
-          if (t.status !== 'needs_info' && t.status !== 'suspended') return;
-          try {
-            const { data: dbTicket } = await supabase
-              .from('tickets')
-              .select('*')
-              .eq('ticket_code', t.id)
-              .single();
-            if (!dbTicket) return;
-
-            const dbReminders = await fetchDbReminders(t.id);
-            
-            // Update local state if DB has newer data
-            if (dbTicket.status === 'suspended' && t.status !== 'suspended') {
-              setTickets(p => p.map(ticket => {
-                if (ticket.id !== t.id) return ticket;
-                const lastReq = ticket.infoRequests?.[ticket.infoRequests.length - 1];
-                if (!lastReq) return { ...ticket, status: 'suspended' as TicketStatus, updatedAt: dbTicket.updated_at };
-                const updatedReq = {
-                  ...lastReq,
-                  remindersSent: dbTicket.reminders_sent,
-                  lastReminderAt: dbTicket.last_reminder_at,
-                  reminders: dbReminders,
-                };
-                return {
-                  ...ticket,
-                  status: 'suspended' as TicketStatus,
-                  infoRequests: [...(ticket.infoRequests?.slice(0, -1) || []), updatedReq],
-                  updatedAt: dbTicket.updated_at,
-                };
-              }));
-            } else if (dbTicket.reminders_sent > (t.infoRequests?.[t.infoRequests.length - 1]?.remindersSent || 0)) {
-              setTickets(p => p.map(ticket => {
-                if (ticket.id !== t.id) return ticket;
-                const lastReq = ticket.infoRequests?.[ticket.infoRequests.length - 1];
-                if (!lastReq) return ticket;
-                const updatedReq = {
-                  ...lastReq,
-                  remindersSent: dbTicket.reminders_sent,
-                  lastReminderAt: dbTicket.last_reminder_at,
-                  reminders: dbReminders,
-                };
-                return {
-                  ...ticket,
-                  infoRequests: [...(ticket.infoRequests?.slice(0, -1) || []), updatedReq],
-                  updatedAt: dbTicket.updated_at,
-                };
-              }));
-            }
-          } catch (e) {
-            console.error('Poll error:', e);
-          }
-        });
-        return prev;
-      });
-    }, 30000);
-    return () => clearInterval(pollInterval);
-  }, [fetchDbReminders]);
-
-  const addTicket = useCallback((data: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>): string => {
-    const now = new Date().toISOString();
-    const ticketId = `TK-${generateId()}`;
-    const complaintItems = data.requestType === 'complaint' && data.complaintItems
-      ? processNewItems(data.complaintItems)
-      : data.complaintItems;
-
-    const assignedTo = data.assignedTo || getAutoAssignment(data);
-    const newTicket: Ticket = {
-      ...data,
-      id: ticketId,
-      status: 'new' as TicketStatus,
-      complaintItems,
-      complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
-      returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
-      otherStatus: data.requestType === 'other' ? 'other_submitted' as OtherStatus : undefined,
-      assignedTo,
-      createdAt: now,
-      updatedAt: now,
-    };
-    setTickets(prev => [newTicket, ...prev]);
-    // Sync to DB
-    syncTicketToDb(newTicket);
-    return ticketId;
-  }, [syncTicketToDb]);
-
-  const updateTicketStatus = useCallback((id: string, status: TicketStatus) => {
-    setTickets(prev => prev.map(t =>
-      t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t
-    ));
-  }, []);
-
-  const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
-    setTickets(prev => prev.map(t =>
-      t.id === id ? { ...t, complaintStatus, updatedAt: new Date().toISOString() } : t
-    ));
-  }, []);
-
-  const updateReturnStatus = useCallback((id: string, returnStatus: ReturnStatus) => {
-    setTickets(prev => prev.map(t =>
-      t.id === id ? { ...t, returnStatus, updatedAt: new Date().toISOString() } : t
-    ));
-  }, []);
-
-  const updateOtherStatus = useCallback((id: string, otherStatus: OtherStatus) => {
-    setTickets(prev => prev.map(t =>
-      t.id === id ? { ...t, otherStatus, updatedAt: new Date().toISOString() } : t
-    ));
-  }, []);
-
-  const updateComplaintItemStatus = useCallback((ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus, actionLabel: string) => {
-    setTickets(prev => prev.map(t => {
-      if (t.id !== ticketId || !t.complaintItems) return t;
-      const updatedItems = t.complaintItems.map((item, i) => {
-        if (i !== itemIndex) return item;
-        const logEntry = {
-          action: actionLabel,
-          newStatus: itemStatus,
-          agent: 'Agent',
-          timestamp: new Date().toISOString(),
-        };
-        return {
-          ...item,
-          itemStatus,
-          actionHistory: [...(item.actionHistory || []), logEntry],
-        };
-      });
-      return { ...t, complaintItems: updatedItems, updatedAt: new Date().toISOString() };
-    }));
-  }, []);
-
-  const setWarehouseReceipt = useCallback((id: string, receivedAt: string, agent: string) => {
-    const now = new Date().toISOString();
-    setTickets(prev => prev.map(t => {
-      if (t.id !== id) return t;
-      const receipt: WarehouseReceiptAudit = { receivedAt, recordedBy: agent, recordedAt: now };
-      // Auto-advance complaint status to received/inspecting
-      let updates: Partial<Ticket> = { warehouseReceipt: receipt, updatedAt: now };
-      if (t.requestType === 'complaint') {
-        updates.complaintStatus = 'complaint_received';
-      } else if (t.requestType === 'return') {
-        updates.returnStatus = 'return_received';
-      }
-      return { ...t, ...updates };
-    }));
-  }, []);
-
-  const updateAssignment = useCallback((id: string, team: AssignedTeam) => {
-    setTickets(prev => prev.map(t =>
-      t.id === id ? { ...t, assignedTo: team, updatedAt: new Date().toISOString() } : t
-    ));
-  }, []);
-
-  const requestInfo = useCallback((id: string, message: string, internalNote?: string) => {
-    const now = new Date().toISOString();
-    const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent', remindersSent: 0, reminders: [] };
-    setTickets(prev => {
-      const updated = prev.map(t => {
-        if (t.id !== id) return t;
-        const updates: Partial<Ticket> = {
-          infoRequests: [...(t.infoRequests || []), entry],
-          status: 'needs_info' as TicketStatus,
-          updatedAt: now,
-        };
-        if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
-        const updatedTicket = { ...t, ...updates };
-        // Sync to DB for cron-based reminders
-        syncTicketToDb(updatedTicket);
-        return updatedTicket;
-      });
-      return updated;
-    });
-  }, [syncTicketToDb]);
-
-  const markInfoProvided = useCallback((id: string) => {
-    const now = new Date().toISOString();
-    setTickets(prev => {
-      const updated = prev.map(t => {
-        if (t.id !== id) return t;
-        const updatedRequests = (t.infoRequests || []).map((r, i, arr) =>
-          i === arr.length - 1 && !r.resolvedAt ? { ...r, resolvedAt: now } : r
-        );
-        const updates: Partial<Ticket> = {
-          infoRequests: updatedRequests,
-          status: 'in_review' as TicketStatus,
-          updatedAt: now,
-        };
-        if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
-        const updatedTicket = { ...t, ...updates };
-        // Sync status change to DB (clears needs_info_since)
-        syncTicketToDb(updatedTicket);
-        return updatedTicket;
-      });
-      return updated;
-    });
-  }, [syncTicketToDb]);
-
-  // Reminders are now handled by the server-side cron job (process-ticket-reminders).
-  // The polling useEffect above syncs DB reminder state back to the frontend.
-
-  const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
-
-  return (
-    <TicketContext.Provider value={{ tickets, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, getTicket }}>
-      {children}
-    </TicketContext.Provider>
-  );
-};
-
-export const useTickets = () => {
-  const ctx = useContext(TicketContext);
-  if (!ctx) throw new Error('useTickets must be used within TicketProvider');
-  return ctx;
-};
+  ];
+}
