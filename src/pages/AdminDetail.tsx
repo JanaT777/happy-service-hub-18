@@ -78,6 +78,11 @@ const AdminDetail = () => {
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
 
+  // Warehouse receipt date modal state
+  const [warehouseReceiptDialogOpen, setWarehouseReceiptDialogOpen] = useState(false);
+  const [warehouseReceiptDate, setWarehouseReceiptDate] = useState<Date | undefined>(undefined);
+  const [pendingWarehouseItem, setPendingWarehouseItem] = useState<{ itemIndex: number; item: ComplaintItem } | null>(null);
+
   // Info request dialog state
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
