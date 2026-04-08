@@ -6,7 +6,8 @@ import {
   ISSUE_TYPE_LABELS, SUGGESTED_SOLUTION_LABELS,
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   COMPLAINT_STATUS_FLOW, RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
-  Ticket, ComplaintStatus, ReturnStatus, OtherStatus,
+  COMPLAINT_TYPE_LABELS, COMPLAINT_ITEM_STATUS_LABELS, REQUESTED_RESOLUTION_LABELS,
+  Ticket, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintType,
 } from '@/types/ticket';
 import { Button } from '@/components/ui/button';
 import {
