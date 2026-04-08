@@ -81,12 +81,15 @@ const AdminDetail = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectNote, setRejectNote] = useState('');
   const [pendingReject, setPendingReject] = useState<{ type: 'item'; itemIndex: number; item: ComplaintItem } | { type: 'ticket' } | null>(null);
+  const [rejectButtonLocked, setRejectButtonLocked] = useState(true);
 
   const openRejectDialog = (target: typeof pendingReject) => {
     setPendingReject(target);
     setRejectReason('');
     setRejectNote('');
+    setRejectButtonLocked(true);
     setRejectDialogOpen(true);
+    setTimeout(() => setRejectButtonLocked(false), 2000);
   };
 
   const confirmReject = () => {
