@@ -390,12 +390,20 @@ const AdminDetail = () => {
                         <span className="text-sm font-semibold">{item.productName}</span>
                         <span className="text-xs text-muted-foreground">({item.quantity}×)</span>
                       </div>
-                      <span className={cn(
-                        'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold',
-                        ITEM_STATUS_COLORS[item.itemStatus] || 'bg-muted text-muted-foreground'
-                      )}>
-                        {COMPLAINT_ITEM_STATUS_LABELS[item.itemStatus] || 'Neznámy stav'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold',
+                          ITEM_STATUS_COLORS[item.itemStatus] || 'bg-muted text-muted-foreground'
+                        )}>
+                          {COMPLAINT_ITEM_STATUS_LABELS[item.itemStatus] || 'Neznámy stav'}
+                        </span>
+                        <span className={cn(
+                          'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                          statusOwner === 'sklad' ? 'bg-warning/15 text-warning border border-warning/30' : 'bg-info/15 text-info border border-info/30'
+                        )}>
+                          {statusOwner === 'sklad' ? 'Sklad' : 'Customer Care'}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="p-4 space-y-4">
