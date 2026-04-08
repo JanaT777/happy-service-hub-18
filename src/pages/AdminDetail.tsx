@@ -82,6 +82,7 @@ const AdminDetail = () => {
   const [warehouseReceiptDialogOpen, setWarehouseReceiptDialogOpen] = useState(false);
   const [warehouseReceiptDate, setWarehouseReceiptDate] = useState<Date | undefined>(undefined);
   const [pendingWarehouseItem, setPendingWarehouseItem] = useState<{ itemIndex: number; item: ComplaintItem } | null>(null);
+  const [pendingReturnReceived, setPendingReturnReceived] = useState(false);
 
   // Info request dialog state
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
@@ -170,21 +171,30 @@ const AdminDetail = () => {
   };
 
   const confirmWarehouseReceipt = () => {
-    if (!pendingWarehouseItem || !warehouseReceiptDate) return;
-    const { itemIndex, item } = pendingWarehouseItem;
+    if (!warehouseReceiptDate) return;
     const dateStr = warehouseReceiptDate.toISOString();
     // Store receipt date on ticket
     setWarehouseReceipt(ticket.id, dateStr, 'Agent');
-    // Transition item status
-    const label = COMPLAINT_ITEM_STATUS_LABELS['item_received_warehouse'];
-    updateComplaintItemStatus(ticket.id, itemIndex, 'item_received_warehouse', label);
-    const newOwner = ITEM_STATUS_OWNER['item_received_warehouse'];
-    if (newOwner && ticket.assignedTo !== newOwner) {
-      updateAssignment(ticket.id, newOwner);
+
+    if (pendingReturnReceived) {
+      // Return flow
+      updateReturnStatus(ticket.id, 'return_received');
+      toast.success(RETURN_STATUS_LABELS['return_received']);
+      setPendingReturnReceived(false);
+    } else if (pendingWarehouseItem) {
+      // Complaint item flow
+      const { itemIndex, item } = pendingWarehouseItem;
+      const label = COMPLAINT_ITEM_STATUS_LABELS['item_received_warehouse'];
+      updateComplaintItemStatus(ticket.id, itemIndex, 'item_received_warehouse', label);
+      const newOwner = ITEM_STATUS_OWNER['item_received_warehouse'];
+      if (newOwner && ticket.assignedTo !== newOwner) {
+        updateAssignment(ticket.id, newOwner);
+      }
+      toast.success(`${item.productName}: ${label}`);
+      setPendingWarehouseItem(null);
     }
-    toast.success(`${item.productName}: ${label}`);
+
     setWarehouseReceiptDialogOpen(false);
-    setPendingWarehouseItem(null);
   };
 
   // Warehouse inspection result actions
@@ -248,6 +258,13 @@ const AdminDetail = () => {
   };
 
   const handleReturnNext = (ns: ReturnStatus) => {
+    // Intercept "return_received" to require warehouse receipt date
+    if (ns === 'return_received') {
+      setPendingReturnReceived(true);
+      setWarehouseReceiptDate(undefined);
+      setWarehouseReceiptDialogOpen(true);
+      return;
+    }
     updateReturnStatus(ticket.id, ns);
     if (ns === 'return_refund_processing') updateTicketStatus(ticket.id, 'refund_processing');
     if (ns === 'return_completed') updateTicketStatus(ticket.id, 'completed');
