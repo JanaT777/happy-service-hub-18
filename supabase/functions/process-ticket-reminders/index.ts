@@ -6,11 +6,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const REMINDER_1_MESSAGE =
-  "Dobrý deň,\n\nradi by sme Vás priateľsky upozornili, že na spracovanie Vašej požiadavky ešte potrebujeme doplniť niektoré informácie. Bez nich, žiaľ, nemôžeme pokračovať.\n\nProsíme, odpovedzte na túto správu alebo sa prihláste do systému a doplňte požadované údaje.\n\nĎakujeme za spoluprácu a prajeme pekný deň!\nVáš tím zákazníckej podpory";
+const getReminder1Message = (ticketCode: string) =>
+  `Dobrý deň,\n\nchceli by sme Vás jemne upozorniť, že k Vašej požiadavke ${ticketCode} stále evidujeme nedoplnené informácie. Možno ste našu predchádzajúcu správu prehliadli – vôbec nič sa nedeje, stačí nám odpovedať.\n\nAby sme mohli Vašu požiadavku posunúť ďalej, prosíme Vás o doplnenie požadovaných údajov. Stačí odpovedať na túto správu alebo sa prihlásiť do systému.\n\nAk si nie ste istí, čo presne potrebujeme, pokojne sa nám ozvite – radi Vám poradíme.\n\nĎakujeme a prajeme pekný deň!\nTím zákazníckej podpory`;
 
-const REMINDER_2_MESSAGE =
-  "Dobrý deň,\n\nopäť sa ozývame, pretože stále čakáme na doplnenie informácií k Vašej požiadavke. Chceme ju vybaviť čo najskôr, no bez Vašej odpovede to, žiaľ, nie je možné.\n\nAk potrebujete pomoc alebo máte otázky, neváhajte nás kontaktovať – radi Vám pomôžeme.\n\nĎakujeme za Váš čas!\nVáš tím zákazníckej podpory";
+const getReminder2Message = (ticketCode: string) =>
+  `Dobrý deň,\n\noznámujeme sa Vám opätovne ohľadom Vašej požiadavky ${ticketCode}. Bohužiaľ, bez doplnenia požadovaných informácií nemôžeme vo vybavovaní pokračovať.\n\nAk nedostaneme Vašu odpoveď v najbližších dňoch, budeme nútení Vašu požiadavku dočasne pozastaviť. Samozrejme, kedykoľvek ju budete môcť obnoviť.\n\nProsíme, doplňte chýbajúce údaje čo najskôr – chceme Vašu záležitosť vyriešiť a nechceme, aby zostala bez povšimnutia.\n\nV prípade akýchkoľvek otázok sme tu pre Vás.\n\nS pozdravom,\nTím zákazníckej podpory`;
 
 const HOURS_48 = 48 * 60 * 60 * 1000;
 const HOURS_96 = 96 * 60 * 60 * 1000;
