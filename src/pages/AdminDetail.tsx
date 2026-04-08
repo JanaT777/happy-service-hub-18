@@ -73,9 +73,14 @@ const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | 
 const AdminDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment } = useTickets();
+  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided } = useTickets();
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
+
+  // Info request dialog state
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [infoMessage, setInfoMessage] = useState('');
+  const [infoNote, setInfoNote] = useState('');
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -178,9 +183,21 @@ const AdminDetail = () => {
   };
 
   const handleRequestInfo = () => {
-    if (isComplaint) updateComplaintStatus(ticket.id, 'complaint_waiting_customer');
-    updateTicketStatus(ticket.id, 'needs_info');
+    setInfoMessage('');
+    setInfoNote('');
+    setInfoDialogOpen(true);
+  };
+
+  const confirmRequestInfo = () => {
+    if (!infoMessage.trim()) return;
+    requestInfo(ticket!.id, infoMessage.trim(), infoNote.trim() || undefined);
+    setInfoDialogOpen(false);
     toast.success('Vyžiadané doplnenie od zákazníka');
+  };
+
+  const handleMarkInfoProvided = () => {
+    markInfoProvided(ticket!.id);
+    toast.success('Označené ako doplnené – tiket pokračuje v spracovaní');
   };
 
   const handleReturnNext = (ns: ReturnStatus) => {
@@ -536,6 +553,27 @@ const AdminDetail = () => {
         {/* ──── RIGHT: Sidebar ──── */}
         <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
 
+          {/* Waiting for info banner */}
+          {ticket.status === 'needs_info' && ticket.infoRequests && ticket.infoRequests.length > 0 && (
+            <div className="rounded-xl border-2 border-warning/40 bg-warning/10 p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-warning" />
+                <p className="text-sm font-semibold text-warning">Čaká sa na doplnenie od zákazníka</p>
+              </div>
+              <div className="rounded-lg border border-warning/20 bg-card p-3 space-y-1">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Požadované informácie</p>
+                <p className="text-sm">{ticket.infoRequests[ticket.infoRequests.length - 1].message}</p>
+              </div>
+              <button
+                onClick={handleMarkInfoProvided}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-primary/90"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Označiť ako doplnené
+              </button>
+            </div>
+          )}
+
           {/* Non-complaint actions (return, other) */}
           {!hasComplaintItems && (
             <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-5">
@@ -757,6 +795,62 @@ const AdminDetail = () => {
               className="relative"
             >
               {rejectButtonLocked ? 'Počkajte...' : 'Áno, som si istý – Zamietnuť'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Info request dialog */}
+      <Dialog open={infoDialogOpen} onOpenChange={setInfoDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-warning">Vyžiadať doplnenie</DialogTitle>
+            <DialogDescription className="text-sm">
+              Zadajte, aké informácie potrebujete od zákazníka. Správa bude viditeľná na stránke sledovania požiadavky.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="info-message" className="text-sm font-medium">
+                Čo potrebujeme od zákazníka <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="info-message"
+                placeholder="Napr. Prosíme o zaslanie fotografie poškodeného produktu..."
+                value={infoMessage}
+                onChange={e => setInfoMessage(e.target.value)}
+                className="min-h-[80px]"
+              />
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Info className="h-3 w-3" /> Táto správa bude viditeľná zákazníkovi
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="info-note" className="text-sm font-medium text-muted-foreground">
+                Interná poznámka <span className="text-muted-foreground text-xs">(nepovinné)</span>
+              </Label>
+              <Textarea
+                id="info-note"
+                placeholder="Interná poznámka pre tím..."
+                value={infoNote}
+                onChange={e => setInfoNote(e.target.value)}
+                className="min-h-[60px]"
+              />
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> Táto poznámka je iba interná – zákazník ju neuvidí
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setInfoDialogOpen(false)}>
+              Zrušiť
+            </Button>
+            <Button
+              disabled={!infoMessage.trim()}
+              onClick={confirmRequestInfo}
+              className="bg-warning text-warning-foreground hover:bg-warning/90"
+            >
+              <MessageSquare className="h-4 w-4 mr-1" />
+              Odoslať požiadavku
             </Button>
           </DialogFooter>
         </DialogContent>
