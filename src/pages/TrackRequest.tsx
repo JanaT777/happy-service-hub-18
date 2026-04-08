@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { sk } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 const searchSchema = z.object({
   email: z.string().trim().email({ message: 'Prosím zadajte platnú e-mailovú adresu' }).max(255),
