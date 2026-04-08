@@ -18,7 +18,9 @@ export type ReturnStatus =
   | 'return_submitted'
   | 'return_received'
   | 'return_inspecting'
-  | 'return_refund_processing'
+  | 'return_approved'
+  | 'return_refund_issued'
+  | 'return_refunded'
   | 'return_completed'
   | 'return_rejected';
 
@@ -278,8 +280,10 @@ export const RETURN_STATUS_LABELS: Record<ReturnStatus, string> = {
   return_submitted: 'Žiadosť podaná',
   return_received: 'Zásielka evidovaná na sklade',
   return_inspecting: 'Kontrola tovaru',
-  return_refund_processing: 'Akceptované – refundácia v procese',
-  return_completed: 'Vybavená',
+  return_approved: 'Akceptované',
+  return_refund_issued: 'Pokyn na refund / Vystavenie dobropisu',
+  return_refunded: 'Refundované',
+  return_completed: 'Ukončená',
   return_rejected: 'Zamietnuté',
 };
 
@@ -306,8 +310,10 @@ export const COMPLAINT_STATUS_FLOW: Record<ComplaintStatus, ComplaintStatus[]> =
 export const RETURN_STATUS_FLOW: Record<ReturnStatus, ReturnStatus[]> = {
   return_submitted: ['return_received'],
   return_received: ['return_inspecting'],
-  return_inspecting: ['return_refund_processing', 'return_rejected'],
-  return_refund_processing: ['return_completed'],
+  return_inspecting: ['return_approved', 'return_rejected'],
+  return_approved: ['return_refund_issued'],
+  return_refund_issued: ['return_refunded'],
+  return_refunded: ['return_completed'],
   return_completed: [],
   return_rejected: [],
 };

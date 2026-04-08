@@ -266,7 +266,8 @@ const AdminDetail = () => {
       return;
     }
     updateReturnStatus(ticket.id, ns);
-    if (ns === 'return_refund_processing') updateTicketStatus(ticket.id, 'refund_processing');
+    if (ns === 'return_approved') updateTicketStatus(ticket.id, 'approved');
+    if (ns === 'return_refund_issued' || ns === 'return_refunded') updateTicketStatus(ticket.id, 'refund_processing');
     if (ns === 'return_completed') updateTicketStatus(ticket.id, 'completed');
     if (ns === 'return_rejected') updateTicketStatus(ticket.id, 'rejected');
     toast.success(RETURN_STATUS_LABELS[ns]);
