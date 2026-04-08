@@ -132,10 +132,12 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) =
       iban: iban.replace(/\s/g, '').toUpperCase(),
       ...(createdBy ? { createdBy } : {}),
     });
-    setTicketId(id);
-    toast.success('Žiadosť o vrátenie bola odoslaná!');
-    setSubmitting(false);
-    setStep('submitted');
+    id.then(ticketId => {
+      setTicketId(ticketId);
+      toast.success('Žiadosť o vrátenie bola odoslaná!');
+      setSubmitting(false);
+      setStep('submitted');
+    });
   };
 
   const goBack = () => {

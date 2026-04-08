@@ -177,10 +177,12 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props
       ...(createdBy ? { createdBy } : {}),
     });
 
-    setTicketId(id);
-    toast.success('Reklamácia bola odoslaná!');
-    setSubmitting(false);
-    setStep('submitted');
+    id.then(ticketId => {
+      setTicketId(ticketId);
+      toast.success('Reklamácia bola odoslaná!');
+      setSubmitting(false);
+      setStep('submitted');
+    });
   };
 
   const goBack = () => {
