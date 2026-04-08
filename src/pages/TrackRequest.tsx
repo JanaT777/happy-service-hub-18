@@ -6,7 +6,8 @@ import {
   ISSUE_TYPE_LABELS, SUGGESTED_SOLUTION_LABELS,
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   COMPLAINT_STATUS_FLOW, RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
-  Ticket, ComplaintStatus, ReturnStatus, OtherStatus,
+  COMPLAINT_TYPE_LABELS, COMPLAINT_ITEM_STATUS_LABELS, REQUESTED_RESOLUTION_LABELS,
+  Ticket, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintType,
 } from '@/types/ticket';
 import { Button } from '@/components/ui/button';
 import {
@@ -327,58 +328,105 @@ const TrackRequest = () => {
                         <WorkflowTimeline ticket={ticket} />
                       </div>
 
-                      {/* Details */}
-                      <div>
-                        <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Detaily požiadavky</h3>
-                        <div className="grid gap-2 text-sm sm:grid-cols-2">
-                          <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
-                            <Package className="h-4 w-4 text-muted-foreground shrink-0" />
-                            <div>
-                              <span className="text-[11px] text-muted-foreground">Produkt</span>
-                              <p className="font-medium leading-tight">{ticket.product}</p>
+                      {/* Per-item details for complaints */}
+                      {ticket.complaintItems && ticket.complaintItems.length > 0 && (
+                        <div>
+                          <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Reklamované položky</h3>
+                          <div className="space-y-3">
+                            {ticket.complaintItems.map((item, i) => {
+                              const reasonLabel = COMPLAINT_TYPE_LABELS[item.complaintReason as ComplaintType] || item.complaintReason;
+                              const statusLabel = COMPLAINT_ITEM_STATUS_LABELS[item.itemStatus] || 'Neznámy stav';
+                              const isFinal = item.itemStatus === 'item_completed' || item.itemStatus === 'item_rejected';
+                              return (
+                                <div key={i} className="rounded-lg border bg-secondary/30 p-4 space-y-2">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                                      <span className="text-sm font-semibold">{item.productName}</span>
+                                      <span className="text-xs text-muted-foreground">({item.quantity}×)</span>
+                                    </div>
+                                    <span className={cn(
+                                      'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap',
+                                      isFinal && item.itemStatus === 'item_completed' ? 'bg-success/15 text-success border-success/30' :
+                                      isFinal && item.itemStatus === 'item_rejected' ? 'bg-destructive/15 text-destructive border-destructive/30' :
+                                      'bg-primary/15 text-primary border-primary/30'
+                                    )}>
+                                      {statusLabel}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                      <span className="text-muted-foreground">Dôvod:</span>{' '}
+                                      <span className="font-medium">{reasonLabel}</span>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Požadované riešenie:</span>{' '}
+                                      <span className="font-medium">{REQUESTED_RESOLUTION_LABELS[item.requestedResolution]}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Per-item details for returns */}
+                      {ticket.returnItems && ticket.returnItems.length > 0 && (
+                        <div>
+                          <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Vrátené položky</h3>
+                          <div className="space-y-2">
+                            {ticket.returnItems.map((item, i) => (
+                              <div key={i} className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-4 py-3">
+                                <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <span className="text-sm font-semibold">{item.name}</span>
+                                <span className="text-xs text-muted-foreground">({item.quantity}×)</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fallback: global product info (for "other" requests or tickets without items) */}
+                      {!ticket.complaintItems?.length && !ticket.returnItems?.length && (
+                        <div>
+                          <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Detaily požiadavky</h3>
+                          <div className="grid gap-2 text-sm sm:grid-cols-2">
+                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
+                              <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <div>
+                                <span className="text-[11px] text-muted-foreground">Produkt</span>
+                                <p className="font-medium leading-tight">{ticket.product}</p>
+                              </div>
                             </div>
                           </div>
-                          {ticket.issueType && (
-                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
-                              <AlertTriangle className="h-4 w-4 text-muted-foreground shrink-0" />
-                              <div>
-                                <span className="text-[11px] text-muted-foreground">Typ problému</span>
-                                <p className="font-medium leading-tight">{ISSUE_TYPE_LABELS[ticket.issueType]}</p>
-                              </div>
-                            </div>
-                          )}
-                          {ticket.suggestedSolution && (
-                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
-                              <RefreshCw className="h-4 w-4 text-muted-foreground shrink-0" />
-                              <div>
-                                <span className="text-[11px] text-muted-foreground">Riešenie</span>
-                                <p className="font-medium leading-tight">{SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</p>
-                              </div>
-                            </div>
-                          )}
-                          {ticket.severity && (
-                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
-                              <span className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${
-                                ticket.severity === 'critical' ? 'bg-destructive' :
-                                ticket.severity === 'high' ? 'bg-warning' :
-                                ticket.severity === 'medium' ? 'bg-info' : 'bg-success'
-                              }`} />
-                              <div>
-                                <span className="text-[11px] text-muted-foreground">Závažnosť</span>
-                                <p className="font-medium leading-tight">{SEVERITY_LABELS[ticket.severity]}</p>
-                              </div>
-                            </div>
-                          )}
-                          {ticket.refundMethod && (
-                            <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
-                              <Banknote className="h-4 w-4 text-muted-foreground shrink-0" />
-                              <div>
-                                <span className="text-[11px] text-muted-foreground">Spôsob vrátenia</span>
-                                <p className="font-medium leading-tight">{REFUND_METHOD_LABELS[ticket.refundMethod]}</p>
-                              </div>
-                            </div>
-                          )}
                         </div>
+                      )}
+
+                      {/* Additional details (severity, refund method) */}
+                      <div className="grid gap-2 text-sm sm:grid-cols-2">
+                        {ticket.severity && (
+                          <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
+                            <span className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${
+                              ticket.severity === 'critical' ? 'bg-destructive' :
+                              ticket.severity === 'high' ? 'bg-warning' :
+                              ticket.severity === 'medium' ? 'bg-info' : 'bg-success'
+                            }`} />
+                            <div>
+                              <span className="text-[11px] text-muted-foreground">Závažnosť</span>
+                              <p className="font-medium leading-tight">{SEVERITY_LABELS[ticket.severity]}</p>
+                            </div>
+                          </div>
+                        )}
+                        {ticket.refundMethod && (
+                          <div className="flex items-center gap-2 rounded-lg border bg-secondary/30 px-3 py-2">
+                            <Banknote className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <div>
+                              <span className="text-[11px] text-muted-foreground">Spôsob vrátenia</span>
+                              <p className="font-medium leading-tight">{REFUND_METHOD_LABELS[ticket.refundMethod]}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Description */}
