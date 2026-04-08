@@ -145,6 +145,10 @@ const AdminDetail = () => {
 
   // ---- Per-item decision actions (only available during quality_check) ----
   const handleItemAction = (itemIndex: number, item: ComplaintItem, actionKey: string) => {
+    if (actionKey === 'reject') {
+      openRejectDialog({ type: 'item', itemIndex, item });
+      return;
+    }
     let newStatus: ComplaintItemStatus;
     switch (actionKey) {
       case 'refund':
@@ -167,11 +171,7 @@ const AdminDetail = () => {
 
   // ---- Non-complaint actions (return, other) ----
   const handleReject = () => {
-    if (isComplaint) updateComplaintStatus(ticket.id, 'complaint_rejected');
-    if (ticket.requestType === 'return' && ticket.returnStatus) updateReturnStatus(ticket.id, 'return_rejected');
-    if (ticket.requestType === 'other' && ticket.otherStatus) updateOtherStatus(ticket.id, 'other_rejected');
-    updateTicketStatus(ticket.id, 'rejected');
-    toast.success('Požiadavka zamietnutá');
+    openRejectDialog({ type: 'ticket' });
   };
 
   const handleRequestInfo = () => {
