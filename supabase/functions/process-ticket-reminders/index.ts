@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
           ticket_id: ticket.id,
           ticket_code: ticket.ticket_code,
           reminder_number: reminderNumber,
-          message: REMINDER_2_MESSAGE,
+          message: getReminder2Message(ticket.ticket_code),
         });
 
         // Update ticket
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
           ticket_id: ticket.id,
           ticket_code: ticket.ticket_code,
           reminder_number: reminderNumber,
-          message: REMINDER_1_MESSAGE,
+          message: getReminder1Message(ticket.ticket_code),
         });
 
         // Update ticket
