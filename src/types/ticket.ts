@@ -153,6 +153,14 @@ export interface WarehouseReceiptAudit {
   recordedAt: string;
 }
 
+export interface InfoRequest {
+  message: string;
+  internalNote?: string;
+  requestedAt: string;
+  requestedBy: string;
+  resolvedAt?: string;
+}
+
 export interface Ticket {
   id: string;
   customerEmail: string;
@@ -180,6 +188,7 @@ export interface Ticket {
   createdBy?: string;
   otherSubtype?: OtherSubtype;
   assignedTo?: AssignedTeam;
+  infoRequests?: InfoRequest[];
 }
 
 export type AssignedTeam = 'customer_care' | 'sklad';

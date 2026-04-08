@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ReturnItem, ComplaintItem, ComplaintItemStatus, COMPLAINT_TYPE_SUGGESTED_SOLUTION, ComplaintType, SuggestedSolution, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest } from '@/types/ticket';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -11,6 +11,8 @@ interface TicketContextType {
   updateComplaintItemStatus: (ticketId: string, itemIndex: number, itemStatus: ComplaintItemStatus, actionLabel: string) => void;
   setWarehouseReceipt: (id: string, receivedAt: string, agent: string) => void;
   updateAssignment: (id: string, team: AssignedTeam) => void;
+  requestInfo: (id: string, message: string, internalNote?: string) => void;
+  markInfoProvided: (id: string) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
