@@ -53,6 +53,7 @@ function dbRowToTicket(row: any): Ticket {
     warehouseReceipt: row.warehouse_receipt || undefined,
     infoRequests: row.info_requests || undefined,
     createdBy: row.created_by || undefined,
+    source: (row.source as any) || 'customer',
   };
 }
 
