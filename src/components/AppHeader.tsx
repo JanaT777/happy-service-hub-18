@@ -36,6 +36,9 @@ export const AppHeader = () => {
               <span className="hidden sm:inline">{label}</span>
             </Link>
           ))}
+          {(pathname.startsWith('/admin') || pathname.startsWith('/crm')) && (
+            <NotificationBell />
+          )}
         </nav>
       </div>
     </header>
