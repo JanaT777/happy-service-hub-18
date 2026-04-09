@@ -406,6 +406,32 @@ const AdminDetail = () => {
                 </dd>
               </div>
 
+              {/* Resolution */}
+              <div className="py-3 border-b">
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Výsledok</dt>
+                <dd>
+                  {ticket.resolution ? (
+                    <span className="inline-flex items-center rounded-full border border-success/30 bg-success/15 px-2.5 py-1 text-xs font-bold text-success">
+                      {TICKET_RESOLUTION_LABELS[ticket.resolution]}
+                    </span>
+                  ) : !isCrmReadOnly ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {(['approved', 'rejected', 'partial', 'refund', 'exchange'] as TicketResolution[]).map(r => (
+                        <button
+                          key={r}
+                          onClick={() => { setResolution(ticket.id, r); toast.success(`Výsledok nastavený: ${TICKET_RESOLUTION_LABELS[r]}`); }}
+                          className="rounded-md border px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                        >
+                          {TICKET_RESOLUTION_LABELS[r]}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Zatiaľ nenastavený</span>
+                  )}
+                </dd>
+              </div>
+
               <Field label="Zákazník" value={`${customerName} · ${ticket.customerEmail}`} />
               {ticket.returnItems && ticket.returnItems.length > 0 ? (
                 <div className="py-3 border-b">
