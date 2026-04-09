@@ -21,6 +21,10 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />;
   }
 
+  if (isSuperAdmin(user.email)) {
+    return <>{children}</>;
+  }
+
   if (!role) {
     return (
       <div className="mx-auto max-w-md px-4 py-16 text-center">
