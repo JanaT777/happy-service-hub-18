@@ -295,6 +295,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         activityLog: appendLog(t, mkLog('status_changed', 'Agent', `Výsledok: ${resolution}, stav → Dokončený`)),
       };
     });
+  }, [updateAndSync]);
 
   const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
     updateAndSync(id, t => ({ ...t, complaintStatus, updatedAt: new Date().toISOString() }));
