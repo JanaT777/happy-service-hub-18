@@ -261,7 +261,17 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const updateTicketStatus = useCallback((id: string, status: TicketStatus) => {
     const now = new Date().toISOString();
-    updateAndSync(id, t => ({ ...t, status, updatedAt: now, activityLog: appendLog(t, mkLog('status_changed', 'Agent', `→ ${STATUS_LABELS[status]}`)) }));
+    updateAndSync(id, t => {
+      // Notify customer about status change
+      createNotification({
+        ticketCode: t.id,
+        type: 'status_changed',
+        message: `Stav vašej požiadavky ${t.id} sa zmenil na: ${STATUS_LABELS[status]}`,
+        recipientType: 'customer',
+        recipientEmail: t.customerEmail,
+      });
+      return { ...t, status, updatedAt: now, activityLog: appendLog(t, mkLog('status_changed', 'Agent', `→ ${STATUS_LABELS[status]}`)) };
+    });
   }, [updateAndSync]);
 
   const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
