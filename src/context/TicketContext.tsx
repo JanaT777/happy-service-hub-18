@@ -84,6 +84,7 @@ function ticketToDbRow(t: Ticket) {
     warehouse_receipt: t.warehouseReceipt || null,
     info_requests: t.infoRequests || [],
     created_by: t.createdBy || null,
+    source: t.source || 'customer',
     needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
