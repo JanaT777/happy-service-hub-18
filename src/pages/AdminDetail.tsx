@@ -430,6 +430,7 @@ const AdminDetail = () => {
                 <dd>
                   <select
                     value={ticket.assignedTo || ''}
+                    disabled={isCrmReadOnly}
                     onChange={e => { updateAssignment(ticket.id, e.target.value as AssignedTeam); toast.success('Priradenie zmenené'); }}
                     className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
                   >
