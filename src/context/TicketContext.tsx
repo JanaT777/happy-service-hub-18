@@ -326,6 +326,14 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const now = new Date().toISOString();
     const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent', remindersSent: 0, reminders: [] };
     updateAndSync(id, t => {
+      // Notify customer about info request
+      createNotification({
+        ticketCode: t.id,
+        type: 'info_requested',
+        message: `K vašej požiadavke ${t.id} bola vyžiadaná doplňujúca informácia`,
+        recipientType: 'customer',
+        recipientEmail: t.customerEmail,
+      });
       const updates: Partial<Ticket> = {
         infoRequests: [...(t.infoRequests || []), entry],
         status: 'needs_info' as TicketStatus,
