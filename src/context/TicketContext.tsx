@@ -102,13 +102,13 @@ function ticketToDbRow(t: Ticket) {
     internal_notes: t.internalNotes || [],
     activity_log: t.activityLog || [],
     resolution: t.resolution || null,
-    needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
+    needs_info_since: t.status === 'caka_na_podklady' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
-    needs_info_message: t.status === 'needs_info' && t.infoRequests?.length
+    needs_info_message: t.status === 'caka_na_podklady' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].message
       : null,
-    reminders_sent: t.status === 'needs_info' && t.infoRequests?.length
+    reminders_sent: t.status === 'caka_na_podklady' && t.infoRequests?.length
       ? (t.infoRequests[t.infoRequests.length - 1].remindersSent || 0)
       : 0,
     updated_at: t.updatedAt,
@@ -176,7 +176,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const { data: dbTickets } = await supabase
           .from('tickets')
           .select('*')
-          .in('status', ['needs_info', 'suspended']);
+          .in('status', ['caka_na_podklady']);
         if (!dbTickets) return;
 
         for (const dbRow of dbTickets) {
@@ -185,13 +185,9 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (t.id !== dbRow.ticket_code) return t;
             const lastReq = t.infoRequests?.[t.infoRequests.length - 1];
             if (!lastReq) {
-              if (dbRow.status === 'suspended' && t.status !== 'suspended') {
-                return { ...t, status: 'suspended' as TicketStatus, updatedAt: dbRow.updated_at };
-              }
               return t;
             }
             const needsUpdate =
-              dbRow.status === 'suspended' && t.status !== 'suspended' ||
               dbRow.reminders_sent > (lastReq.remindersSent || 0);
             if (!needsUpdate) return t;
             const updatedReq = {
@@ -238,7 +234,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newTicket: Ticket = {
       ...data,
       id: ticketId,
-      status: 'new' as TicketStatus,
+      status: 'podnet_prijaty' as TicketStatus,
       complaintItems,
       complaintStatus: data.requestType === 'complaint' ? 'complaint_new' as ComplaintStatus : undefined,
       returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
@@ -279,6 +275,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const setResolution = useCallback((id: string, resolution: TicketResolution) => {
     const now = new Date().toISOString();
+    const isFinalApproved = resolution === 'approved' || resolution === 'refund' || resolution === 'exchange' || resolution === 'partial';
+    const finalStatus: TicketStatus = isFinalApproved ? 'ukoncena_uznana' : 'ukoncena_zamietnuta';
     updateAndSync(id, t => {
       createNotification({
         ticketCode: t.id,
@@ -290,9 +288,9 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return {
         ...t,
         resolution,
-        status: 'completed' as TicketStatus,
+        status: finalStatus,
         updatedAt: now,
-        activityLog: appendLog(t, mkLog('status_changed', 'Agent', `Výsledok: ${resolution}, stav → Dokončený`)),
+        activityLog: appendLog(t, mkLog('status_changed', 'Agent', `Výsledok: ${resolution}, stav → ${STATUS_LABELS[finalStatus]}`)),
       };
     });
   }, [updateAndSync]);
@@ -359,7 +357,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
       const updates: Partial<Ticket> = {
         infoRequests: [...(t.infoRequests || []), entry],
-        status: 'needs_info' as TicketStatus,
+        status: 'caka_na_podklady' as TicketStatus,
         updatedAt: now,
         activityLog: appendLog(t, mkLog('info_requested', 'Agent', message)),
       };
@@ -376,7 +374,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       );
       const updates: Partial<Ticket> = {
         infoRequests: updatedRequests,
-        status: 'in_review' as TicketStatus,
+        status: 'reklamacia_v_rieseni' as TicketStatus,
         updatedAt: now,
         activityLog: appendLog(t, mkLog('info_provided', 'Agent', 'Informácie doplnené')),
       };
@@ -450,7 +448,7 @@ function getSeedTickets(): Ticket[] {
       ],
       complaintStatus: 'complaint_new',
       assignedTo: 'customer_care',
-      status: 'new',
+      status: 'podnet_prijaty',
       source: 'customer',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -471,7 +469,7 @@ function getSeedTickets(): Ticket[] {
       withinReturnWindow: true,
       returnStatus: 'return_submitted',
       assignedTo: 'sklad',
-      status: 'new',
+      status: 'podnet_prijaty',
       source: 'customer',
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
@@ -486,7 +484,7 @@ function getSeedTickets(): Ticket[] {
       requestType: 'other',
       otherStatus: 'other_submitted',
       assignedTo: 'customer_care',
-      status: 'new',
+      status: 'podnet_prijaty',
       source: 'customer',
       createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 0.5).toISOString(),
