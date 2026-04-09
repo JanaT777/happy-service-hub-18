@@ -250,7 +250,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [syncToDb]);
 
   const updateTicketStatus = useCallback((id: string, status: TicketStatus) => {
-    updateAndSync(id, t => ({ ...t, status, updatedAt: new Date().toISOString() }));
+    const now = new Date().toISOString();
+    updateAndSync(id, t => ({ ...t, status, updatedAt: now, activityLog: appendLog(t, mkLog('status_changed', 'Agent', `→ ${STATUS_LABELS[status]}`)) }));
   }, [updateAndSync]);
 
   const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
@@ -282,7 +283,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           actionHistory: [...(item.actionHistory || []), logEntry],
         };
       });
-      return { ...t, complaintItems: updatedItems, updatedAt: new Date().toISOString() };
+      return { ...t, complaintItems: updatedItems, updatedAt: new Date().toISOString(), activityLog: appendLog(t, mkLog('item_status_changed', 'Agent', actionLabel)) };
     });
   }, [updateAndSync]);
 
@@ -290,7 +291,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const now = new Date().toISOString();
     updateAndSync(id, t => {
       const receipt: WarehouseReceiptAudit = { receivedAt, recordedBy: agent, recordedAt: now };
-      let updates: Partial<Ticket> = { warehouseReceipt: receipt, updatedAt: now };
+      let updates: Partial<Ticket> = { warehouseReceipt: receipt, updatedAt: now, activityLog: appendLog(t, mkLog('warehouse_receipt', agent, `Prijaté: ${receivedAt}`)) };
       if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_received';
       else if (t.requestType === 'return') updates.returnStatus = 'return_received';
       return { ...t, ...updates };
@@ -298,7 +299,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [updateAndSync]);
 
   const updateAssignment = useCallback((id: string, team: AssignedTeam) => {
-    updateAndSync(id, t => ({ ...t, assignedTo: team, updatedAt: new Date().toISOString() }));
+    updateAndSync(id, t => ({ ...t, assignedTo: team, updatedAt: new Date().toISOString(), activityLog: appendLog(t, mkLog('assignment_changed', 'Agent', `→ ${team}`)) }));
   }, [updateAndSync]);
 
   const requestInfo = useCallback((id: string, message: string, internalNote?: string) => {
@@ -309,6 +310,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         infoRequests: [...(t.infoRequests || []), entry],
         status: 'needs_info' as TicketStatus,
         updatedAt: now,
+        activityLog: appendLog(t, mkLog('info_requested', 'Agent', message)),
       };
       if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
       return { ...t, ...updates };
@@ -325,6 +327,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         infoRequests: updatedRequests,
         status: 'in_review' as TicketStatus,
         updatedAt: now,
+        activityLog: appendLog(t, mkLog('info_provided', 'Agent', 'Informácie doplnené')),
       };
       if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
       return { ...t, ...updates };
@@ -338,6 +341,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ...t,
       internalNotes: [...(t.internalNotes || []), note],
       updatedAt: now,
+      activityLog: appendLog(t, mkLog('note_added', author, text.length > 60 ? text.slice(0, 60) + '…' : text)),
     }));
   }, [updateAndSync]);
 
