@@ -240,6 +240,27 @@ const TrackRequest = () => {
         </p>
       </form>
 
+      {/* Customer notifications */}
+      {searched && customerNotifs.filter(n => !n.isRead).length > 0 && (
+        <div className="mb-6 rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Bell className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">Nové upozornenia</span>
+          </div>
+          {customerNotifs.filter(n => !n.isRead).slice(0, 5).map(n => (
+            <div key={n.id} className="flex items-start justify-between gap-2 rounded-lg border bg-card p-3">
+              <div>
+                <p className="text-sm font-medium">{n.message}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: sk })}
+                </p>
+              </div>
+              <button onClick={() => markNotifRead(n.id)} className="text-xs text-muted-foreground hover:text-foreground shrink-0">✓</button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {searched && results !== null && (
         <>
           {results.length === 0 ? (
