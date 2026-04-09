@@ -8,6 +8,7 @@ interface TicketContextType {
   loading: boolean;
   addTicket: (ticket: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateTicketStatus: (id: string, status: TicketStatus) => void;
+  setResolution: (id: string, resolution: TicketResolution) => void;
   updateComplaintStatus: (id: string, complaintStatus: ComplaintStatus) => void;
   updateReturnStatus: (id: string, returnStatus: ReturnStatus) => void;
   updateOtherStatus: (id: string, otherStatus: OtherStatus) => void;
