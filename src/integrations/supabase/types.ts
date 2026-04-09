@@ -77,6 +77,7 @@ export type Database = {
           return_items: Json | null
           return_status: string | null
           severity: string | null
+          source: string
           status: string
           suggested_solution: string | null
           ticket_code: string
@@ -111,6 +112,7 @@ export type Database = {
           return_items?: Json | null
           return_status?: string | null
           severity?: string | null
+          source?: string
           status?: string
           suggested_solution?: string | null
           ticket_code: string
@@ -145,6 +147,7 @@ export type Database = {
           return_items?: Json | null
           return_status?: string | null
           severity?: string | null
+          source?: string
           status?: string
           suggested_solution?: string | null
           ticket_code?: string

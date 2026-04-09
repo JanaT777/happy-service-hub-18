@@ -1,0 +1,1 @@
+ALTER TABLE public.tickets ADD COLUMN source text NOT NULL DEFAULT 'customer';
