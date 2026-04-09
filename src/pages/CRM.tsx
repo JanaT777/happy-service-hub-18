@@ -25,26 +25,26 @@ import { OtherRequestForm } from '@/components/OtherRequestForm';
 
 const WORKFLOW_STATUS_COLORS: Record<string, string> = {
   complaint_new: 'bg-info/15 text-info border-info/30',
-  complaint_pickup_ordered: 'bg-primary/15 text-primary border-primary/30',
-  complaint_received: 'bg-primary/15 text-primary border-primary/30',
+  complaint_pickup_ordered: 'bg-warning/15 text-warning border-warning/30',
+  complaint_received: 'bg-warning/15 text-warning border-warning/30',
   complaint_inspecting: 'bg-warning/15 text-warning border-warning/30',
   complaint_in_progress: 'bg-warning/15 text-warning border-warning/30',
-  complaint_waiting_customer: 'bg-destructive/15 text-destructive border-destructive/30',
+  complaint_waiting_customer: 'bg-caution/15 text-caution border-caution/30',
   complaint_approved: 'bg-success/15 text-success border-success/30',
-  complaint_refund_processing: 'bg-primary/15 text-primary border-primary/30',
+  complaint_refund_processing: 'bg-warning/15 text-warning border-warning/30',
   complaint_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
-  complaint_resolved: 'bg-muted text-muted-foreground border-muted',
+  complaint_resolved: 'bg-success/15 text-success border-success/30',
   return_submitted: 'bg-info/15 text-info border-info/30',
-  return_received: 'bg-primary/15 text-primary border-primary/30',
+  return_received: 'bg-warning/15 text-warning border-warning/30',
   return_inspecting: 'bg-warning/15 text-warning border-warning/30',
-  return_approved: 'bg-primary/15 text-primary border-primary/30',
+  return_approved: 'bg-success/15 text-success border-success/30',
   return_refund_issued: 'bg-warning/15 text-warning border-warning/30',
-  return_refunded: 'bg-primary/15 text-primary border-primary/30',
-  return_completed: 'bg-muted text-muted-foreground border-muted',
+  return_refunded: 'bg-success/15 text-success border-success/30',
+  return_completed: 'bg-success/15 text-success border-success/30',
   return_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
   other_submitted: 'bg-info/15 text-info border-info/30',
   other_in_progress: 'bg-warning/15 text-warning border-warning/30',
-  other_completed: 'bg-muted text-muted-foreground border-muted',
+  other_completed: 'bg-success/15 text-success border-success/30',
   other_rejected: 'bg-destructive/15 text-destructive border-destructive/30',
 };
 
@@ -63,8 +63,8 @@ const getWorkflowStatusKey = (ticket: Ticket): string | undefined => {
 };
 
 const TYPE_CONFIG: Record<RequestType, { icon: typeof AlertTriangle; bg: string; text: string; border: string }> = {
-  complaint: { icon: AlertTriangle, bg: 'bg-warning/8', text: 'text-warning/80', border: 'border-warning/25' },
-  return: { icon: RotateCcw, bg: 'bg-info/8', text: 'text-info/80', border: 'border-info/25' },
+  complaint: { icon: AlertTriangle, bg: 'bg-muted/60', text: 'text-muted-foreground', border: 'border-border' },
+  return: { icon: RotateCcw, bg: 'bg-muted/60', text: 'text-muted-foreground', border: 'border-border' },
   other: { icon: Building2, bg: 'bg-muted/60', text: 'text-muted-foreground', border: 'border-border' },
 };
 
