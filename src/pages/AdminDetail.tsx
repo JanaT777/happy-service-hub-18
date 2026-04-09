@@ -801,7 +801,7 @@ const AdminDetail = () => {
           })()}
 
           {/* Non-complaint actions (return, other) */}
-          {!hasComplaintItems && !isCrmReadOnly && (
+          {!hasComplaintItems && !isCrmReadOnly && !isCrmView && (
             <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-5">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Akcie</p>
