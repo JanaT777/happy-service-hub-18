@@ -12,11 +12,12 @@ import {
 import { Button } from '@/components/ui/button';
 import {
   Search, Mail, Hash, Package, AlertTriangle, Banknote, Clock,
-  CheckCircle2, Circle, FileText, RotateCcw, Truck, RefreshCw, CalendarDays,
+  CheckCircle2, Circle, FileText, RotateCcw, Truck, RefreshCw, CalendarDays, Bell,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/hooks/use-notifications';
 
 const searchSchema = z.object({
   email: z.string().trim().email({ message: 'Prosím zadajte platnú e-mailovú adresu' }).max(255),
