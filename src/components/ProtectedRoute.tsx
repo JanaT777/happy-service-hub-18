@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth, type AppRole } from '@/hooks/use-auth';
+import { useAuth, isSuperAdmin, type AppRole } from '@/hooks/use-auth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

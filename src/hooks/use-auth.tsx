@@ -4,6 +4,9 @@ import type { User, Session } from '@supabase/supabase-js';
 
 export type AppRole = 'crm' | 'cc_admin';
 
+const SUPERADMIN_EMAIL = 'tarhajova@taktik.sk';
+export const isSuperAdmin = (email?: string | null) => email === SUPERADMIN_EMAIL;
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
