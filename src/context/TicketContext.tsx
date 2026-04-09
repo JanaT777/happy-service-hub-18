@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TicketContextType {
@@ -56,6 +56,7 @@ function dbRowToTicket(row: any): Ticket {
     createdBy: row.created_by || undefined,
     source: (row.source as any) || 'customer',
     internalNotes: row.internal_notes || [],
+    activityLog: row.activity_log || [],
   };
 }
 
@@ -88,6 +89,7 @@ function ticketToDbRow(t: Ticket) {
     created_by: t.createdBy || null,
     source: t.source || 'customer',
     internal_notes: t.internalNotes || [],
+    activity_log: t.activityLog || [],
     needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
