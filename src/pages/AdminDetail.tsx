@@ -13,6 +13,7 @@ import {
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
   AssignedTeam, ASSIGNED_TEAM_LABELS, ActivityAction,
+  TicketResolution, TICKET_RESOLUTION_LABELS,
 } from '@/types/ticket';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -76,7 +77,7 @@ const AdminDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isCrmView = location.pathname.startsWith('/crm/');
-  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote } = useTickets();
+  const { getTicket, updateTicketStatus, setResolution, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote } = useTickets();
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
 
@@ -401,6 +402,32 @@ const AdminDetail = () => {
                     <span className="rounded-full border bg-secondary px-2.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
                       {workflowLabel}
                     </span>
+                  )}
+                </dd>
+              </div>
+
+              {/* Resolution */}
+              <div className="py-3 border-b">
+                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Výsledok</dt>
+                <dd>
+                  {ticket.resolution ? (
+                    <span className="inline-flex items-center rounded-full border border-success/30 bg-success/15 px-2.5 py-1 text-xs font-bold text-success">
+                      {TICKET_RESOLUTION_LABELS[ticket.resolution]}
+                    </span>
+                  ) : !isCrmReadOnly ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {(['approved', 'rejected', 'partial', 'refund', 'exchange'] as TicketResolution[]).map(r => (
+                        <button
+                          key={r}
+                          onClick={() => { setResolution(ticket.id, r); toast.success(`Výsledok nastavený: ${TICKET_RESOLUTION_LABELS[r]}`); }}
+                          className="rounded-md border px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                        >
+                          {TICKET_RESOLUTION_LABELS[r]}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Zatiaľ nenastavený</span>
                   )}
                 </dd>
               </div>

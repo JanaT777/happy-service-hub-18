@@ -120,6 +120,7 @@ export type Database = {
           reminders_sent: number
           request_type: string
           requested_resolution: string | null
+          resolution: string | null
           return_items: Json | null
           return_status: string | null
           severity: string | null
@@ -157,6 +158,7 @@ export type Database = {
           reminders_sent?: number
           request_type?: string
           requested_resolution?: string | null
+          resolution?: string | null
           return_items?: Json | null
           return_status?: string | null
           severity?: string | null
@@ -194,6 +196,7 @@ export type Database = {
           reminders_sent?: number
           request_type?: string
           requested_resolution?: string | null
+          resolution?: string | null
           return_items?: Json | null
           return_status?: string | null
           severity?: string | null
@@ -240,6 +243,12 @@ export type Database = {
     }
     Enums: {
       app_role: "crm" | "cc_admin"
+      ticket_resolution:
+        | "approved"
+        | "rejected"
+        | "partial"
+        | "refund"
+        | "exchange"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -368,6 +377,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["crm", "cc_admin"],
+      ticket_resolution: [
+        "approved",
+        "rejected",
+        "partial",
+        "refund",
+        "exchange",
+      ],
     },
   },
 } as const

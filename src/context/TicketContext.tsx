@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS, REQUEST_TYPE_LABELS } from '@/types/ticket';
+import { Ticket, TicketStatus, TicketResolution, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS, REQUEST_TYPE_LABELS } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/hooks/use-notifications';
 
@@ -8,6 +8,7 @@ interface TicketContextType {
   loading: boolean;
   addTicket: (ticket: Omit<Ticket, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => Promise<string>;
   updateTicketStatus: (id: string, status: TicketStatus) => void;
+  setResolution: (id: string, resolution: TicketResolution) => void;
   updateComplaintStatus: (id: string, complaintStatus: ComplaintStatus) => void;
   updateReturnStatus: (id: string, returnStatus: ReturnStatus) => void;
   updateOtherStatus: (id: string, otherStatus: OtherStatus) => void;
@@ -66,6 +67,7 @@ function dbRowToTicket(row: any): Ticket {
     source: (row.source as any) || 'customer',
     internalNotes: row.internal_notes || [],
     activityLog: row.activity_log || [],
+    resolution: row.resolution || undefined,
   };
 }
 
@@ -99,6 +101,7 @@ function ticketToDbRow(t: Ticket) {
     source: t.source || 'customer',
     internal_notes: t.internalNotes || [],
     activity_log: t.activityLog || [],
+    resolution: t.resolution || null,
     needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
@@ -274,6 +277,26 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [updateAndSync]);
 
+  const setResolution = useCallback((id: string, resolution: TicketResolution) => {
+    const now = new Date().toISOString();
+    updateAndSync(id, t => {
+      createNotification({
+        ticketCode: t.id,
+        type: 'status_changed',
+        message: `Požiadavka ${t.id} bola uzavretá s výsledkom: ${resolution}`,
+        recipientType: 'customer',
+        recipientEmail: t.customerEmail,
+      });
+      return {
+        ...t,
+        resolution,
+        status: 'completed' as TicketStatus,
+        updatedAt: now,
+        activityLog: appendLog(t, mkLog('status_changed', 'Agent', `Výsledok: ${resolution}, stav → Dokončený`)),
+      };
+    });
+  }, [updateAndSync]);
+
   const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
     updateAndSync(id, t => ({ ...t, complaintStatus, updatedAt: new Date().toISOString() }));
   }, [updateAndSync]);
@@ -376,7 +399,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, getTicket }}>
+    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, setResolution, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, getTicket }}>
       {children}
     </TicketContext.Provider>
   );

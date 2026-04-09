@@ -36,6 +36,16 @@ export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 export type RefundMethod = 'bank_transfer' | 'original_payment';
 export type RequestedResolution = 'resend' | 'exchange' | 'refund';
 
+export type TicketResolution = 'approved' | 'rejected' | 'partial' | 'refund' | 'exchange';
+
+export const TICKET_RESOLUTION_LABELS: Record<TicketResolution, string> = {
+  approved: 'Schválené',
+  rejected: 'Zamietnuté',
+  partial: 'Čiastočne vybavené',
+  refund: 'Refundácia',
+  exchange: 'Výmena',
+};
+
 export const REQUESTED_RESOLUTION_LABELS: Record<RequestedResolution, string> = {
   resend: 'Opätovné zaslanie',
   exchange: 'Výmena produktu',
@@ -237,6 +247,7 @@ export interface Ticket {
   infoRequests?: InfoRequest[];
   internalNotes?: InternalNote[];
   activityLog?: ActivityLogEntry[];
+  resolution?: TicketResolution;
 }
 
 export type AssignedTeam = 'customer_care' | 'sklad';
