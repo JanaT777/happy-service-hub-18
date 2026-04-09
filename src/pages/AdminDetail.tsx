@@ -96,6 +96,7 @@ const AdminDetail = () => {
   const [rejectNote, setRejectNote] = useState('');
   const [pendingReject, setPendingReject] = useState<{ type: 'item'; itemIndex: number; item: ComplaintItem } | { type: 'ticket' } | null>(null);
   const [rejectButtonLocked, setRejectButtonLocked] = useState(true);
+  const [noteText, setNoteText] = useState('');
 
   const openRejectDialog = (target: typeof pendingReject) => {
     setPendingReject(target);
