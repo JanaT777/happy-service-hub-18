@@ -140,8 +140,8 @@ const Admin = () => {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl font-bold sm:text-3xl">Prehľad požiadaviek</h1>
-        <p className="text-muted-foreground">Zoznam všetkých požiadaviek zákazníkov</p>
+        <h1 className="font-heading text-2xl font-bold sm:text-3xl">CC Admin</h1>
+        <p className="text-muted-foreground">Prehľad všetkých požiadaviek zákazníkov</p>
       </div>
 
       {/* Quick type filters */}
