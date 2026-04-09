@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Headset, LayoutDashboard, PlusCircle, SearchCheck, Briefcase, LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/NotificationBell';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth, isSuperAdmin } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 
 export const AppHeader = () => {
@@ -15,11 +15,17 @@ export const AppHeader = () => {
     { to: '/track', label: 'Sledovať požiadavku', icon: SearchCheck },
   ];
 
-  const roleLinks = role === 'cc_admin'
-    ? [{ to: '/admin', label: 'CC Admin', icon: LayoutDashboard }]
-    : role === 'crm'
-      ? [{ to: '/crm', label: 'CRM', icon: Briefcase }]
-      : [];
+  const superAdmin = isSuperAdmin(user?.email);
+  const roleLinks = superAdmin
+    ? [
+        { to: '/admin', label: 'CC Admin', icon: LayoutDashboard },
+        { to: '/crm', label: 'CRM', icon: Briefcase },
+      ]
+    : role === 'cc_admin'
+      ? [{ to: '/admin', label: 'CC Admin', icon: LayoutDashboard }]
+      : role === 'crm'
+        ? [{ to: '/crm', label: 'CRM', icon: Briefcase }]
+        : [];
 
   const links = [...publicLinks, ...roleLinks];
 

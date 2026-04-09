@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth, type AppRole } from '@/hooks/use-auth';
+import { useAuth, isSuperAdmin, type AppRole } from '@/hooks/use-auth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,6 +19,10 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (isSuperAdmin(user.email)) {
+    return <>{children}</>;
   }
 
   if (!role) {
