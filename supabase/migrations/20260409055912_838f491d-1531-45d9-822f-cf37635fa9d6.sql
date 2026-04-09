@@ -1,0 +1,1 @@
+ALTER TABLE public.tickets ADD COLUMN activity_log jsonb NOT NULL DEFAULT '[]'::jsonb;
