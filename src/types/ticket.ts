@@ -247,6 +247,7 @@ export interface Ticket {
   infoRequests?: InfoRequest[];
   internalNotes?: InternalNote[];
   activityLog?: ActivityLogEntry[];
+  resolution?: TicketResolution;
 }
 
 export type AssignedTeam = 'customer_care' | 'sklad';
