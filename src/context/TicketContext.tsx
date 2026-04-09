@@ -23,6 +23,14 @@ const TicketContext = createContext<TicketContextType | undefined>(undefined);
 
 const generateId = () => Math.random().toString(36).substring(2, 10).toUpperCase();
 
+function mkLog(action: ActivityAction, actor: string, details?: string): ActivityLogEntry {
+  return { action, actor, timestamp: new Date().toISOString(), details };
+}
+
+function appendLog(t: Ticket, log: ActivityLogEntry): ActivityLogEntry[] {
+  return [...(t.activityLog || []), log];
+}
+
 // ── DB ↔ Ticket mapping ──
 
 function dbRowToTicket(row: any): Ticket {
