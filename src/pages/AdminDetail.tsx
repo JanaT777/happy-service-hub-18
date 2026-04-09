@@ -12,7 +12,7 @@ import {
   ComplaintItemStatus, ITEM_STATUS_FLOW, ITEM_STATUS_OWNER,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
-  AssignedTeam, ASSIGNED_TEAM_LABELS,
+  AssignedTeam, ASSIGNED_TEAM_LABELS, ActivityAction,
 } from '@/types/ticket';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
