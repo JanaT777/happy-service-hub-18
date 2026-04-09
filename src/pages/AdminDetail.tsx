@@ -208,6 +208,7 @@ const AdminDetail = () => {
   const handleWarehouseInspection = (itemIndex: number, item: ComplaintItem, result: 'ok' | 'nok') => {
     const actionLabel = result === 'ok' ? 'Kontrola OK' : 'Kontrola NOK';
     updateComplaintItemStatus(ticket.id, itemIndex, 'item_checked', actionLabel);
+    ensureInProgress();
     // Auto-reassign to Customer Care
     if (ticket.assignedTo !== 'customer_care') {
       updateAssignment(ticket.id, 'customer_care');
@@ -238,6 +239,7 @@ const AdminDetail = () => {
 
     const actionLabel = ITEM_ACTIONS.find(a => a.key === actionKey)?.label ?? actionKey;
     updateComplaintItemStatus(ticket.id, itemIndex, newStatus, actionLabel);
+    ensureInProgress();
     toast.success(`${item.productName}: ${actionLabel}`);
   };
 
@@ -254,6 +256,7 @@ const AdminDetail = () => {
 
   const confirmRequestInfo = () => {
     if (!infoMessage.trim()) return;
+    ensureInProgress();
     requestInfo(ticket!.id, infoMessage.trim(), infoNote.trim() || undefined);
     setInfoDialogOpen(false);
     toast.success('Vyžiadané doplnenie od zákazníka');
