@@ -9,6 +9,7 @@ import {
   ComplaintType, COMPLAINT_TYPE_LABELS, COMPLAINT_TYPE_SUGGESTED_SOLUTION,
   REQUESTED_RESOLUTION_LABELS, MOCK_ORDERS, OTHER_SUBTYPE_LABELS, ASSIGNED_TEAM_LABELS,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
+  TICKET_RESOLUTION_LABELS,
 } from '@/types/ticket';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -276,6 +277,7 @@ const CRM = () => {
               <TableHead>Podtyp</TableHead>
               <TableHead>Priradené</TableHead>
               <TableHead>Stav</TableHead>
+              <TableHead>Výsledok</TableHead>
               <TableHead>Navrhované riešenie</TableHead>
               <TableHead>Požiadavka zákazníka</TableHead>
               <TableHead>Zákazník</TableHead>
@@ -285,9 +287,9 @@ const CRM = () => {
           <TableBody>
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
-                  Žiadne požiadavky neboli nájdené.
-                </TableCell>
+                <TableCell colSpan={11} className="h-32 text-center text-muted-foreground">
+                   Žiadne požiadavky neboli nájdené.
+                 </TableCell>
               </TableRow>
             )}
             {filtered.map(ticket => {
