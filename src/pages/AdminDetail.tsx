@@ -319,7 +319,7 @@ const AdminDetail = () => {
     <div className="mx-auto max-w-6xl px-4 py-8">
       {/* Back + title */}
       <div className="mb-8 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="shrink-0">
+        <Button variant="ghost" size="icon" onClick={() => navigate(isCrmView ? '/crm' : '/admin')} className="shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -329,6 +329,21 @@ const AdminDetail = () => {
           </p>
         </div>
       </div>
+
+      {/* CRM read-only banner */}
+      {isCrmReadOnly && (
+        <div className="mb-6 rounded-xl border-2 border-muted bg-muted/30 p-4 flex items-center gap-3">
+          <Info className="h-5 w-5 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-muted-foreground">Len na čítanie</p>
+            <p className="text-xs text-muted-foreground">
+              {ticket.source === 'customer'
+                ? 'Tento tiket bol vytvorený zákazníkom. V CRM rozhraní je k dispozícii len na čítanie.'
+                : 'Tento tiket je možné upravovať iba keď je v stave „Čaká na doplnenie".'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* === TWO COLUMNS === */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[7fr_3fr]">
