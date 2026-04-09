@@ -332,7 +332,6 @@ const TrackRequest = () => {
                           <p className="text-sm text-muted-foreground">
                             Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.
                           </p>
-                          </p>
                           <div className="rounded-lg border border-warning/20 bg-card p-3">
                             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Požadované informácie</p>
                             <p className="text-sm font-medium">{ticket.infoRequests[ticket.infoRequests.length - 1].message}</p>
