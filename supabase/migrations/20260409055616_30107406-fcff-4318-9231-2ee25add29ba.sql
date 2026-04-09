@@ -1,0 +1,1 @@
+ALTER TABLE public.tickets ADD COLUMN internal_notes jsonb NOT NULL DEFAULT '[]'::jsonb;

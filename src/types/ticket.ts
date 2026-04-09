@@ -189,6 +189,12 @@ export interface InfoRequest {
   reminders?: ReminderLog[];
 }
 
+export interface InternalNote {
+  text: string;
+  author: string;
+  createdAt: string;
+}
+
 export type TicketSource = 'customer' | 'crm';
 
 export interface Ticket {
@@ -220,6 +226,7 @@ export interface Ticket {
   otherSubtype?: OtherSubtype;
   assignedTo?: AssignedTeam;
   infoRequests?: InfoRequest[];
+  internalNotes?: InternalNote[];
 }
 
 export type AssignedTeam = 'customer_care' | 'sklad';

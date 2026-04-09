@@ -76,7 +76,7 @@ const AdminDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isCrmView = location.pathname.startsWith('/crm/');
-  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided } = useTickets();
+  const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote } = useTickets();
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
 
@@ -96,6 +96,7 @@ const AdminDetail = () => {
   const [rejectNote, setRejectNote] = useState('');
   const [pendingReject, setPendingReject] = useState<{ type: 'item'; itemIndex: number; item: ComplaintItem } | { type: 'ticket' } | null>(null);
   const [rejectButtonLocked, setRejectButtonLocked] = useState(true);
+  const [noteText, setNoteText] = useState('');
 
   const openRejectDialog = (target: typeof pendingReject) => {
     setPendingReject(target);
@@ -720,6 +721,58 @@ const AdminDetail = () => {
               })}
             </div>
           )}
+          {/* Internal notes */}
+          <div className="rounded-xl border bg-card p-6">
+            <h2 className="font-heading text-base font-semibold mb-4 flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              Interné poznámky
+            </h2>
+
+            {/* Add note form */}
+            {!isCrmReadOnly && (
+              <div className="mb-4 space-y-2">
+                <Textarea
+                  placeholder="Pridať internú poznámku..."
+                  value={noteText}
+                  onChange={e => setNoteText(e.target.value)}
+                  className="min-h-[80px] text-sm"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    disabled={!noteText.trim()}
+                    onClick={() => {
+                      addInternalNote(ticket.id, noteText.trim(), isCrmView ? 'OZ' : 'Agent');
+                      setNoteText('');
+                      toast.success('Poznámka bola pridaná');
+                    }}
+                  >
+                    <Send className="h-3.5 w-3.5 mr-1.5" />
+                    Uložiť poznámku
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Notes list */}
+            {ticket.internalNotes && ticket.internalNotes.length > 0 ? (
+              <div className="space-y-3">
+                {[...ticket.internalNotes].reverse().map((note, i) => (
+                  <div key={i} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-foreground">{note.author}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true, locale: sk })}
+                      </span>
+                    </div>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{note.text}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Žiadne interné poznámky.</p>
+            )}
+          </div>
         </div>
 
         {/* ──── RIGHT: Sidebar ──── */}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TicketContextType {
@@ -15,6 +15,7 @@ interface TicketContextType {
   updateAssignment: (id: string, team: AssignedTeam) => void;
   requestInfo: (id: string, message: string, internalNote?: string) => void;
   markInfoProvided: (id: string) => void;
+  addInternalNote: (id: string, text: string, author: string) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
@@ -54,6 +55,7 @@ function dbRowToTicket(row: any): Ticket {
     infoRequests: row.info_requests || undefined,
     createdBy: row.created_by || undefined,
     source: (row.source as any) || 'customer',
+    internalNotes: row.internal_notes || [],
   };
 }
 
@@ -85,6 +87,7 @@ function ticketToDbRow(t: Ticket) {
     info_requests: t.infoRequests || [],
     created_by: t.createdBy || null,
     source: t.source || 'customer',
+    internal_notes: t.internalNotes || [],
     needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
@@ -315,10 +318,20 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [updateAndSync]);
 
+  const addInternalNote = useCallback((id: string, text: string, author: string) => {
+    const now = new Date().toISOString();
+    const note: InternalNote = { text, author, createdAt: now };
+    updateAndSync(id, t => ({
+      ...t,
+      internalNotes: [...(t.internalNotes || []), note],
+      updatedAt: now,
+    }));
+  }, [updateAndSync]);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, getTicket }}>
+    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, getTicket }}>
       {children}
     </TicketContext.Provider>
   );
