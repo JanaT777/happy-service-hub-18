@@ -318,10 +318,20 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [updateAndSync]);
 
+  const addInternalNote = useCallback((id: string, text: string, author: string) => {
+    const now = new Date().toISOString();
+    const note: InternalNote = { text, author, createdAt: now };
+    updateAndSync(id, t => ({
+      ...t,
+      internalNotes: [...(t.internalNotes || []), note],
+      updatedAt: now,
+    }));
+  }, [updateAndSync]);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, getTicket }}>
+    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, getTicket }}>
       {children}
     </TicketContext.Provider>
   );
