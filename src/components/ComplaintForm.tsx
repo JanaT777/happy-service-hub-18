@@ -175,6 +175,7 @@ export const ComplaintForm = ({ treeResult, onBack, onSubmit, createdBy }: Props
       complaintItems,
       iban: iban.replace(/\s/g, '').toUpperCase(),
       ...(createdBy ? { createdBy } : {}),
+      source: createdBy ? 'crm' as const : 'customer' as const,
     });
 
     id.then(ticketId => {

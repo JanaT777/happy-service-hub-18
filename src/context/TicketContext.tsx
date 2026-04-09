@@ -53,6 +53,7 @@ function dbRowToTicket(row: any): Ticket {
     warehouseReceipt: row.warehouse_receipt || undefined,
     infoRequests: row.info_requests || undefined,
     createdBy: row.created_by || undefined,
+    source: (row.source as any) || 'customer',
   };
 }
 
@@ -83,6 +84,7 @@ function ticketToDbRow(t: Ticket) {
     warehouse_receipt: t.warehouseReceipt || null,
     info_requests: t.infoRequests || [],
     created_by: t.createdBy || null,
+    source: t.source || 'customer',
     needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
@@ -368,6 +370,7 @@ function getSeedTickets(): Ticket[] {
       complaintStatus: 'complaint_new',
       assignedTo: 'customer_care',
       status: 'new',
+      source: 'customer',
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     },
@@ -388,6 +391,7 @@ function getSeedTickets(): Ticket[] {
       returnStatus: 'return_submitted',
       assignedTo: 'sklad',
       status: 'new',
+      source: 'customer',
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     },
@@ -402,6 +406,7 @@ function getSeedTickets(): Ticket[] {
       otherStatus: 'other_submitted',
       assignedTo: 'customer_care',
       status: 'new',
+      source: 'customer',
       createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
       updatedAt: new Date(Date.now() - 86400000 * 0.5).toISOString(),
     },

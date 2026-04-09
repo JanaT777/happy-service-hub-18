@@ -189,6 +189,8 @@ export interface InfoRequest {
   reminders?: ReminderLog[];
 }
 
+export type TicketSource = 'customer' | 'crm';
+
 export interface Ticket {
   id: string;
   customerEmail: string;
@@ -198,6 +200,7 @@ export interface Ticket {
   attachments: string[];
   requestType: RequestType;
   status: TicketStatus;
+  source: TicketSource;
   createdAt: string;
   updatedAt: string;
   refundMethod?: RefundMethod;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
 import {
   REQUEST_TYPE_LABELS, SUGGESTED_SOLUTION_LABELS,
@@ -74,6 +74,8 @@ const ITEM_ACTIONS: { key: string; label: string; solution: SuggestedSolution | 
 const AdminDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isCrmView = location.pathname.startsWith('/crm/');
   const { getTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided } = useTickets();
   const [receiptDate, setReceiptDate] = useState<Date | undefined>(undefined);
   const [receiptPopoverOpen, setReceiptPopoverOpen] = useState(false);
@@ -134,6 +136,12 @@ const AdminDetail = () => {
       </div>
     );
   }
+
+  // CRM read-only logic
+  const isCrmReadOnly = isCrmView && (
+    ticket.source === 'customer' ||
+    (ticket.source === 'crm' && ticket.status !== 'needs_info')
+  );
 
   // Derived data
   const order = MOCK_ORDERS[ticket.orderNumber];
@@ -311,7 +319,7 @@ const AdminDetail = () => {
     <div className="mx-auto max-w-6xl px-4 py-8">
       {/* Back + title */}
       <div className="mb-8 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} className="shrink-0">
+        <Button variant="ghost" size="icon" onClick={() => navigate(isCrmView ? '/crm' : '/admin')} className="shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -321,6 +329,21 @@ const AdminDetail = () => {
           </p>
         </div>
       </div>
+
+      {/* CRM read-only banner */}
+      {isCrmReadOnly && (
+        <div className="mb-6 rounded-xl border-2 border-muted bg-muted/30 p-4 flex items-center gap-3">
+          <Info className="h-5 w-5 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-muted-foreground">Len na čítanie</p>
+            <p className="text-xs text-muted-foreground">
+              {ticket.source === 'customer'
+                ? 'Tento tiket bol vytvorený zákazníkom. V CRM rozhraní je k dispozícii len na čítanie.'
+                : 'Tento tiket je možné upravovať iba keď je v stave „Čaká na doplnenie".'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* === TWO COLUMNS === */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[7fr_3fr]">
@@ -407,6 +430,7 @@ const AdminDetail = () => {
                 <dd>
                   <select
                     value={ticket.assignedTo || ''}
+                    disabled={isCrmReadOnly}
                     onChange={e => { updateAssignment(ticket.id, e.target.value as AssignedTeam); toast.success('Priradenie zmenené'); }}
                     className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
                   >
@@ -580,7 +604,7 @@ const AdminDetail = () => {
                       )}
 
                       {/* Per-item action buttons */}
-                      {!isFinal && (
+                      {!isFinal && !isCrmReadOnly && (
                         <div className="border-t pt-3 space-y-2">
                           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Akcie</p>
 
@@ -702,7 +726,7 @@ const AdminDetail = () => {
         <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
 
           {/* Suspended banner */}
-          {ticket.status === 'suspended' && (
+          {ticket.status === 'suspended' && !isCrmReadOnly && (
             <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -777,7 +801,7 @@ const AdminDetail = () => {
           })()}
 
           {/* Non-complaint actions (return, other) */}
-          {!hasComplaintItems && (
+          {!hasComplaintItems && !(isCrmView && (isCrmReadOnly || ticket.status === 'needs_info')) && (
             <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-5">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Akcie</p>
@@ -824,7 +848,7 @@ const AdminDetail = () => {
           )}
 
           {/* Warehouse Receipt — staff only */}
-          {(ticket.requestType === 'return' || ticket.requestType === 'complaint') && (
+          {(ticket.requestType === 'return' || ticket.requestType === 'complaint') && !isCrmReadOnly && (
             <div className="rounded-xl border-2 border-warning/30 bg-warning/5 p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <Warehouse className="h-4 w-4 text-warning" />

@@ -103,6 +103,7 @@ export const OtherRequestForm = ({ onBack, onSubmit, createdBy }: Props) => {
       requestType: 'other',
       otherSubtype: subtype || undefined,
       ...(createdBy ? { createdBy } : {}),
+      source: createdBy ? 'crm' as const : 'customer' as const,
     }).then(() => {
       toast.success('Požiadavka bola odoslaná!');
       setSubmitting(false);
