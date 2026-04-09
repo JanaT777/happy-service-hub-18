@@ -131,6 +131,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) =
       returnItems: selectedProducts.map(p => ({ name: p.name, quantity: p.qty })),
       iban: iban.replace(/\s/g, '').toUpperCase(),
       ...(createdBy ? { createdBy } : {}),
+      source: createdBy ? 'crm' as const : 'customer' as const,
     });
     id.then(ticketId => {
       setTicketId(ticketId);
