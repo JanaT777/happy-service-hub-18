@@ -195,6 +195,15 @@ export interface InternalNote {
   createdAt: string;
 }
 
+export type ActivityAction = 'ticket_created' | 'status_changed' | 'note_added' | 'info_requested' | 'info_provided' | 'item_status_changed' | 'assignment_changed' | 'warehouse_receipt' | 'rejected';
+
+export interface ActivityLogEntry {
+  action: ActivityAction;
+  actor: string;
+  timestamp: string;
+  details?: string;
+}
+
 export type TicketSource = 'customer' | 'crm';
 
 export interface Ticket {
@@ -227,6 +236,7 @@ export interface Ticket {
   assignedTo?: AssignedTeam;
   infoRequests?: InfoRequest[];
   internalNotes?: InternalNote[];
+  activityLog?: ActivityLogEntry[];
 }
 
 export type AssignedTeam = 'customer_care' | 'sklad';
