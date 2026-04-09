@@ -310,7 +310,7 @@ const CRM = () => {
                     deadline?.level === 'ok' && 'border-l-[5px] border-l-success/60 hover:bg-accent/50',
                     !deadline && 'hover:bg-accent/50'
                   )}
-                  onClick={() => navigate(`/admin/${ticket.id}`)}
+                  onClick={() => navigate(`/crm/${ticket.id}`)}
                 >
                   <TableCell className="font-heading font-bold text-sm">{ticket.id}</TableCell>
                   <TableCell>
