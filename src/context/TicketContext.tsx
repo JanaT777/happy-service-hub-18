@@ -277,6 +277,25 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [updateAndSync]);
 
+  const setResolution = useCallback((id: string, resolution: TicketResolution) => {
+    const now = new Date().toISOString();
+    updateAndSync(id, t => {
+      createNotification({
+        ticketCode: t.id,
+        type: 'status_changed',
+        message: `Požiadavka ${t.id} bola uzavretá s výsledkom: ${resolution}`,
+        recipientType: 'customer',
+        recipientEmail: t.customerEmail,
+      });
+      return {
+        ...t,
+        resolution,
+        status: 'completed' as TicketStatus,
+        updatedAt: now,
+        activityLog: appendLog(t, mkLog('status_changed', 'Agent', `Výsledok: ${resolution}, stav → Dokončený`)),
+      };
+    });
+
   const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
     updateAndSync(id, t => ({ ...t, complaintStatus, updatedAt: new Date().toISOString() }));
   }, [updateAndSync]);
