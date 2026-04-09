@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          recipient_email: string | null
+          recipient_type: string
+          ticket_code: string
+          ticket_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          recipient_email?: string | null
+          recipient_type?: string
+          ticket_code: string
+          ticket_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          recipient_email?: string | null
+          recipient_type?: string
+          ticket_code?: string
+          ticket_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_reminder_log: {
         Row: {
           id: string
