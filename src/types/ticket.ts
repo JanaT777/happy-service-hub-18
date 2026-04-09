@@ -1,6 +1,6 @@
 export type RequestType = 'return' | 'complaint' | 'other';
 
-export type TicketStatus = 'new' | 'in_review' | 'needs_info' | 'approved' | 'rejected' | 'refund_processing' | 'completed' | 'suspended';
+export type TicketStatus = 'new' | 'in_progress' | 'in_review' | 'needs_info' | 'approved' | 'rejected' | 'refund_processing' | 'completed' | 'suspended';
 
 export type ComplaintStatus =
   | 'complaint_new'
@@ -254,6 +254,7 @@ export function getDerivedTicketStatus(ticket: Ticket): DerivedTicketStatus | nu
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
   new: 'Nový',
+  in_progress: 'V riešení',
   in_review: 'V preskúmaní',
   needs_info: 'Čaká na doplnenie',
   approved: 'Schválený',
@@ -364,7 +365,8 @@ export const REFUND_METHOD_LABELS: Record<RefundMethod, string> = {
 };
 
 export const STATUS_FLOW: Record<TicketStatus, TicketStatus[]> = {
-  new: ['in_review'],
+  new: ['in_progress'],
+  in_progress: ['in_review', 'needs_info', 'approved', 'rejected'],
   in_review: ['needs_info', 'approved', 'rejected'],
   needs_info: ['in_review', 'suspended'],
   approved: ['refund_processing', 'completed'],

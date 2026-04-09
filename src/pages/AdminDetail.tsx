@@ -139,6 +139,13 @@ const AdminDetail = () => {
   const order = MOCK_ORDERS[ticket.orderNumber];
   const customerName = order?.customerName ?? ticket.customerEmail.split('@')[0];
   const isComplaint = ticket.requestType === 'complaint';
+
+  // Auto-transition new → in_progress on first admin action
+  const ensureInProgress = () => {
+    if (ticket.status === 'new') {
+      updateTicketStatus(ticket.id, 'in_progress');
+    }
+  };
   const complaintType =
     isComplaint && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS
       ? (ticket.issueType as ComplaintType)
@@ -201,6 +208,7 @@ const AdminDetail = () => {
   const handleWarehouseInspection = (itemIndex: number, item: ComplaintItem, result: 'ok' | 'nok') => {
     const actionLabel = result === 'ok' ? 'Kontrola OK' : 'Kontrola NOK';
     updateComplaintItemStatus(ticket.id, itemIndex, 'item_checked', actionLabel);
+    ensureInProgress();
     // Auto-reassign to Customer Care
     if (ticket.assignedTo !== 'customer_care') {
       updateAssignment(ticket.id, 'customer_care');
@@ -231,6 +239,7 @@ const AdminDetail = () => {
 
     const actionLabel = ITEM_ACTIONS.find(a => a.key === actionKey)?.label ?? actionKey;
     updateComplaintItemStatus(ticket.id, itemIndex, newStatus, actionLabel);
+    ensureInProgress();
     toast.success(`${item.productName}: ${actionLabel}`);
   };
 
@@ -247,6 +256,7 @@ const AdminDetail = () => {
 
   const confirmRequestInfo = () => {
     if (!infoMessage.trim()) return;
+    ensureInProgress();
     requestInfo(ticket!.id, infoMessage.trim(), infoNote.trim() || undefined);
     setInfoDialogOpen(false);
     toast.success('Vyžiadané doplnenie od zákazníka');
@@ -265,6 +275,7 @@ const AdminDetail = () => {
       setWarehouseReceiptDialogOpen(true);
       return;
     }
+    ensureInProgress();
     updateReturnStatus(ticket.id, ns);
     if (ns === 'return_approved') updateTicketStatus(ticket.id, 'approved');
     if (ns === 'return_refund_issued' || ns === 'return_refunded') updateTicketStatus(ticket.id, 'refund_processing');
@@ -274,6 +285,7 @@ const AdminDetail = () => {
   };
 
   const handleOtherNext = (ns: OtherStatus) => {
+    ensureInProgress();
     updateOtherStatus(ticket.id, ns);
     if (ns === 'other_completed') updateTicketStatus(ticket.id, 'completed');
     if (ns === 'other_rejected') updateTicketStatus(ticket.id, 'rejected');
