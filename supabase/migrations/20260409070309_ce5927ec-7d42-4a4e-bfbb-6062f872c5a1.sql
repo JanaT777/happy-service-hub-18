@@ -1,0 +1,1 @@
+ALTER TABLE public.tickets ALTER COLUMN status SET DEFAULT 'podnet_prijaty';
