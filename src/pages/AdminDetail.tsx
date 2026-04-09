@@ -30,7 +30,7 @@ import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import {
   ArrowLeft, Star, XCircle, MessageSquare, CheckCircle2,
-  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle, Info,
+  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle, Info, PlusCircle,
   Truck, Warehouse, ClipboardCheck, CalendarDays, Clock, UserCheck, FileText, History,
 } from 'lucide-react';
 
