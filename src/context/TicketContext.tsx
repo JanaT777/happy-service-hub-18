@@ -67,6 +67,7 @@ function dbRowToTicket(row: any): Ticket {
     source: (row.source as any) || 'customer',
     internalNotes: row.internal_notes || [],
     activityLog: row.activity_log || [],
+    resolution: row.resolution || undefined,
   };
 }
 
@@ -100,6 +101,7 @@ function ticketToDbRow(t: Ticket) {
     source: t.source || 'customer',
     internal_notes: t.internalNotes || [],
     activity_log: t.activityLog || [],
+    resolution: t.resolution || null,
     needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
