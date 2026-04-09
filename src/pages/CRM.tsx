@@ -362,6 +362,13 @@ const CRM = () => {
                         </span>
                       )}
                     </div>
+                   </TableCell>
+                  <TableCell>
+                    {ticket.resolution ? (
+                      <span className="text-xs font-semibold">{TICKET_RESOLUTION_LABELS[ticket.resolution]}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {complaintType ? (
