@@ -746,7 +746,7 @@ const AdminDetail = () => {
           )}
 
           {/* Waiting for info banner */}
-          {ticket.status === 'needs_info' && !isCrmReadOnly && ticket.infoRequests && ticket.infoRequests.length > 0 && (() => {
+          {ticket.status === 'needs_info' && ticket.infoRequests && ticket.infoRequests.length > 0 && (() => {
             const lastReq = ticket.infoRequests[ticket.infoRequests.length - 1];
             const reminders = lastReq.reminders || [];
             return (
