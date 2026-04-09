@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Headset, LayoutDashboard, PlusCircle, SearchCheck, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/NotificationBell';
 
 export const AppHeader = () => {
   const { pathname } = useLocation();
@@ -35,6 +36,9 @@ export const AppHeader = () => {
               <span className="hidden sm:inline">{label}</span>
             </Link>
           ))}
+          {(pathname.startsWith('/admin') || pathname.startsWith('/crm')) && (
+            <NotificationBell />
+          )}
         </nav>
       </div>
     </header>

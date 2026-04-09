@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS, REQUEST_TYPE_LABELS } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
+import { createNotification } from '@/hooks/use-notifications';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -246,12 +247,31 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
     setTickets(prev => [newTicket, ...prev]);
     await syncToDb(newTicket);
+
+    // Notify admin about new ticket
+    createNotification({
+      ticketCode: ticketId,
+      type: 'new_ticket',
+      message: `Nový tiket: ${REQUEST_TYPE_LABELS[data.requestType]} od ${data.customerEmail}`,
+      recipientType: 'admin',
+    });
+
     return ticketId;
   }, [syncToDb]);
 
   const updateTicketStatus = useCallback((id: string, status: TicketStatus) => {
     const now = new Date().toISOString();
-    updateAndSync(id, t => ({ ...t, status, updatedAt: now, activityLog: appendLog(t, mkLog('status_changed', 'Agent', `→ ${STATUS_LABELS[status]}`)) }));
+    updateAndSync(id, t => {
+      // Notify customer about status change
+      createNotification({
+        ticketCode: t.id,
+        type: 'status_changed',
+        message: `Stav vašej požiadavky ${t.id} sa zmenil na: ${STATUS_LABELS[status]}`,
+        recipientType: 'customer',
+        recipientEmail: t.customerEmail,
+      });
+      return { ...t, status, updatedAt: now, activityLog: appendLog(t, mkLog('status_changed', 'Agent', `→ ${STATUS_LABELS[status]}`)) };
+    });
   }, [updateAndSync]);
 
   const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
@@ -306,6 +326,14 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const now = new Date().toISOString();
     const entry: InfoRequest = { message, internalNote, requestedAt: now, requestedBy: 'Agent', remindersSent: 0, reminders: [] };
     updateAndSync(id, t => {
+      // Notify customer about info request
+      createNotification({
+        ticketCode: t.id,
+        type: 'info_requested',
+        message: `K vašej požiadavke ${t.id} bola vyžiadaná doplňujúca informácia`,
+        recipientType: 'customer',
+        recipientEmail: t.customerEmail,
+      });
       const updates: Partial<Ticket> = {
         infoRequests: [...(t.infoRequests || []), entry],
         status: 'needs_info' as TicketStatus,

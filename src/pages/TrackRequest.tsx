@@ -12,11 +12,12 @@ import {
 import { Button } from '@/components/ui/button';
 import {
   Search, Mail, Hash, Package, AlertTriangle, Banknote, Clock,
-  CheckCircle2, Circle, FileText, RotateCcw, Truck, RefreshCw, CalendarDays,
+  CheckCircle2, Circle, FileText, RotateCcw, Truck, RefreshCw, CalendarDays, Bell,
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useNotifications } from '@/hooks/use-notifications';
 
 const searchSchema = z.object({
   email: z.string().trim().email({ message: 'Prosím zadajte platnú e-mailovú adresu' }).max(255),
@@ -178,6 +179,7 @@ const TrackRequest = () => {
   const [results, setResults] = useState<Ticket[] | null>(null);
   const [errors, setErrors] = useState<{ email?: string; orderNumber?: string }>({});
   const [searched, setSearched] = useState(false);
+  const { notifications: customerNotifs, markAsRead: markNotifRead } = useNotifications('customer', email || undefined);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,6 +239,27 @@ const TrackRequest = () => {
           Skúste: jana@example.com / ORD-10042 alebo marek@example.com / ORD-10038
         </p>
       </form>
+
+      {/* Customer notifications */}
+      {searched && customerNotifs.filter(n => !n.isRead).length > 0 && (
+        <div className="mb-6 rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Bell className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">Nové upozornenia</span>
+          </div>
+          {customerNotifs.filter(n => !n.isRead).slice(0, 5).map(n => (
+            <div key={n.id} className="flex items-start justify-between gap-2 rounded-lg border bg-card p-3">
+              <div>
+                <p className="text-sm font-medium">{n.message}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: sk })}
+                </p>
+              </div>
+              <button onClick={() => markNotifRead(n.id)} className="text-xs text-muted-foreground hover:text-foreground shrink-0">✓</button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {searched && results !== null && (
         <>
