@@ -229,6 +229,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       : data.complaintItems;
 
     const assignedTo = data.assignedTo || getAutoAssignment(data);
+    const actor = data.source === 'crm' ? (data.createdBy || 'OZ') : 'Zákazník';
+    const createdLog = mkLog('ticket_created', actor, `Typ: ${data.requestType}`);
     const newTicket: Ticket = {
       ...data,
       id: ticketId,
@@ -238,6 +240,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
       otherStatus: data.requestType === 'other' ? 'other_submitted' as OtherStatus : undefined,
       assignedTo,
+      activityLog: [createdLog],
       createdAt: now,
       updatedAt: now,
     };
