@@ -399,7 +399,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, getTicket }}>
+    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, setResolution, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, getTicket }}>
       {children}
     </TicketContext.Provider>
   );
