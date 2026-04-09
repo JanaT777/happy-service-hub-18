@@ -604,7 +604,7 @@ const AdminDetail = () => {
                       )}
 
                       {/* Per-item action buttons */}
-                      {!isFinal && (
+                      {!isFinal && !isCrmReadOnly && (
                         <div className="border-t pt-3 space-y-2">
                           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Akcie</p>
 
@@ -726,7 +726,7 @@ const AdminDetail = () => {
         <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
 
           {/* Suspended banner */}
-          {ticket.status === 'suspended' && (
+          {ticket.status === 'suspended' && !isCrmReadOnly && (
             <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -746,7 +746,7 @@ const AdminDetail = () => {
           )}
 
           {/* Waiting for info banner */}
-          {ticket.status === 'needs_info' && ticket.infoRequests && ticket.infoRequests.length > 0 && (() => {
+          {ticket.status === 'needs_info' && !isCrmReadOnly && ticket.infoRequests && ticket.infoRequests.length > 0 && (() => {
             const lastReq = ticket.infoRequests[ticket.infoRequests.length - 1];
             const reminders = lastReq.reminders || [];
             return (
@@ -848,7 +848,7 @@ const AdminDetail = () => {
           )}
 
           {/* Warehouse Receipt — staff only */}
-          {(ticket.requestType === 'return' || ticket.requestType === 'complaint') && (
+          {(ticket.requestType === 'return' || ticket.requestType === 'complaint') && !isCrmReadOnly && (
             <div className="rounded-xl border-2 border-warning/30 bg-warning/5 p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <Warehouse className="h-4 w-4 text-warning" />
