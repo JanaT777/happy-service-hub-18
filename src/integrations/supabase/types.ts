@@ -62,6 +62,7 @@ export type Database = {
           iban: string | null
           id: string
           info_requests: Json | null
+          internal_notes: Json
           issue_type: string | null
           last_reminder_at: string | null
           needs_info_message: string | null
@@ -97,6 +98,7 @@ export type Database = {
           iban?: string | null
           id?: string
           info_requests?: Json | null
+          internal_notes?: Json
           issue_type?: string | null
           last_reminder_at?: string | null
           needs_info_message?: string | null
@@ -132,6 +134,7 @@ export type Database = {
           iban?: string | null
           id?: string
           info_requests?: Json | null
+          internal_notes?: Json
           issue_type?: string | null
           last_reminder_at?: string | null
           needs_info_message?: string | null
