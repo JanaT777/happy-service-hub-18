@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 
 const statusStyles: Record<TicketStatus, string> = {
   new: 'bg-info/15 text-info border-info/30',
+  in_progress: 'bg-primary/15 text-primary border-primary/30',
   in_review: 'bg-warning/15 text-warning border-warning/30',
   needs_info: 'bg-destructive/15 text-destructive border-destructive/30',
   approved: 'bg-success/15 text-success border-success/30',
