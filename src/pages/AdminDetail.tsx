@@ -139,6 +139,13 @@ const AdminDetail = () => {
   const order = MOCK_ORDERS[ticket.orderNumber];
   const customerName = order?.customerName ?? ticket.customerEmail.split('@')[0];
   const isComplaint = ticket.requestType === 'complaint';
+
+  // Auto-transition new → in_progress on first admin action
+  const ensureInProgress = () => {
+    if (ticket.status === 'new') {
+      updateTicketStatus(ticket.id, 'in_progress');
+    }
+  };
   const complaintType =
     isComplaint && ticket.issueType && (ticket.issueType as string) in COMPLAINT_TYPE_LABELS
       ? (ticket.issueType as ComplaintType)
