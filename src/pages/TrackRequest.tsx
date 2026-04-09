@@ -179,6 +179,7 @@ const TrackRequest = () => {
   const [results, setResults] = useState<Ticket[] | null>(null);
   const [errors, setErrors] = useState<{ email?: string; orderNumber?: string }>({});
   const [searched, setSearched] = useState(false);
+  const { notifications: customerNotifs, markAsRead: markNotifRead } = useNotifications('customer', email || undefined);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
