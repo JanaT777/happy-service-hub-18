@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTickets } from '@/context/TicketContext';
 import {
   REQUEST_TYPE_LABELS, SUGGESTED_SOLUTION_LABELS,
