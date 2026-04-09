@@ -28,35 +28,21 @@ const App = () => (
           <BrowserRouter>
             <AppHeader />
             <Routes>
-              {/* Public routes */}
               <Route path="/" element={<Index />} />
               <Route path="/track" element={<TrackRequest />} />
               <Route path="/login" element={<Login />} />
-
-              {/* CC Admin routes */}
               <Route path="/admin" element={
-                <ProtectedRoute allowedRoles={['cc_admin']}>
-                  <Admin />
-                </ProtectedRoute>
+                <ProtectedRoute allowedRoles={['cc_admin']}><Admin /></ProtectedRoute>
               } />
               <Route path="/admin/:id" element={
-                <ProtectedRoute allowedRoles={['cc_admin']}>
-                  <AdminDetail />
-                </ProtectedRoute>
+                <ProtectedRoute allowedRoles={['cc_admin']}><AdminDetail /></ProtectedRoute>
               } />
-
-              {/* CRM routes */}
               <Route path="/crm" element={
-                <ProtectedRoute allowedRoles={['crm']}>
-                  <CRM />
-                </ProtectedRoute>
+                <ProtectedRoute allowedRoles={['crm']}><CRM /></ProtectedRoute>
               } />
               <Route path="/crm/:id" element={
-                <ProtectedRoute allowedRoles={['crm']}>
-                  <AdminDetail />
-                </ProtectedRoute>
+                <ProtectedRoute allowedRoles={['crm']}><AdminDetail /></ProtectedRoute>
               } />
-
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
