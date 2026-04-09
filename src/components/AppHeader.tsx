@@ -9,7 +9,7 @@ export const AppHeader = () => {
   const links = [
     { to: '/', label: 'Nová požiadavka', icon: PlusCircle },
     { to: '/track', label: 'Sledovať požiadavku', icon: SearchCheck },
-    { to: '/admin', label: 'Prehľad', icon: LayoutDashboard },
+    { to: '/admin', label: 'CC Admin', icon: LayoutDashboard },
     { to: '/crm', label: 'CRM', icon: Briefcase },
   ];
 
