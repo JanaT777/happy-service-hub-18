@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS, REQUEST_TYPE_LABELS } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/hooks/use-notifications';
 
