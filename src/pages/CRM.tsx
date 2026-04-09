@@ -304,48 +304,39 @@ const CRM = () => {
                 <TableRow
                   key={ticket.id}
                   className={cn(
-                    'cursor-pointer transition-colors',
-                    deadline?.level === 'critical' && 'bg-destructive/8 hover:bg-destructive/15 border-l-[5px] border-l-destructive',
-                    deadline?.level === 'warning' && 'bg-warning/8 hover:bg-warning/15 border-l-[5px] border-l-warning',
-                    deadline?.level === 'ok' && 'border-l-[5px] border-l-success/60 hover:bg-accent/50',
-                    !deadline && 'hover:bg-accent/50'
+                    'cursor-pointer transition-colors hover:bg-accent/50',
+                    deadline?.level === 'critical' && 'border-l-[4px] border-l-destructive',
+                    deadline?.level === 'warning' && 'border-l-[4px] border-l-warning',
+                    deadline?.level === 'ok' && 'border-l-[4px] border-l-success/50',
                   )}
                   onClick={() => navigate(`/crm/${ticket.id}`)}
                 >
-                  <TableCell className="font-heading font-bold text-sm">{ticket.id}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{ticket.id}</TableCell>
                   <TableCell>
-                    <span className={cn(
-                      'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold',
-                      typeConfig.bg, typeConfig.text, typeConfig.border
-                    )}>
-                      <TypeIcon className="h-3 w-3" />
+                    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <TypeIcon className="h-3.5 w-3.5" />
                       {REQUEST_TYPE_LABELS[ticket.requestType]}
                     </span>
                   </TableCell>
                   <TableCell>
                     {complaintType ? (
-                      <span className="text-xs font-medium">{COMPLAINT_TYPE_LABELS[complaintType]}</span>
+                      <span className="text-xs">{COMPLAINT_TYPE_LABELS[complaintType]}</span>
                     ) : ticket.requestType === 'return' ? (
-                      <span className="text-xs font-medium">Odstúpenie od zmluvy</span>
+                      <span className="text-xs">Odstúpenie od zmluvy</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {ticket.otherSubtype ? (
-                      <span className="text-xs font-medium">{OTHER_SUBTYPE_LABELS[ticket.otherSubtype]}</span>
+                      <span className="text-xs">{OTHER_SUBTYPE_LABELS[ticket.otherSubtype]}</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {ticket.assignedTo ? (
-                      <span className={cn(
-                        'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold',
-                        'bg-muted text-muted-foreground border-border'
-                      )}>
-                        {ASSIGNED_TEAM_LABELS[ticket.assignedTo]}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{ASSIGNED_TEAM_LABELS[ticket.assignedTo]}</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
@@ -356,7 +347,7 @@ const CRM = () => {
                         const derived = getDerivedTicketStatus(ticket);
                         if (derived) {
                           return (
-                            <span className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${DERIVED_TICKET_STATUS_COLORS[derived]}`}>
+                            <span className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-xs font-bold ${DERIVED_TICKET_STATUS_COLORS[derived]}`}>
                               {DERIVED_TICKET_STATUS_LABELS[derived]}
                             </span>
                           );
@@ -364,7 +355,7 @@ const CRM = () => {
                         return <StatusBadge status={ticket.status} />;
                       })()}
                       {workflowKey && workflowLabel && (
-                        <span className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${WORKFLOW_STATUS_COLORS[workflowKey] || 'bg-secondary text-secondary-foreground'}`}>
+                        <span className="text-[10px] text-muted-foreground">
                           {workflowLabel}
                         </span>
                       )}
@@ -372,22 +363,20 @@ const CRM = () => {
                   </TableCell>
                   <TableCell>
                     {complaintType ? (
-                      <span className="text-xs font-medium">
+                      <span className="text-xs">
                         {SUGGESTED_SOLUTION_LABELS[COMPLAINT_TYPE_SUGGESTED_SOLUTION[complaintType]]}
                       </span>
                     ) : ticket.requestType === 'return' ? (
-                      <span className="text-xs font-medium">Vrátenie finančných prostriedkov</span>
+                      <span className="text-xs">Vrátenie finančných prostriedkov</span>
                     ) : ticket.suggestedSolution ? (
-                      <span className="text-xs font-medium">{SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</span>
+                      <span className="text-xs">{SUGGESTED_SOLUTION_LABELS[ticket.suggestedSolution]}</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {ticket.requestedResolution ? (
-                      <span className="inline-flex items-center rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-medium text-accent-foreground">
-                        {REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution]}
-                      </span>
+                      <span className="text-xs">{REQUESTED_RESOLUTION_LABELS[ticket.requestedResolution]}</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
@@ -406,18 +395,12 @@ const CRM = () => {
                       </span>
                       {deadline && (
                         <span className={cn(
-                          'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold border',
-                          deadline.level === 'critical' && 'bg-destructive/15 text-destructive border-destructive/30',
-                          deadline.level === 'warning' && 'bg-warning/15 text-warning border-warning/30',
-                          deadline.level === 'ok' && 'bg-success/15 text-success border-success/30'
+                          'text-[10px] font-semibold',
+                          deadline.level === 'critical' && 'text-destructive',
+                          deadline.level === 'warning' && 'text-warning',
+                          deadline.level === 'ok' && 'text-success'
                         )}>
-                          {deadline.level === 'critical' && <AlertTriangle className="h-3 w-3" />}
-                          {deadline.level === 'warning' && <Clock className="h-3 w-3" />}
-                          {deadline.level === 'ok' && <CheckCircle2 className="h-3 w-3" />}
                           {deadline.days}/{deadline.limit}d
-                          {deadline.level === 'critical' && ' · Po termíne'}
-                          {deadline.level === 'warning' && ' · Blíži sa'}
-                          {deadline.level === 'ok' && ' · OK'}
                         </span>
                       )}
                     </div>
