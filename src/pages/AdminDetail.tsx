@@ -118,7 +118,7 @@ const AdminDetail = () => {
       if (isComplaint) updateComplaintStatus(ticket!.id, 'complaint_rejected');
       if (ticket!.requestType === 'return' && ticket!.returnStatus) updateReturnStatus(ticket!.id, 'return_rejected');
       if (ticket!.requestType === 'other' && ticket!.otherStatus) updateOtherStatus(ticket!.id, 'other_rejected');
-      updateTicketStatus(ticket!.id, 'rejected');
+      updateTicketStatus(ticket!.id, 'ukoncena_zamietnuta');
       toast.success('Požiadavka zamietnutá');
     }
     setRejectDialogOpen(false);
@@ -142,7 +142,7 @@ const AdminDetail = () => {
   // CRM read-only logic
   const isCrmReadOnly = isCrmView && (
     ticket.source === 'customer' ||
-    (ticket.source === 'crm' && ticket.status !== 'needs_info')
+    (ticket.source === 'crm' && ticket.status !== 'caka_na_podklady')
   );
 
   // Derived data
@@ -150,10 +150,10 @@ const AdminDetail = () => {
   const customerName = order?.customerName ?? ticket.customerEmail.split('@')[0];
   const isComplaint = ticket.requestType === 'complaint';
 
-  // Auto-transition new → in_progress on first admin action
+  // Auto-transition podnet_prijaty → reklamacia_v_rieseni on first admin action
   const ensureInProgress = () => {
-    if (ticket.status === 'new') {
-      updateTicketStatus(ticket.id, 'in_progress');
+    if (ticket.status === 'podnet_prijaty') {
+      updateTicketStatus(ticket.id, 'reklamacia_v_rieseni');
     }
   };
   const complaintType =
@@ -287,18 +287,18 @@ const AdminDetail = () => {
     }
     ensureInProgress();
     updateReturnStatus(ticket.id, ns);
-    if (ns === 'return_approved') updateTicketStatus(ticket.id, 'approved');
-    if (ns === 'return_refund_issued' || ns === 'return_refunded') updateTicketStatus(ticket.id, 'refund_processing');
-    if (ns === 'return_completed') updateTicketStatus(ticket.id, 'completed');
-    if (ns === 'return_rejected') updateTicketStatus(ticket.id, 'rejected');
+    if (ns === 'return_approved') updateTicketStatus(ticket.id, 'reklamacia_v_rieseni');
+    if (ns === 'return_refund_issued' || ns === 'return_refunded') updateTicketStatus(ticket.id, 'vratenie_fin_prostriedkov');
+    if (ns === 'return_completed') updateTicketStatus(ticket.id, 'ukoncena_uznana');
+    if (ns === 'return_rejected') updateTicketStatus(ticket.id, 'ukoncena_zamietnuta');
     toast.success(RETURN_STATUS_LABELS[ns]);
   };
 
   const handleOtherNext = (ns: OtherStatus) => {
     ensureInProgress();
     updateOtherStatus(ticket.id, ns);
-    if (ns === 'other_completed') updateTicketStatus(ticket.id, 'completed');
-    if (ns === 'other_rejected') updateTicketStatus(ticket.id, 'rejected');
+    if (ns === 'other_completed') updateTicketStatus(ticket.id, 'ukoncena_uznana');
+    if (ns === 'other_rejected') updateTicketStatus(ticket.id, 'ukoncena_zamietnuta');
     toast.success(OTHER_STATUS_LABELS[ns]);
   };
 
@@ -865,7 +865,7 @@ const AdminDetail = () => {
         <div className="lg:sticky lg:top-8 lg:self-start space-y-4">
 
           {/* Suspended banner */}
-          {ticket.status === 'suspended' && !isCrmReadOnly && (
+          {ticket.status === 'caka_na_podklady' && !ticket.infoRequests?.length && !isCrmReadOnly && (
             <div className="rounded-xl border-2 border-destructive/40 bg-destructive/10 p-5 space-y-4">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -885,7 +885,7 @@ const AdminDetail = () => {
           )}
 
           {/* Waiting for info banner */}
-          {ticket.status === 'needs_info' && ticket.infoRequests && ticket.infoRequests.length > 0 && (() => {
+          {ticket.status === 'caka_na_podklady' && ticket.infoRequests && ticket.infoRequests.length > 0 && (() => {
             const lastReq = ticket.infoRequests[ticket.infoRequests.length - 1];
             const reminders = lastReq.reminders || [];
             return (
@@ -940,7 +940,7 @@ const AdminDetail = () => {
           })()}
 
           {/* Non-complaint actions (return, other) */}
-          {!hasComplaintItems && !(isCrmView && (isCrmReadOnly || ticket.status === 'needs_info')) && (
+          {!hasComplaintItems && !(isCrmView && (isCrmReadOnly || ticket.status === 'caka_na_podklady')) && (
             <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 space-y-5">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Akcie</p>
