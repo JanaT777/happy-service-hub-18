@@ -12,7 +12,7 @@ import {
   ComplaintItemStatus, ITEM_STATUS_FLOW, ITEM_STATUS_OWNER,
   RETURN_STATUS_FLOW, OTHER_STATUS_FLOW, ComplaintItem,
   getDerivedTicketStatus, DERIVED_TICKET_STATUS_LABELS, DERIVED_TICKET_STATUS_COLORS,
-  AssignedTeam, ASSIGNED_TEAM_LABELS,
+  AssignedTeam, ASSIGNED_TEAM_LABELS, ActivityAction,
 } from '@/types/ticket';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -30,8 +30,8 @@ import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { sk } from 'date-fns/locale';
 import {
   ArrowLeft, Star, XCircle, MessageSquare, CheckCircle2,
-  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle, Info,
-  Truck, Warehouse, ClipboardCheck, CalendarDays, Clock, UserCheck,
+  Send, Banknote, Package, RefreshCw, Replace, AlertTriangle, Info, PlusCircle,
+  Truck, Warehouse, ClipboardCheck, CalendarDays, Clock, UserCheck, FileText, History,
 } from 'lucide-react';
 
 const ACTION_ICONS: Partial<Record<SuggestedSolution, typeof Send>> = {
@@ -773,6 +773,65 @@ const AdminDetail = () => {
               <p className="text-sm text-muted-foreground">Žiadne interné poznámky.</p>
             )}
           </div>
+
+          {/* Activity log timeline */}
+          {ticket.activityLog && ticket.activityLog.length > 0 && (
+            <div className="rounded-xl border bg-card p-6">
+              <h2 className="font-heading text-base font-semibold mb-4 flex items-center gap-2">
+                <History className="h-4 w-4 text-muted-foreground" />
+                História aktivít
+              </h2>
+              <div className="relative space-y-0">
+                {/* Timeline line */}
+                <div className="absolute left-[11px] top-2 bottom-2 w-px bg-border" />
+                {[...ticket.activityLog].reverse().map((entry, i) => {
+                  const iconMap: Record<ActivityAction, { icon: typeof Send; color: string }> = {
+                    ticket_created: { icon: PlusCircle, color: 'text-primary bg-primary/15' },
+                    status_changed: { icon: RefreshCw, color: 'text-info bg-info/15' },
+                    note_added: { icon: FileText, color: 'text-muted-foreground bg-muted' },
+                    info_requested: { icon: MessageSquare, color: 'text-warning bg-warning/15' },
+                    info_provided: { icon: CheckCircle2, color: 'text-success bg-success/15' },
+                    item_status_changed: { icon: Package, color: 'text-primary bg-primary/15' },
+                    assignment_changed: { icon: UserCheck, color: 'text-info bg-info/15' },
+                    warehouse_receipt: { icon: Warehouse, color: 'text-warning bg-warning/15' },
+                    rejected: { icon: XCircle, color: 'text-destructive bg-destructive/15' },
+                  };
+                  const actionLabels: Record<ActivityAction, string> = {
+                    ticket_created: 'Tiket vytvorený',
+                    status_changed: 'Zmena stavu',
+                    note_added: 'Poznámka pridaná',
+                    info_requested: 'Žiadosť o doplnenie',
+                    info_provided: 'Informácie doplnené',
+                    item_status_changed: 'Zmena stavu položky',
+                    assignment_changed: 'Zmena priradenia',
+                    warehouse_receipt: 'Príjem na sklad',
+                    rejected: 'Zamietnuté',
+                  };
+                  const cfg = iconMap[entry.action] || { icon: Info, color: 'text-muted-foreground bg-muted' };
+                  const Icon = cfg.icon;
+                  return (
+                    <div key={i} className="relative flex gap-3 pb-4 last:pb-0">
+                      <div className={cn('relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full', cfg.color)}>
+                        <Icon className="h-3 w-3" />
+                      </div>
+                      <div className="flex-1 min-w-0 pt-0.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-foreground">{actionLabels[entry.action]}</span>
+                          <span className="text-[10px] text-muted-foreground shrink-0">
+                            {formatDistanceToNow(new Date(entry.timestamp), { addSuffix: true, locale: sk })}
+                          </span>
+                        </div>
+                        {entry.details && (
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">{entry.details}</p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground">{entry.actor}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ──── RIGHT: Sidebar ──── */}

@@ -51,6 +51,7 @@ export type Database = {
       }
       tickets: {
         Row: {
+          activity_log: Json
           assigned_to: string | null
           attachments: Json | null
           complaint_items: Json | null
@@ -87,6 +88,7 @@ export type Database = {
           within_return_window: boolean | null
         }
         Insert: {
+          activity_log?: Json
           assigned_to?: string | null
           attachments?: Json | null
           complaint_items?: Json | null
@@ -123,6 +125,7 @@ export type Database = {
           within_return_window?: boolean | null
         }
         Update: {
+          activity_log?: Json
           assigned_to?: string | null
           attachments?: Json | null
           complaint_items?: Json | null

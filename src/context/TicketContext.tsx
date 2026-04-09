@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote } from '@/types/ticket';
+import { Ticket, TicketStatus, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TicketContextType {
@@ -22,6 +22,14 @@ interface TicketContextType {
 const TicketContext = createContext<TicketContextType | undefined>(undefined);
 
 const generateId = () => Math.random().toString(36).substring(2, 10).toUpperCase();
+
+function mkLog(action: ActivityAction, actor: string, details?: string): ActivityLogEntry {
+  return { action, actor, timestamp: new Date().toISOString(), details };
+}
+
+function appendLog(t: Ticket, log: ActivityLogEntry): ActivityLogEntry[] {
+  return [...(t.activityLog || []), log];
+}
 
 // ── DB ↔ Ticket mapping ──
 
@@ -56,6 +64,7 @@ function dbRowToTicket(row: any): Ticket {
     createdBy: row.created_by || undefined,
     source: (row.source as any) || 'customer',
     internalNotes: row.internal_notes || [],
+    activityLog: row.activity_log || [],
   };
 }
 
@@ -88,6 +97,7 @@ function ticketToDbRow(t: Ticket) {
     created_by: t.createdBy || null,
     source: t.source || 'customer',
     internal_notes: t.internalNotes || [],
+    activity_log: t.activityLog || [],
     needs_info_since: t.status === 'needs_info' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
@@ -219,6 +229,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       : data.complaintItems;
 
     const assignedTo = data.assignedTo || getAutoAssignment(data);
+    const actor = data.source === 'crm' ? (data.createdBy || 'OZ') : 'Zákazník';
+    const createdLog = mkLog('ticket_created', actor, `Typ: ${data.requestType}`);
     const newTicket: Ticket = {
       ...data,
       id: ticketId,
@@ -228,6 +240,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       returnStatus: data.requestType === 'return' ? 'return_submitted' as ReturnStatus : undefined,
       otherStatus: data.requestType === 'other' ? 'other_submitted' as OtherStatus : undefined,
       assignedTo,
+      activityLog: [createdLog],
       createdAt: now,
       updatedAt: now,
     };
@@ -237,7 +250,8 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [syncToDb]);
 
   const updateTicketStatus = useCallback((id: string, status: TicketStatus) => {
-    updateAndSync(id, t => ({ ...t, status, updatedAt: new Date().toISOString() }));
+    const now = new Date().toISOString();
+    updateAndSync(id, t => ({ ...t, status, updatedAt: now, activityLog: appendLog(t, mkLog('status_changed', 'Agent', `→ ${STATUS_LABELS[status]}`)) }));
   }, [updateAndSync]);
 
   const updateComplaintStatus = useCallback((id: string, complaintStatus: ComplaintStatus) => {
@@ -269,7 +283,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           actionHistory: [...(item.actionHistory || []), logEntry],
         };
       });
-      return { ...t, complaintItems: updatedItems, updatedAt: new Date().toISOString() };
+      return { ...t, complaintItems: updatedItems, updatedAt: new Date().toISOString(), activityLog: appendLog(t, mkLog('item_status_changed', 'Agent', actionLabel)) };
     });
   }, [updateAndSync]);
 
@@ -277,7 +291,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const now = new Date().toISOString();
     updateAndSync(id, t => {
       const receipt: WarehouseReceiptAudit = { receivedAt, recordedBy: agent, recordedAt: now };
-      let updates: Partial<Ticket> = { warehouseReceipt: receipt, updatedAt: now };
+      let updates: Partial<Ticket> = { warehouseReceipt: receipt, updatedAt: now, activityLog: appendLog(t, mkLog('warehouse_receipt', agent, `Prijaté: ${receivedAt}`)) };
       if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_received';
       else if (t.requestType === 'return') updates.returnStatus = 'return_received';
       return { ...t, ...updates };
@@ -285,7 +299,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [updateAndSync]);
 
   const updateAssignment = useCallback((id: string, team: AssignedTeam) => {
-    updateAndSync(id, t => ({ ...t, assignedTo: team, updatedAt: new Date().toISOString() }));
+    updateAndSync(id, t => ({ ...t, assignedTo: team, updatedAt: new Date().toISOString(), activityLog: appendLog(t, mkLog('assignment_changed', 'Agent', `→ ${team}`)) }));
   }, [updateAndSync]);
 
   const requestInfo = useCallback((id: string, message: string, internalNote?: string) => {
@@ -296,6 +310,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         infoRequests: [...(t.infoRequests || []), entry],
         status: 'needs_info' as TicketStatus,
         updatedAt: now,
+        activityLog: appendLog(t, mkLog('info_requested', 'Agent', message)),
       };
       if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_waiting_customer';
       return { ...t, ...updates };
@@ -312,6 +327,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         infoRequests: updatedRequests,
         status: 'in_review' as TicketStatus,
         updatedAt: now,
+        activityLog: appendLog(t, mkLog('info_provided', 'Agent', 'Informácie doplnené')),
       };
       if (t.requestType === 'complaint') updates.complaintStatus = 'complaint_in_progress';
       return { ...t, ...updates };
@@ -325,6 +341,7 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       ...t,
       internalNotes: [...(t.internalNotes || []), note],
       updatedAt: now,
+      activityLog: appendLog(t, mkLog('note_added', author, text.length > 60 ? text.slice(0, 60) + '…' : text)),
     }));
   }, [updateAndSync]);
 
