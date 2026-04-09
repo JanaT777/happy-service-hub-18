@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { useTickets } from '@/context/TicketContext';
 import {
   REQUEST_TYPE_LABELS, SEVERITY_LABELS, REFUND_METHOD_LABELS,
-  ISSUE_TYPE_LABELS, SUGGESTED_SOLUTION_LABELS,
+  ISSUE_TYPE_LABELS, SUGGESTED_SOLUTION_LABELS, STATUS_LABELS,
   COMPLAINT_STATUS_LABELS, RETURN_STATUS_LABELS, OTHER_STATUS_LABELS,
   COMPLAINT_STATUS_FLOW, RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
   COMPLAINT_TYPE_LABELS, COMPLAINT_ITEM_STATUS_LABELS, REQUESTED_RESOLUTION_LABELS,
@@ -326,15 +326,12 @@ const TrackRequest = () => {
                           <div className="flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-warning shrink-0" />
                             <p className="text-sm font-semibold text-warning">
-                              {ticket.status === 'suspended'
-                                ? 'Vaša požiadavka bola pozastavená'
-                                : 'Čakáme na doplnenie informácií'}
+                              Čakáme na doplnenie informácií
                             </p>
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            {ticket.status === 'suspended'
-                              ? 'Vaša požiadavka bola pozastavená z dôvodu chýbajúcich informácií. Prosíme, kontaktujte nás čo najskôr.'
-                              : 'Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.'}
+                            Prosíme, doplňte požadované údaje, aby sme mohli pokračovať.
+                          </p>
                           </p>
                           <div className="rounded-lg border border-warning/20 bg-card p-3">
                             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Požadované informácie</p>
