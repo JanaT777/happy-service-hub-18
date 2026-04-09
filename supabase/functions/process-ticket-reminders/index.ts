@@ -34,11 +34,11 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all tickets with status 'needs_info' that have a needs_info_since timestamp
+    // Get all tickets with status 'caka_na_podklady' that have a needs_info_since timestamp
     const { data: tickets, error } = await supabase
       .from("tickets")
       .select("*")
-      .eq("status", "needs_info")
+      .eq("status", "caka_na_podklady")
       .not("needs_info_since", "is", null);
 
     if (error) {
@@ -56,18 +56,18 @@ Deno.serve(async (req) => {
       const elapsed = now - new Date(ticket.needs_info_since).getTime();
       const remindersSent = ticket.reminders_sent || 0;
 
-      // Auto-suspend after 7 days
+      // Auto-close as rejected after 7 days without response
       if (elapsed >= DAYS_7) {
         await supabase
           .from("tickets")
           .update({
-            status: "suspended",
+            status: "ukoncena_zamietnuta",
             updated_at: new Date().toISOString(),
           })
           .eq("id", ticket.id);
 
         results.suspended++;
-        console.log(`Ticket ${ticket.ticket_code}: suspended (7+ days without response)`);
+        console.log(`Ticket ${ticket.ticket_code}: auto-closed (7+ days without response)`);
         continue;
       }
 
