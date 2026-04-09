@@ -3,22 +3,26 @@ import { cn } from '@/lib/utils';
 
 /**
  * Consistent status color mapping:
- *   NEW        → blue   (info)
- *   IN_PROGRESS→ yellow (warning)
- *   WAITING    → orange (caution)
- *   RESOLVED   → green  (success)
- *   REJECTED   → red    (destructive)
+ *   PODNET_PRIJATY        → blue   (info)
+ *   CAKA_NA_PODKLADY      → orange (caution)
+ *   REKLAMACIA_V_RIESENI  → yellow (warning)
+ *   OBJEDNANY_ZVOZ        → yellow (warning)
+ *   VRATENE_NA_SKLAD      → yellow (warning)
+ *   DOBROPIS_VYSTAVENIE   → yellow (warning)
+ *   VRATENIE_FIN_PROSTR.  → yellow (warning)
+ *   UKONCENA_UZNANA       → green  (success)
+ *   UKONCENA_ZAMIETNUTA   → red    (destructive)
  */
 const statusStyles: Record<TicketStatus, string> = {
-  new: 'bg-info/15 text-info border-info/30',
-  in_progress: 'bg-warning/15 text-warning border-warning/30',
-  in_review: 'bg-warning/15 text-warning border-warning/30',
-  needs_info: 'bg-caution/15 text-caution border-caution/30',
-  approved: 'bg-success/15 text-success border-success/30',
-  rejected: 'bg-destructive/15 text-destructive border-destructive/30',
-  refund_processing: 'bg-warning/15 text-warning border-warning/30',
-  completed: 'bg-success/15 text-success border-success/30',
-  suspended: 'bg-caution/15 text-caution border-caution/30',
+  podnet_prijaty: 'bg-info/15 text-info border-info/30',
+  caka_na_podklady: 'bg-caution/15 text-caution border-caution/30',
+  reklamacia_v_rieseni: 'bg-warning/15 text-warning border-warning/30',
+  objednany_zvoz: 'bg-warning/15 text-warning border-warning/30',
+  vratene_na_sklad: 'bg-warning/15 text-warning border-warning/30',
+  dobropis_vystavenie: 'bg-warning/15 text-warning border-warning/30',
+  vratenie_fin_prostriedkov: 'bg-warning/15 text-warning border-warning/30',
+  ukoncena_uznana: 'bg-success/15 text-success border-success/30',
+  ukoncena_zamietnuta: 'bg-destructive/15 text-destructive border-destructive/30',
 };
 
 export const StatusBadge = ({ status }: { status: TicketStatus }) => (
