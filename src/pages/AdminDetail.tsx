@@ -137,6 +137,12 @@ const AdminDetail = () => {
     );
   }
 
+  // CRM read-only logic
+  const isCrmReadOnly = isCrmView && (
+    ticket.source === 'customer' ||
+    (ticket.source === 'crm' && ticket.status !== 'needs_info')
+  );
+
   // Derived data
   const order = MOCK_ORDERS[ticket.orderNumber];
   const customerName = order?.customerName ?? ticket.customerEmail.split('@')[0];
