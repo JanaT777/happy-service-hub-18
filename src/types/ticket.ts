@@ -161,8 +161,8 @@ export const DERIVED_TICKET_STATUS_LABELS: Record<DerivedTicketStatus, string> =
 export const DERIVED_TICKET_STATUS_COLORS: Record<DerivedTicketStatus, string> = {
   new: 'bg-info/15 text-info border-info/30',
   processing: 'bg-warning/15 text-warning border-warning/30',
-  waiting_customer: 'bg-destructive/15 text-destructive border-destructive/30',
-  completed: 'bg-green-500/15 text-green-700 border-green-500/30',
+  waiting_customer: 'bg-caution/15 text-caution border-caution/30',
+  completed: 'bg-success/15 text-success border-success/30',
   rejected: 'bg-destructive/15 text-destructive border-destructive/30',
 };
 
