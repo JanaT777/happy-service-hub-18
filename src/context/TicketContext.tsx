@@ -247,6 +247,15 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
     setTickets(prev => [newTicket, ...prev]);
     await syncToDb(newTicket);
+
+    // Notify admin about new ticket
+    createNotification({
+      ticketCode: ticketId,
+      type: 'new_ticket',
+      message: `Nový tiket: ${REQUEST_TYPE_LABELS[data.requestType]} od ${data.customerEmail}`,
+      recipientType: 'admin',
+    });
+
     return ticketId;
   }, [syncToDb]);
 
