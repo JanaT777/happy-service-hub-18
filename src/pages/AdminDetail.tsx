@@ -275,6 +275,7 @@ const AdminDetail = () => {
       setWarehouseReceiptDialogOpen(true);
       return;
     }
+    ensureInProgress();
     updateReturnStatus(ticket.id, ns);
     if (ns === 'return_approved') updateTicketStatus(ticket.id, 'approved');
     if (ns === 'return_refund_issued' || ns === 'return_refunded') updateTicketStatus(ticket.id, 'refund_processing');
@@ -284,6 +285,7 @@ const AdminDetail = () => {
   };
 
   const handleOtherNext = (ns: OtherStatus) => {
+    ensureInProgress();
     updateOtherStatus(ticket.id, ns);
     if (ns === 'other_completed') updateTicketStatus(ticket.id, 'completed');
     if (ns === 'other_rejected') updateTicketStatus(ticket.id, 'rejected');
