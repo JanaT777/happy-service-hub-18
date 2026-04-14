@@ -1,38 +1,17 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Headset, LayoutDashboard, PlusCircle, SearchCheck, Briefcase, LogIn, LogOut } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Headset, LayoutDashboard, PlusCircle, SearchCheck, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/NotificationBell';
-import { useAuth, isSuperAdmin } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
 
 export const AppHeader = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const { user, role, signOut } = useAuth();
 
-  const publicLinks = [
+  const links = [
     { to: '/', label: 'Nová požiadavka', icon: PlusCircle },
     { to: '/track', label: 'Sledovať požiadavku', icon: SearchCheck },
+    { to: '/admin', label: 'CC Admin', icon: LayoutDashboard },
+    { to: '/crm', label: 'CRM', icon: Briefcase },
   ];
-
-  const superAdmin = isSuperAdmin(user?.email);
-  const roleLinks = superAdmin
-    ? [
-        { to: '/admin', label: 'CC Admin', icon: LayoutDashboard },
-        { to: '/crm', label: 'CRM', icon: Briefcase },
-      ]
-    : role === 'cc_admin'
-      ? [{ to: '/admin', label: 'CC Admin', icon: LayoutDashboard }]
-      : role === 'crm'
-        ? [{ to: '/crm', label: 'CRM', icon: Briefcase }]
-        : [];
-
-  const links = [...publicLinks, ...roleLinks];
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
@@ -57,27 +36,8 @@ export const AppHeader = () => {
               <span className="hidden sm:inline">{label}</span>
             </Link>
           ))}
-          {user && (pathname.startsWith('/admin') || pathname.startsWith('/crm')) && (
+          {(pathname.startsWith('/admin') || pathname.startsWith('/crm')) && (
             <NotificationBell />
-          )}
-          {user ? (
-            <Button variant="ghost" size="sm" className="ml-2 gap-1.5 text-muted-foreground" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Odhlásiť</span>
-            </Button>
-          ) : (
-            <Link
-              to="/login"
-              className={cn(
-                'ml-2 flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                pathname === '/login'
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
-              )}
-            >
-              <LogIn className="h-4 w-4" />
-              <span className="hidden sm:inline">Prihlásiť</span>
-            </Link>
           )}
         </nav>
       </div>
