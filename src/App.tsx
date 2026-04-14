@@ -31,18 +31,10 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/track" element={<TrackRequest />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/admin" element={
-                <ProtectedRoute allowedRoles={['cc_admin']}><Admin /></ProtectedRoute>
-              } />
-              <Route path="/admin/:id" element={
-                <ProtectedRoute allowedRoles={['cc_admin']}><AdminDetail /></ProtectedRoute>
-              } />
-              <Route path="/crm" element={
-                <ProtectedRoute allowedRoles={['crm']}><CRM /></ProtectedRoute>
-              } />
-              <Route path="/crm/:id" element={
-                <ProtectedRoute allowedRoles={['crm']}><AdminDetail /></ProtectedRoute>
-              } />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/:id" element={<AdminDetail />} />
+              <Route path="/crm" element={<CRM />} />
+              <Route path="/crm/:id" element={<AdminDetail />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
