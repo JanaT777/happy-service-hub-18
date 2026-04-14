@@ -5,14 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TicketProvider } from "@/context/TicketContext";
 import { AuthProvider } from "@/hooks/use-auth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppHeader } from "@/components/AppHeader";
 import Index from "./pages/Index.tsx";
 import Admin from "./pages/Admin.tsx";
 import AdminDetail from "./pages/AdminDetail.tsx";
 import TrackRequest from "./pages/TrackRequest.tsx";
 import CRM from "./pages/CRM.tsx";
-import Login from "./pages/Login.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 // HMR anchor v4
@@ -30,7 +28,6 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/track" element={<TrackRequest />} />
-              <Route path="/login" element={<Login />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/:id" element={<AdminDetail />} />
               <Route path="/crm" element={<CRM />} />
