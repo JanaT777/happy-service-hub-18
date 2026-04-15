@@ -104,6 +104,7 @@ export type Database = {
           created_by: string | null
           customer_email: string
           description: string | null
+          handling_type: string | null
           iban: string | null
           id: string
           info_requests: Json | null
@@ -142,6 +143,7 @@ export type Database = {
           created_by?: string | null
           customer_email: string
           description?: string | null
+          handling_type?: string | null
           iban?: string | null
           id?: string
           info_requests?: Json | null
@@ -180,6 +182,7 @@ export type Database = {
           created_by?: string | null
           customer_email?: string
           description?: string | null
+          handling_type?: string | null
           iban?: string | null
           id?: string
           info_requests?: Json | null
