@@ -321,7 +321,20 @@ const TrackRequest = () => {
                         </p>
                       </div>
 
-                      {/* Info request alert for customer */}
+                      {/* Handling type instructions for complaints */}
+                      {ticket.requestType === 'complaint' && ticket.handlingType && (
+                        <div className="rounded-lg border-2 border-success/30 bg-success/10 p-4">
+                          <div className="flex items-start gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-semibold text-success mb-1">Pokyny k vašej reklamácii</p>
+                              <p className="text-sm whitespace-pre-line">
+                                {HANDLING_TYPE_CUSTOMER_MESSAGES[ticket.handlingType]}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {ticket.status === 'caka_na_podklady' && ticket.infoRequests && ticket.infoRequests.length > 0 && (
                         <div className="rounded-lg border-2 border-warning/40 bg-warning/10 p-4 space-y-3">
                           <div className="flex items-center gap-2">
