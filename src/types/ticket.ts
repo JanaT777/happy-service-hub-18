@@ -47,6 +47,20 @@ export type RequestedResolution = 'resend' | 'exchange' | 'refund';
 
 export type TicketResolution = 'approved' | 'rejected' | 'partial' | 'refund' | 'exchange';
 
+export type HandlingType = 'pickup_by_courier' | 'customer_ship' | 'no_return_needed';
+
+export const HANDLING_TYPE_LABELS: Record<HandlingType, string> = {
+  pickup_by_courier: 'Vyzdvihnutie kuriérom',
+  customer_ship: 'Zaslanie zákazníkom',
+  no_return_needed: 'Bez vrátenia tovaru',
+};
+
+export const HANDLING_TYPE_CUSTOMER_MESSAGES: Record<HandlingType, string> = {
+  pickup_by_courier: 'Vašu reklamáciu sme schválili. Zabezpečíme vyzdvihnutie tovaru kuriérom na vašej adrese. O termíne vás budeme informovať.',
+  customer_ship: 'Prosíme, zašlite tovar na adresu: Orbis Pictus Istropolitana s.r.o.\nCTPark Žilina Airport, hala ZAR6B\n013 41 Dolný Hričov. Po uznaní reklamácie vám preplatíme náklady na dopravu.',
+  no_return_needed: 'Vašu reklamáciu sme vyriešili bez potreby vrátenia tovaru.',
+};
+
 export const TICKET_RESOLUTION_LABELS: Record<TicketResolution, string> = {
   approved: 'Schválené',
   rejected: 'Zamietnuté',
@@ -257,6 +271,7 @@ export interface Ticket {
   internalNotes?: InternalNote[];
   activityLog?: ActivityLogEntry[];
   resolution?: TicketResolution;
+  handlingType?: HandlingType;
 }
 
 export type AssignedTeam = 'customer_care' | 'sklad';

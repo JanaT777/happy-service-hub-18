@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Ticket, TicketStatus, TicketResolution, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS, REQUEST_TYPE_LABELS } from '@/types/ticket';
+import { Ticket, TicketStatus, TicketResolution, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS, REQUEST_TYPE_LABELS, HandlingType } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/hooks/use-notifications';
 
@@ -18,6 +18,7 @@ interface TicketContextType {
   requestInfo: (id: string, message: string, internalNote?: string) => void;
   markInfoProvided: (id: string) => void;
   addInternalNote: (id: string, text: string, author: string) => void;
+  setHandlingType: (id: string, handlingType: HandlingType) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
@@ -68,6 +69,7 @@ function dbRowToTicket(row: any): Ticket {
     internalNotes: row.internal_notes || [],
     activityLog: row.activity_log || [],
     resolution: row.resolution || undefined,
+    handlingType: row.handling_type || undefined,
   };
 }
 
@@ -102,6 +104,7 @@ function ticketToDbRow(t: Ticket) {
     internal_notes: t.internalNotes || [],
     activity_log: t.activityLog || [],
     resolution: t.resolution || null,
+    handling_type: t.handlingType || null,
     needs_info_since: t.status === 'caka_na_podklady' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
@@ -394,10 +397,20 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }));
   }, [updateAndSync]);
 
+  const setHandlingType = useCallback((id: string, handlingType: HandlingType) => {
+    const now = new Date().toISOString();
+    updateAndSync(id, t => ({
+      ...t,
+      handlingType,
+      updatedAt: now,
+      activityLog: appendLog(t, mkLog('status_changed', 'Agent', `Spôsob vybavenia: ${handlingType}`)),
+    }));
+  }, [updateAndSync]);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, setResolution, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, getTicket }}>
+    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, setResolution, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, setHandlingType, getTicket }}>
       {children}
     </TicketContext.Provider>
   );
