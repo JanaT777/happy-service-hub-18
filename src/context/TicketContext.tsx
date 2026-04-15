@@ -104,6 +104,7 @@ function ticketToDbRow(t: Ticket) {
     internal_notes: t.internalNotes || [],
     activity_log: t.activityLog || [],
     resolution: t.resolution || null,
+    handling_type: t.handlingType || null,
     needs_info_since: t.status === 'caka_na_podklady' && t.infoRequests?.length
       ? t.infoRequests[t.infoRequests.length - 1].requestedAt
       : null,
