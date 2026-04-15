@@ -397,10 +397,20 @@ export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }));
   }, [updateAndSync]);
 
+  const setHandlingType = useCallback((id: string, handlingType: HandlingType) => {
+    const now = new Date().toISOString();
+    updateAndSync(id, t => ({
+      ...t,
+      handlingType,
+      updatedAt: now,
+      activityLog: appendLog(t, mkLog('status_changed', 'Agent', `Spôsob vybavenia: ${handlingType}`)),
+    }));
+  }, [updateAndSync]);
+
   const getTicket = useCallback((id: string) => tickets.find(t => t.id === id), [tickets]);
 
   return (
-    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, setResolution, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, getTicket }}>
+    <TicketContext.Provider value={{ tickets, loading, addTicket, updateTicketStatus, setResolution, updateComplaintStatus, updateReturnStatus, updateOtherStatus, updateComplaintItemStatus, setWarehouseReceipt, updateAssignment, requestInfo, markInfoProvided, addInternalNote, setHandlingType, getTicket }}>
       {children}
     </TicketContext.Provider>
   );
