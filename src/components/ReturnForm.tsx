@@ -371,7 +371,7 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) =
               <p className="mt-1 text-xs text-info font-medium">
                 {order.paymentMethod === 'card' && 'Platba bola kartou – peniaze štandardne vrátime na kartu. IBAN použijeme len v prípade, že refund na kartu nebude možný.'}
                 {order.paymentMethod === 'bank_transfer' && 'Peniaze vám vrátime na bankový účet.'}
-                {order.paymentMethod === 'cod' && 'Pri dobierke je potrebné vrátenie peňazí na bankový účet.'}
+                {order.paymentMethod === 'cash' && 'Pri dobierke je potrebné vrátenie peňazí na bankový účet.'}
               </p>
             )}
             {errors.iban && <p className="mt-1 text-xs text-destructive">{errors.iban}</p>}
