@@ -107,9 +107,9 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) =
     }
     const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
     if (!trimmedIban) {
-      newErrors.iban = 'IBAN je povinný.';
+      newErrors.iban = 'Zadajte, prosím, platný IBAN';
     } else if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(trimmedIban)) {
-      newErrors.iban = 'Neplatný formát IBAN (napr. SK31 1200 0000 1987 4263 7541).';
+      newErrors.iban = 'Zadajte, prosím, platný IBAN';
     }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
