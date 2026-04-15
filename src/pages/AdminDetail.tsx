@@ -497,6 +497,37 @@ const AdminDetail = () => {
                   {ticket.iban || '—'}
                 </dd>
               </div>
+
+              {/* Handling type - complaint only */}
+              {ticket.requestType === 'complaint' && (
+                <div className="py-3 border-b">
+                  <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Spôsob vybavenia</dt>
+                  <dd>
+                    {!isCrmReadOnly ? (
+                      <select
+                        value={ticket.handlingType || ''}
+                        onChange={e => {
+                          const val = e.target.value as HandlingType;
+                          if (val) {
+                            setHandlingType(ticket.id, val);
+                            toast.success(`Spôsob vybavenia: ${HANDLING_TYPE_LABELS[val]}`);
+                          }
+                        }}
+                        className="rounded-md border border-input bg-background px-2.5 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+                      >
+                        <option value="">— Vybrať —</option>
+                        {Object.entries(HANDLING_TYPE_LABELS).map(([k, v]) => (
+                          <option key={k} value={k}>{v}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-sm font-medium">
+                        {ticket.handlingType ? HANDLING_TYPE_LABELS[ticket.handlingType] : '—'}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
 

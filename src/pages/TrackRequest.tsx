@@ -8,6 +8,7 @@ import {
   COMPLAINT_STATUS_FLOW, RETURN_STATUS_FLOW, OTHER_STATUS_FLOW,
   COMPLAINT_TYPE_LABELS, COMPLAINT_ITEM_STATUS_LABELS, REQUESTED_RESOLUTION_LABELS,
   Ticket, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintType,
+  HANDLING_TYPE_CUSTOMER_MESSAGES,
 } from '@/types/ticket';
 import { Button } from '@/components/ui/button';
 import {
