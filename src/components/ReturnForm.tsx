@@ -107,9 +107,9 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) =
     }
     const trimmedIban = iban.replace(/\s/g, '').toUpperCase();
     if (!trimmedIban) {
-      newErrors.iban = 'IBAN je povinný.';
+      newErrors.iban = 'Zadajte, prosím, platný IBAN';
     } else if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(trimmedIban)) {
-      newErrors.iban = 'Neplatný formát IBAN (napr. SK31 1200 0000 1987 4263 7541).';
+      newErrors.iban = 'Zadajte, prosím, platný IBAN';
     }
     if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     setErrors({});
@@ -357,21 +357,22 @@ export const ReturnForm = ({ treeResult, onBack, onSubmit, createdBy }: Props) =
 
           {/* IBAN - always required */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium">IBAN pre vrátenie peňazí <span className="text-destructive">*</span></label>
+            <label className="mb-1.5 block text-sm font-semibold">IBAN pre vrátenie peňazí <span className="text-destructive">*</span></label>
             <input
               className={inputClass('iban')}
-              placeholder="SK00 0000 0000 0000 0000 0000"
+              placeholder="SK12 3456 7890 1234 5678 9012"
               value={iban}
               onChange={e => { setIban(e.target.value); setErrors(prev => { const { iban: _, ...rest } = prev; return rest; }); }}
             />
             <p className="mt-1.5 text-xs text-muted-foreground">
-              Pre urýchlenie spracovania vás prosíme o zadanie IBAN. V prípade potreby môžeme vrátiť peniaze aj na bankový účet, aj keď bola platba kartou.
+              Pre rýchle spracovanie vašej žiadosti potrebujeme IBAN. Peniaze vám vieme vrátiť aj na účet, aj keď bola platba kartou.
             </p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground/70">Použijeme len v prípade potreby.</p>
             {order && (
-              <p className="mt-1 text-xs text-info font-medium">
+              <p className="mt-1.5 text-xs text-info font-medium">
                 {order.paymentMethod === 'card' && 'Platba bola kartou – peniaze štandardne vrátime na kartu. IBAN použijeme len v prípade, že refund na kartu nebude možný.'}
                 {order.paymentMethod === 'bank_transfer' && 'Peniaze vám vrátime na bankový účet.'}
-                {order.paymentMethod === 'cash' && 'Pri dobierke je potrebné vrátenie peňazí na bankový účet.'}
+                {order.paymentMethod === 'cash' && 'Pri dobierke je vrátenie peňazí možné iba na bankový účet.'}
               </p>
             )}
             {errors.iban && <p className="mt-1 text-xs text-destructive">{errors.iban}</p>}
