@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Ticket, TicketStatus, TicketResolution, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS, REQUEST_TYPE_LABELS } from '@/types/ticket';
+import { Ticket, TicketStatus, TicketResolution, ComplaintStatus, ReturnStatus, OtherStatus, ComplaintItem, ComplaintItemStatus, WarehouseReceiptAudit, AssignedTeam, getAutoAssignment, InfoRequest, ReminderLog, InternalNote, ActivityLogEntry, ActivityAction, STATUS_LABELS, REQUEST_TYPE_LABELS, HandlingType } from '@/types/ticket';
 import { supabase } from '@/integrations/supabase/client';
 import { createNotification } from '@/hooks/use-notifications';
 
@@ -18,6 +18,7 @@ interface TicketContextType {
   requestInfo: (id: string, message: string, internalNote?: string) => void;
   markInfoProvided: (id: string) => void;
   addInternalNote: (id: string, text: string, author: string) => void;
+  setHandlingType: (id: string, handlingType: HandlingType) => void;
   getTicket: (id: string) => Ticket | undefined;
 }
 
@@ -68,6 +69,7 @@ function dbRowToTicket(row: any): Ticket {
     internalNotes: row.internal_notes || [],
     activityLog: row.activity_log || [],
     resolution: row.resolution || undefined,
+    handlingType: row.handling_type || undefined,
   };
 }
 
